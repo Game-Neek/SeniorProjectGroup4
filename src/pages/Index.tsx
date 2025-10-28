@@ -1,13 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Hero } from "@/components/Hero";
+import { LearningStyleQuiz } from "@/components/LearningStyleQuiz";
+import { Dashboard } from "@/components/Dashboard";
+import { ChatInterface } from "@/components/ChatInterface";
+
+type AppState = "hero" | "quiz" | "dashboard";
 
 const Index = () => {
+  const [appState, setAppState] = useState<AppState>("hero");
+  const [learningStyles, setLearningStyles] = useState<string[]>([]);
+  const [showChat, setShowChat] = useState(false);
+
+  const handleGetStarted = () => {
+    setAppState("quiz");
+  };
+
+  const handleQuizComplete = (styles: string[]) => {
+    setLearningStyles(styles);
+    setAppState("dashboard");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <>
+      {appState === "hero" && <Hero onGetStarted={handleGetStarted} />}
+      {appState === "quiz" && <LearningStyleQuiz onComplete={handleQuizComplete} />}
+      {appState === "dashboard" && (
+        <Dashboard 
+          learningStyles={learningStyles} 
+          onOpenChat={() => setShowChat(true)}
+        />
+      )}
+      {showChat && <ChatInterface onClose={() => setShowChat(false)} />}
+    </>
   );
 };
 
