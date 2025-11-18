@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, MessageSquare, Calendar, MapPin, Info, Utensils, Bus, Shield, User, LogOut, GraduationCap } from "lucide-react";
+import { BookOpen, MessageSquare, Calendar, MapPin, Info, Utensils, Bus, Shield, User, LogOut, GraduationCap, Target, TrendingUp, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -129,7 +129,9 @@ export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
               </div>
               <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
+
+            {/* Progress Bars */}
+            <div className="grid gap-6 md:grid-cols-2 mb-8">
               <div className="space-y-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-foreground">Placement Quizzes</span>
@@ -157,6 +159,74 @@ export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
                   <span className="text-sm text-muted-foreground">92%</span>
                 </div>
                 <Progress value={92} className="h-2" />
+              </div>
+            </div>
+
+            {/* Learning Objectives & Weekly Performance */}
+            <div className="grid gap-6 md:grid-cols-2 pt-6 border-t border-border">
+              {/* Learning Objectives */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-foreground">Learning Objectives</h4>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Master Calculus Fundamentals</p>
+                      <p className="text-xs text-muted-foreground mt-1">Complete by end of week</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <CheckCircle2 className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Improve Essay Writing Skills</p>
+                      <p className="text-xs text-muted-foreground mt-1">Practice 3 essays this week</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <CheckCircle2 className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Complete Physics Lab Reports</p>
+                      <p className="text-xs text-muted-foreground mt-1">2 reports due this Friday</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Weekly Performance Report */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-foreground">Weekly Performance Report</h4>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">Study Time</span>
+                      <Badge variant="secondary">+15%</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">12.5 hrs</p>
+                    <p className="text-xs text-muted-foreground mt-1">1.5 hours more than last week</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-secondary/5 to-accent/5 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">Quiz Average</span>
+                      <Badge variant="secondary">+8%</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">87%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Improved from 79% last week</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-accent/5 to-primary/5 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">Assignments Completed</span>
+                      <Badge variant="secondary">8/10</Badge>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">80%</p>
+                    <p className="text-xs text-muted-foreground mt-1">2 assignments pending</p>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
