@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, MessageSquare, Calendar, MapPin, Info, Utensils, Bus, Shield, User, LogOut } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { BookOpen, MessageSquare, Calendar, MapPin, Info, Utensils, Bus, Shield, User, LogOut, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -120,6 +121,46 @@ export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
 
         {/* Main Content Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Adaptive Learning */}
+          <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)] md:col-span-2 lg:col-span-3">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <GraduationCap className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">Placement Quizzes</span>
+                  <span className="text-sm text-muted-foreground">75%</span>
+                </div>
+                <Progress value={75} className="h-2" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">Personalized Practice</span>
+                  <span className="text-sm text-muted-foreground">60%</span>
+                </div>
+                <Progress value={60} className="h-2" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">Explanations for Mistakes</span>
+                  <span className="text-sm text-muted-foreground">85%</span>
+                </div>
+                <Progress value={85} className="h-2" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">Progress Tracking</span>
+                  <span className="text-sm text-muted-foreground">92%</span>
+                </div>
+                <Progress value={92} className="h-2" />
+              </div>
+            </div>
+          </Card>
+
           {/* Study Resources */}
           <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)]">
             <div className="flex items-center gap-3 mb-4">
