@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FileQuestion, Loader2, BookOpen, RefreshCw } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { FileQuestion, Loader2, BookOpen, RefreshCw, CheckCircle2, XCircle, ArrowRight, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +17,14 @@ interface Syllabus {
   file_name: string;
 }
 
+interface QuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 interface PlacementQuizProps {
   learningStyles: string[];
 }
@@ -21,8 +32,13 @@ interface PlacementQuizProps {
 export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [quizContent, setQuizContent] = useState<string>("");
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [showResult, setShowResult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -51,7 +67,12 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
     }
 
     setIsGenerating(true);
-    setQuizContent("");
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setShowResult(false);
+    setQuizCompleted(false);
+    setSelectedAnswer("");
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -65,59 +86,29 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
             Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [{ role: "user", content: `Generate a comprehensive placement quiz for ${selectedClass}` }],
+            messages: [{ role: "user", content: `Generate an interactive placement quiz for ${selectedClass}` }],
             learningStyles,
-            requestType: "placement-quiz",
+            requestType: "placement-quiz-interactive",
             className: selectedClass,
           }),
         }
       );
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         throw new Error("Failed to generate quiz");
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let content = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (delta) {
-              content += delta;
-              setQuizContent(content);
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
+      const data = await response.json();
+      
+      if (data.questions && Array.isArray(data.questions)) {
+        setQuestions(data.questions);
+        toast({
+          title: "Quiz Generated",
+          description: `${data.questions.length} questions ready for ${selectedClass}!`,
+        });
+      } else {
+        throw new Error("Invalid quiz format received");
       }
-
-      toast({
-        title: "Quiz Generated",
-        description: `Placement quiz for ${selectedClass} is ready!`,
-      });
     } catch (error) {
       console.error("Quiz generation error:", error);
       toast({
@@ -129,6 +120,51 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
       setIsGenerating(false);
     }
   };
+
+  const handleAnswerSelect = (value: string) => {
+    setSelectedAnswer(value);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (!selectedAnswer) return;
+    
+    const answerIndex = parseInt(selectedAnswer);
+    setAnswers((prev) => ({ ...prev, [currentQuestionIndex]: answerIndex }));
+    setShowResult(true);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setSelectedAnswer("");
+      setShowResult(false);
+    } else {
+      setQuizCompleted(true);
+    }
+  };
+
+  const calculateScore = () => {
+    let correct = 0;
+    Object.entries(answers).forEach(([idx, answer]) => {
+      if (questions[parseInt(idx)]?.correctIndex === answer) {
+        correct++;
+      }
+    });
+    return correct;
+  };
+
+  const restartQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setShowResult(false);
+    setQuizCompleted(false);
+    setSelectedAnswer("");
+  };
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isCorrect = showResult && currentQuestion && answers[currentQuestionIndex] === currentQuestion.correctIndex;
+  const score = calculateScore();
+  const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
 
   return (
     <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
@@ -148,7 +184,7 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
           <p>Upload a syllabus first to generate placement quizzes</p>
           <p className="text-sm">Go to "Class Syllabi" section above</p>
         </div>
-      ) : (
+      ) : questions.length === 0 ? (
         <div className="space-y-4">
           <div className="flex gap-3">
             <Select value={selectedClass} onValueChange={setSelectedClass}>
@@ -181,30 +217,141 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
               )}
             </Button>
           </div>
+        </div>
+      ) : quizCompleted ? (
+        // Results Screen
+        <div className="text-center py-8 space-y-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10">
+            <Trophy className="w-10 h-10 text-primary" />
+          </div>
+          <div>
+            <h4 className="text-2xl font-bold text-foreground mb-2">Quiz Complete!</h4>
+            <p className="text-muted-foreground">{selectedClass}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-4xl font-bold text-primary">{percentage}%</p>
+            <p className="text-muted-foreground">
+              You got {score} out of {questions.length} correct
+            </p>
+            <Progress value={percentage} className="h-3 w-48 mx-auto" />
+          </div>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={restartQuiz}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry Quiz
+            </Button>
+            <Button
+              onClick={() => {
+                setQuestions([]);
+                setSelectedClass("");
+              }}
+              className="bg-[image:var(--gradient-primary)] hover:opacity-90"
+            >
+              New Quiz
+            </Button>
+          </div>
+        </div>
+      ) : (
+        // Quiz Questions
+        <div className="space-y-6">
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <Badge variant="secondary">{selectedClass}</Badge>
+              <span className="text-muted-foreground">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </span>
+            </div>
+            <Progress value={((currentQuestionIndex + 1) / questions.length) * 100} className="h-2" />
+          </div>
 
-          {quizContent && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-3">
-                <Badge variant="secondary" className="text-xs">
-                  {selectedClass}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateQuiz}
-                  disabled={isGenerating}
-                >
-                  <RefreshCw className="w-4 h-4 mr-1" />
-                  Regenerate
-                </Button>
-              </div>
-              <ScrollArea className="h-[400px] rounded-lg border border-border p-4 bg-muted/30">
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                  {quizContent}
-                </div>
-              </ScrollArea>
+          {/* Question */}
+          <div className="p-4 rounded-xl bg-muted/30 border border-border">
+            <p className="text-lg font-medium text-foreground mb-6">{currentQuestion?.question}</p>
+
+            <RadioGroup
+              value={selectedAnswer}
+              onValueChange={handleAnswerSelect}
+              disabled={showResult}
+              className="space-y-3"
+            >
+              {currentQuestion?.options.map((option, idx) => {
+                const isSelected = selectedAnswer === idx.toString();
+                const isCorrectOption = currentQuestion.correctIndex === idx;
+                let optionClass = "border-border";
+                
+                if (showResult) {
+                  if (isCorrectOption) {
+                    optionClass = "border-green-500 bg-green-500/10";
+                  } else if (isSelected && !isCorrectOption) {
+                    optionClass = "border-destructive bg-destructive/10";
+                  }
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all ${optionClass} ${
+                      !showResult && isSelected ? "border-primary bg-primary/5" : ""
+                    } ${!showResult ? "hover:border-primary/50 cursor-pointer" : ""}`}
+                    onClick={() => !showResult && handleAnswerSelect(idx.toString())}
+                  >
+                    <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
+                    <Label
+                      htmlFor={`option-${idx}`}
+                      className={`flex-1 cursor-pointer ${showResult ? "cursor-default" : ""}`}
+                    >
+                      {option}
+                    </Label>
+                    {showResult && isCorrectOption && (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    )}
+                    {showResult && isSelected && !isCorrectOption && (
+                      <XCircle className="w-5 h-5 text-destructive" />
+                    )}
+                  </div>
+                );
+              })}
+            </RadioGroup>
+          </div>
+
+          {/* Explanation (shown after answering) */}
+          {showResult && currentQuestion?.explanation && (
+            <div className={`p-4 rounded-lg border ${isCorrect ? "bg-green-500/5 border-green-500/20" : "bg-amber-500/5 border-amber-500/20"}`}>
+              <p className="text-sm font-medium mb-1">{isCorrect ? "✓ Correct!" : "✗ Not quite right"}</p>
+              <p className="text-sm text-muted-foreground">{currentQuestion.explanation}</p>
             </div>
           )}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3">
+            {!showResult ? (
+              <Button
+                onClick={handleSubmitAnswer}
+                disabled={!selectedAnswer}
+                className="bg-[image:var(--gradient-primary)] hover:opacity-90"
+              >
+                Submit Answer
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNextQuestion}
+                className="bg-[image:var(--gradient-primary)] hover:opacity-90"
+              >
+                {currentQuestionIndex < questions.length - 1 ? (
+                  <>
+                    Next Question
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    See Results
+                    <Trophy className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </Card>

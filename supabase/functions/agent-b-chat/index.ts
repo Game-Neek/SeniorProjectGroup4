@@ -54,8 +54,21 @@ serve(async (req) => {
       : "";
 
     let systemPrompt = "";
+    let useToolCalling = false;
 
-    if (requestType === "placement-quiz") {
+    if (requestType === "placement-quiz-interactive") {
+      // Return structured JSON for interactive quiz
+      useToolCalling = true;
+      systemPrompt = `You are AgentB creating a placement quiz. Generate exactly 10 multiple-choice questions for: ${className || "the subject"}.
+
+${learningStyleContext}
+
+Requirements:
+- Questions should progress from basic to advanced
+- Each question must have exactly 4 options
+- Include clear explanations for the correct answer
+- Cover key foundational concepts for this course`;
+    } else if (requestType === "placement-quiz") {
       systemPrompt = `You are AgentB, an intelligent AI tutor creating a placement quiz for a student.
       
 ${learningStyleContext}
@@ -124,6 +137,89 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
 
     console.log(`AgentB request - Type: ${requestType || "chat"}, User: ${userId || "anonymous"}, Class: ${className || "none"}`);
 
+    // For interactive quizzes, use tool calling to get structured output
+    if (useToolCalling) {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "generate_quiz",
+                description: "Generate a structured placement quiz with multiple choice questions",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    questions: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "number" },
+                          question: { type: "string" },
+                          options: { type: "array", items: { type: "string" } },
+                          correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
+                          explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                        },
+                        required: ["id", "question", "options", "correctIndex", "explanation"]
+                      }
+                    }
+                  },
+                  required: ["questions"]
+                }
+              }
+            }
+          ],
+          tool_choice: { type: "function", function: { name: "generate_quiz" } },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI gateway error:", response.status, errorText);
+        return new Response(JSON.stringify({ error: "Failed to generate quiz" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data = await response.json();
+      console.log("Quiz response:", JSON.stringify(data).slice(0, 500));
+
+      // Extract questions from tool call
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      if (toolCall?.function?.arguments) {
+        try {
+          const quizData = JSON.parse(toolCall.function.arguments);
+          return new Response(JSON.stringify(quizData), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } catch (parseError) {
+          console.error("Failed to parse quiz data:", parseError);
+          return new Response(JSON.stringify({ error: "Failed to parse quiz data" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ error: "No quiz data returned" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Standard streaming response for chat
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
