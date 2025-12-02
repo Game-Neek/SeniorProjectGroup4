@@ -8,6 +8,7 @@ import {
   ClipboardList, Bell, BookMarked, AlertTriangle, Star, Zap, Clock
 } from "lucide-react";
 import { SyllabusUpload } from "./SyllabusUpload";
+import { PlacementQuiz } from "./PlacementQuiz";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -132,6 +133,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
 
         {/* Syllabus Upload */}
         <SyllabusUpload />
+
+        {/* Placement Quiz */}
+        <PlacementQuiz learningStyles={learningStyles} />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

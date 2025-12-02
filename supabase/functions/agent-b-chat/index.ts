@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,18 +12,86 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, learningStyles, requestType } = await req.json();
+    const { messages, learningStyles, requestType, className } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    let syllabiContext = "";
+    let userId = null;
+
+    if (authHeader && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      
+      // Verify user token
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (user && !authError) {
+        userId = user.id;
+        
+        // Fetch user's syllabi metadata
+        const { data: syllabi, error: syllabiError } = await supabase
+          .from("syllabi")
+          .select("class_name, file_name")
+          .eq("user_id", user.id);
+
+        if (syllabi && syllabi.length > 0 && !syllabiError) {
+          const classList = syllabi.map(s => `- ${s.class_name} (${s.file_name})`).join("\n");
+          syllabiContext = `\n\nThe student has uploaded syllabi for the following classes:\n${classList}\n\nWhen the student asks about these classes, provide relevant academic support. If they ask about a specific class, focus your responses on that subject area.`;
+        }
+      }
     }
 
     const learningStyleContext = learningStyles?.length > 0 
       ? `The student's preferred learning styles are: ${learningStyles.join(", ")}. Adapt your explanations accordingly.`
       : "";
 
-    const systemPrompt = `You are AgentB, an intelligent AI campus assistant and tutor. You help students with:
+    let systemPrompt = "";
+
+    if (requestType === "placement-quiz") {
+      systemPrompt = `You are AgentB, an intelligent AI tutor creating a placement quiz for a student.
+      
+${learningStyleContext}
+${syllabiContext}
+
+Your task is to generate a comprehensive placement quiz for the class: ${className || "the requested subject"}.
+
+Create a placement quiz with 15-20 questions that:
+1. Cover foundational concepts that students should know
+2. Progress from basic to intermediate to advanced topics
+3. Include a mix of question types:
+   - Multiple choice (provide 4 options, mark correct with *)
+   - True/False
+   - Short answer
+4. Test understanding, not just memorization
+5. Cover key topics typically found in this course
+
+Format your response as:
+# Placement Quiz: [Class Name]
+
+## Section 1: Fundamentals (Questions 1-5)
+[Basic concept questions]
+
+## Section 2: Core Concepts (Questions 6-12)
+[Intermediate questions]
+
+## Section 3: Advanced Topics (Questions 13-20)
+[More challenging questions]
+
+---
+## Answer Key
+[Provide all answers]
+
+After the quiz, provide a brief study guide based on the topics covered.`;
+    } else {
+      systemPrompt = `You are AgentB, an intelligent AI campus assistant and tutor. You help students with:
 
 1. **Chat Tutoring**: Provide clear, patient explanations of academic concepts
 2. **AI Explanations**: Break down complex topics into digestible parts
@@ -34,6 +103,7 @@ serve(async (req) => {
 8. **Pre-quizzes**: Create quick assessment questions to gauge understanding
 
 ${learningStyleContext}
+${syllabiContext}
 
 Guidelines:
 - Be encouraging and supportive
@@ -48,7 +118,11 @@ Guidelines:
 - For auditory learners: use conversational tone and verbal cues
 
 When the user asks for a pre-quiz, create 3-5 questions with multiple choice or short answer format.
-When explaining concepts, always offer to provide additional examples or practice problems.`;
+When explaining concepts, always offer to provide additional examples or practice problems.
+When the user asks about their uploaded classes/syllabi, provide targeted help for those specific courses.`;
+    }
+
+    console.log(`AgentB request - Type: ${requestType || "chat"}, User: ${userId || "anonymous"}, Class: ${className || "none"}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
