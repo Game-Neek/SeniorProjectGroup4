@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 interface DashboardProps {
   learningStyles: string[];
   onOpenChat: () => void;
+  onRetakeQuiz: () => void;
 }
 
 const styleIcons: Record<string, string> = {
@@ -33,7 +34,7 @@ const styleDescriptions: Record<string, string> = {
   writing: "Learn by taking notes and writing summaries"
 };
 
-export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
+export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: DashboardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -105,7 +106,12 @@ export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
 
         {/* Learning Styles */}
         <Card className="p-6 shadow-[var(--shadow-medium)] border-border">
-          <h3 className="text-xl font-semibold text-foreground mb-4">Your Learning Style</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-foreground">Your Learning Style</h3>
+            <Button variant="outline" size="sm" onClick={onRetakeQuiz}>
+              Retake Quiz
+            </Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             {learningStyles.map(style => (
               <div 

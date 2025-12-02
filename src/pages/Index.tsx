@@ -51,6 +51,7 @@ const Index = () => {
         <Dashboard 
           learningStyles={learningStyles} 
           onOpenChat={() => setShowChat(true)}
+          onRetakeQuiz={() => setAppState("quiz")}
         />
       )}
       {showChat && <ChatInterface onClose={() => setShowChat(false)} learningStyles={learningStyles} />}
