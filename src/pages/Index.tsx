@@ -53,7 +53,7 @@ const Index = () => {
           onOpenChat={() => setShowChat(true)}
         />
       )}
-      {showChat && <ChatInterface onClose={() => setShowChat(false)} />}
+      {showChat && <ChatInterface onClose={() => setShowChat(false)} learningStyles={learningStyles} />}
     </>
   );
 };
