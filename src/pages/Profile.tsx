@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2 } from "lucide-react";
 
 interface UserClass {
   id: string;
@@ -17,6 +17,15 @@ interface UserClass {
   professor: string | null;
   semester: string | null;
   year: number | null;
+}
+
+interface Syllabus {
+  id: string;
+  class_name: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  uploaded_at: string;
 }
 
 interface Profile {
@@ -37,6 +46,7 @@ interface LearningResource {
 export default function Profile() {
   const [profile, setProfile] = useState<Profile>({ full_name: "", email: "", university_id: "" });
   const [classes, setClasses] = useState<UserClass[]>([]);
+  const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [universities, setUniversities] = useState<{ id: string; name: string }[]>([]);
   const [learningResources, setLearningResources] = useState<LearningResource[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,6 +94,9 @@ export default function Profile() {
     // Fetch classes
     fetchClasses();
     
+    // Fetch syllabi
+    fetchSyllabi();
+    
     // Fetch learning resources
     fetchLearningResources();
   };
@@ -104,6 +117,61 @@ export default function Profile() {
     } else {
       setClasses(data || []);
     }
+  };
+
+  const fetchSyllabi = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("syllabi")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("uploaded_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching syllabi:", error);
+    } else {
+      setSyllabi(data || []);
+    }
+  };
+
+  const handleDeleteSyllabus = async (syllabusId: string, filePath: string) => {
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from("syllabi")
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error("Error deleting file from storage:", storageError);
+    }
+
+    // Delete from database
+    const { error } = await supabase
+      .from("syllabi")
+      .delete()
+      .eq("id", syllabusId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete syllabus",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Syllabus deleted successfully",
+      });
+      fetchSyllabi();
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return "Unknown size";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -392,6 +460,59 @@ export default function Profile() {
                       onClick={() => handleDeleteClass(cls.id)}
                     >
                       Delete
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Uploaded Syllabi */}
+        <Card className="p-6 shadow-[var(--shadow-medium)]">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-foreground">Uploaded Syllabi</h2>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload New
+            </Button>
+          </div>
+
+          {syllabi.length === 0 ? (
+            <p className="text-muted-foreground">No syllabi uploaded yet. Upload a syllabus from the dashboard to get started.</p>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {syllabi.map((syllabus) => (
+                <Card key={syllabus.id} className="p-4 border-border">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground">{syllabus.class_name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 truncate">{syllabus.file_name}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {formatFileSize(syllabus.file_size)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(syllabus.uploaded_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteSyllabus(syllabus.id, syllabus.file_path)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </Card>
