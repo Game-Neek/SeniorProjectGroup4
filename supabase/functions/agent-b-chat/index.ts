@@ -318,8 +318,41 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
       });
     }
 
-    // Non-streaming response for resource content
+    // Non-streaming response for resource content with caching
     if (requestType === "resource-content") {
+      const sortedStyles = [...(learningStyles || [])].sort();
+      
+      // Check if we have cached content for this resource + learning style combo
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        
+        const { data: cachedResource, error: cacheError } = await supabase
+          .from("generated_resources")
+          .select("content, id, usage_count")
+          .eq("resource_type", resourceType)
+          .eq("resource_title", resourceTitle)
+          .eq("topic", topic)
+          .contains("learning_styles", sortedStyles)
+          .maybeSingle();
+
+        if (cachedResource && !cacheError) {
+          console.log(`Cache hit for resource: ${resourceTitle}, styles: ${sortedStyles.join(", ")}`);
+          
+          // Increment usage count
+          await supabase
+            .from("generated_resources")
+            .update({ usage_count: (cachedResource.usage_count || 0) + 1 })
+            .eq("id", cachedResource.id);
+
+          return new Response(JSON.stringify({ content: cachedResource.content, cached: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      // Generate new content if not cached
+      console.log(`Cache miss - generating content for: ${resourceTitle}, styles: ${sortedStyles.join(", ")}`);
+      
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -347,7 +380,30 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content || "Content generation failed.";
       
-      return new Response(JSON.stringify({ content }), {
+      // Save to cache for future users with same learning style
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && content !== "Content generation failed.") {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        
+        const { error: insertError } = await supabase
+          .from("generated_resources")
+          .upsert({
+            resource_type: resourceType,
+            resource_title: resourceTitle,
+            topic: topic,
+            learning_styles: sortedStyles,
+            content: content,
+          }, {
+            onConflict: "resource_type,resource_title,topic,learning_styles"
+          });
+
+        if (insertError) {
+          console.error("Failed to cache resource:", insertError);
+        } else {
+          console.log(`Cached new resource: ${resourceTitle} for styles: ${sortedStyles.join(", ")}`);
+        }
+      }
+      
+      return new Response(JSON.stringify({ content, cached: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_resources: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          learning_styles: string[]
+          resource_title: string
+          resource_type: string
+          topic: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          learning_styles: string[]
+          resource_title: string
+          resource_type: string
+          topic: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          learning_styles?: string[]
+          resource_title?: string
+          resource_type?: string
+          topic?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       learning_resources: {
         Row: {
           content: string
