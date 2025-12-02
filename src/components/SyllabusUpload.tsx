@@ -24,6 +24,13 @@ export const SyllabusUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const getCurrentSemester = () => {
+    const month = new Date().getMonth();
+    if (month >= 0 && month <= 4) return "Spring";
+    if (month >= 5 && month <= 7) return "Summer";
+    return "Fall";
+  };
+
   useEffect(() => {
     fetchSyllabi();
   }, []);
@@ -80,6 +87,23 @@ export const SyllabusUpload = () => {
       });
 
       if (dbError) throw dbError;
+
+      // Also create a class entry if it doesn't exist
+      const { data: existingClass } = await supabase
+        .from("user_classes")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("class_name", className.trim())
+        .maybeSingle();
+
+      if (!existingClass) {
+        await supabase.from("user_classes").insert({
+          user_id: user.id,
+          class_name: className.trim(),
+          semester: getCurrentSemester(),
+          year: new Date().getFullYear(),
+        });
+      }
 
       toast({
         title: "Syllabus uploaded",
