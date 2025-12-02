@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, learningStyles, requestType, className } = await req.json();
+    const { messages, learningStyles, requestType, className, quizResult } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -55,8 +55,82 @@ serve(async (req) => {
 
     let systemPrompt = "";
     let useToolCalling = false;
+    let toolConfig = null;
 
-    if (requestType === "placement-quiz-interactive") {
+    if (requestType === "study-plan") {
+      // Generate personalized study plan based on quiz results
+      useToolCalling = true;
+      const weakAreas = quizResult?.weakAreas?.join(", ") || "general topics";
+      const strongAreas = quizResult?.strongAreas?.join(", ") || "none identified";
+      const score = quizResult ? `${quizResult.score}/${quizResult.totalQuestions}` : "unknown";
+
+      systemPrompt = `You are AgentB creating a personalized study plan for a student.
+
+Class: ${className || "the course"}
+Quiz Score: ${score}
+Weak Areas: ${weakAreas}
+Strong Areas: ${strongAreas}
+${learningStyleContext}
+
+Generate learning objectives that:
+1. Focus primarily on weak areas identified from the quiz
+2. Prioritize topics based on importance (high/medium/low)
+3. Include specific, actionable goals
+
+Generate study resources that:
+1. Match the student's learning style (${learningStyles?.join(", ") || "general"})
+2. Focus on weak areas first
+3. Include a mix of resource types (videos for visual, readings for reading, practice for kinesthetic, audio for auditory)
+4. Provide realistic time estimates`;
+
+      toolConfig = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generate_study_plan",
+              description: "Generate personalized learning objectives and study resources",
+              parameters: {
+                type: "object",
+                properties: {
+                  objectives: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        topic: { type: "string" },
+                        description: { type: "string" },
+                        priority: { type: "string", enum: ["high", "medium", "low"] },
+                        completed: { type: "boolean" }
+                      },
+                      required: ["id", "topic", "description", "priority"]
+                    }
+                  },
+                  resources: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        title: { type: "string" },
+                        type: { type: "string", enum: ["video", "reading", "practice", "audio"] },
+                        topic: { type: "string" },
+                        description: { type: "string" },
+                        estimatedTime: { type: "string" }
+                      },
+                      required: ["id", "title", "type", "topic", "description", "estimatedTime"]
+                    }
+                  }
+                },
+                required: ["objectives", "resources"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "generate_study_plan" } }
+      };
+    } else if (requestType === "placement-quiz-interactive") {
       // Return structured JSON for interactive quiz
       useToolCalling = true;
       systemPrompt = `You are AgentB creating a placement quiz. Generate exactly 10 multiple-choice questions for: ${className || "the subject"}.
@@ -137,8 +211,43 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
 
     console.log(`AgentB request - Type: ${requestType || "chat"}, User: ${userId || "anonymous"}, Class: ${className || "none"}`);
 
-    // For interactive quizzes, use tool calling to get structured output
+    // For tool calling requests (quizzes, study plans)
     if (useToolCalling) {
+      const quizTools = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generate_quiz",
+              description: "Generate a structured placement quiz with multiple choice questions",
+              parameters: {
+                type: "object",
+                properties: {
+                  questions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        question: { type: "string" },
+                        options: { type: "array", items: { type: "string" } },
+                        correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
+                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                      },
+                      required: ["id", "question", "options", "correctIndex", "explanation"]
+                    }
+                  }
+                },
+                required: ["questions"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "generate_quiz" } }
+      };
+
+      const activeToolConfig = toolConfig || quizTools;
+
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -151,36 +260,7 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
             { role: "system", content: systemPrompt },
             ...messages,
           ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "generate_quiz",
-                description: "Generate a structured placement quiz with multiple choice questions",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    questions: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          id: { type: "number" },
-                          question: { type: "string" },
-                          options: { type: "array", items: { type: "string" } },
-                          correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
-                          explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
-                        },
-                        required: ["id", "question", "options", "correctIndex", "explanation"]
-                      }
-                    }
-                  },
-                  required: ["questions"]
-                }
-              }
-            }
-          ],
-          tool_choice: { type: "function", function: { name: "generate_quiz" } },
+          ...activeToolConfig,
         }),
       });
 

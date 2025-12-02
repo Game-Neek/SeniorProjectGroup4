@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { FileQuestion, Loader2, BookOpen, RefreshCw, CheckCircle2, XCircle, ArrowRight, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { StudyPlan } from "./StudyPlan";
 
 interface Syllabus {
   id: string;
@@ -23,6 +23,14 @@ interface QuizQuestion {
   options: string[];
   correctIndex: number;
   explanation: string;
+}
+
+interface QuizResult {
+  className: string;
+  score: number;
+  totalQuestions: number;
+  weakAreas: string[];
+  strongAreas: string[];
 }
 
 interface PlacementQuizProps {
@@ -39,6 +47,7 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
   const [showResult, setShowResult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -139,6 +148,31 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
       setSelectedAnswer("");
       setShowResult(false);
     } else {
+      // Quiz completed - calculate results
+      const weakAreas: string[] = [];
+      const strongAreas: string[] = [];
+      
+      questions.forEach((q, idx) => {
+        const userAnswer = answers[idx];
+        const isCorrect = userAnswer === q.correctIndex;
+        // Extract topic from question (first part before colon or first 50 chars)
+        const topic = q.question.split(":")[0].slice(0, 50).trim();
+        
+        if (isCorrect) {
+          if (!strongAreas.includes(topic)) strongAreas.push(topic);
+        } else {
+          if (!weakAreas.includes(topic)) weakAreas.push(topic);
+        }
+      });
+
+      const finalScore = calculateScore();
+      setQuizResult({
+        className: selectedClass,
+        score: finalScore,
+        totalQuestions: questions.length,
+        weakAreas,
+        strongAreas,
+      });
       setQuizCompleted(true);
     }
   };
@@ -159,6 +193,7 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
     setShowResult(false);
     setQuizCompleted(false);
     setSelectedAnswer("");
+    setQuizResult(null);
   };
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -167,6 +202,7 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
 
   return (
+  <>
     <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-lg bg-accent/10">
@@ -355,5 +391,17 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
         </div>
       )}
     </Card>
+
+    {/* Study Plan - shown after quiz completion */}
+    {quizResult && (
+      <div className="mt-6">
+        <StudyPlan
+          quizResult={quizResult}
+          learningStyles={learningStyles}
+          onClear={() => setQuizResult(null)}
+        />
+      </div>
+    )}
+  </>
   );
 };
