@@ -28,9 +28,10 @@ interface QuizQuestion {
 interface PlacementQuizProps {
   learningStyles: string[];
   onQuizComplete: (result: QuizResult) => void;
+  refreshTrigger?: number;
 }
 
-export const PlacementQuiz = ({ learningStyles, onQuizComplete }: PlacementQuizProps) => {
+export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger }: PlacementQuizProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -44,7 +45,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete }: PlacementQuizP
 
   useEffect(() => {
     fetchSyllabi();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchSyllabi = async () => {
     const { data, error } = await supabase

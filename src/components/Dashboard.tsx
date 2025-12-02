@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ const styleDescriptions: Record<string, string> = {
 export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: DashboardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
   
   const {
     quizResult,
@@ -168,12 +170,13 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         </Card>
 
         {/* Syllabus Upload */}
-        <SyllabusUpload />
+        <SyllabusUpload onUploadComplete={() => setSyllabusRefreshTrigger(prev => prev + 1)} />
 
         {/* Placement Quiz */}
         <PlacementQuiz 
           learningStyles={learningStyles} 
           onQuizComplete={setQuizResultAndGenerate}
+          refreshTrigger={syllabusRefreshTrigger}
         />
 
         {/* Study Plan - shown after quiz completion */}

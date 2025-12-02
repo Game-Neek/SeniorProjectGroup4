@@ -17,7 +17,11 @@ interface Syllabus {
   uploaded_at: string;
 }
 
-export const SyllabusUpload = () => {
+interface SyllabusUploadProps {
+  onUploadComplete?: () => void;
+}
+
+export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [className, setClassName] = useState("");
@@ -113,6 +117,7 @@ export const SyllabusUpload = () => {
       setClassName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchSyllabi();
+      onUploadComplete?.();
     } catch (error) {
       console.error("Upload error:", error);
       toast({
