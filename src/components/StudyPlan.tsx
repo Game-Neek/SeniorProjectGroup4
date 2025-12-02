@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,38 +16,19 @@ import {
   RefreshCw, Video, FileText, PenTool, Headphones, ExternalLink
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-
-interface QuizResult {
-  className: string;
-  score: number;
-  totalQuestions: number;
-  weakAreas: string[];
-  strongAreas: string[];
-}
-
-interface LearningObjective {
-  id: number;
-  topic: string;
-  description: string;
-  priority: "high" | "medium" | "low";
-  completed: boolean;
-}
-
-interface StudyResource {
-  id: number;
-  title: string;
-  type: "video" | "reading" | "practice" | "audio";
-  topic: string;
-  description: string;
-  estimatedTime: string;
-  content?: string;
-}
+import { QuizResult, LearningObjective, StudyResource } from "@/hooks/useStudyPlan";
 
 interface StudyPlanProps {
   quizResult: QuizResult | null;
+  objectives: LearningObjective[];
+  resources: StudyResource[];
+  completedObjectives: Set<number>;
+  completionPercentage: number;
+  isLoading: boolean;
   learningStyles: string[];
+  onToggleObjective: (id: number) => void;
   onClear: () => void;
+  onRefresh: () => void;
 }
 
 const resourceIcons = {
@@ -57,95 +38,21 @@ const resourceIcons = {
   audio: Headphones,
 };
 
-export const StudyPlan = ({ quizResult, learningStyles, onClear }: StudyPlanProps) => {
-  const [objectives, setObjectives] = useState<LearningObjective[]>([]);
-  const [resources, setResources] = useState<StudyResource[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [completedObjectives, setCompletedObjectives] = useState<Set<number>>(new Set());
+export const StudyPlan = ({ 
+  quizResult, 
+  objectives, 
+  resources, 
+  completedObjectives,
+  completionPercentage,
+  isLoading,
+  learningStyles,
+  onToggleObjective,
+  onClear,
+  onRefresh,
+}: StudyPlanProps) => {
   const [selectedResource, setSelectedResource] = useState<StudyResource | null>(null);
   const [resourceContent, setResourceContent] = useState<string>("");
   const [isLoadingContent, setIsLoadingContent] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (quizResult) {
-      generateStudyPlan();
-    }
-  }, [quizResult]);
-
-  const generateStudyPlan = async () => {
-    if (!quizResult) return;
-
-    setIsLoading(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agent-b-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: [{
-              role: "user",
-              content: `Generate a study plan for ${quizResult.className}. 
-                Score: ${quizResult.score}/${quizResult.totalQuestions}
-                Weak areas: ${quizResult.weakAreas.join(", ")}
-                Strong areas: ${quizResult.strongAreas.join(", ")}
-                Learning styles: ${learningStyles.join(", ")}`
-            }],
-            learningStyles,
-            requestType: "study-plan",
-            className: quizResult.className,
-            quizResult,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to generate study plan");
-      }
-
-      const data = await response.json();
-
-      if (data.objectives) {
-        setObjectives(data.objectives);
-      }
-      if (data.resources) {
-        setResources(data.resources);
-      }
-
-      toast({
-        title: "Study Plan Created",
-        description: "Personalized objectives and resources are ready!",
-      });
-    } catch (error) {
-      console.error("Study plan generation error:", error);
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate study plan. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleObjective = (id: number) => {
-    setCompletedObjectives((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const openResource = async (resource: StudyResource) => {
     setSelectedResource(resource);
@@ -189,10 +96,6 @@ export const StudyPlan = ({ quizResult, learningStyles, onClear }: StudyPlanProp
     }
   };
 
-  const completionPercentage = objectives.length > 0
-    ? Math.round((completedObjectives.size / objectives.length) * 100)
-    : 0;
-
   if (!quizResult) return null;
 
   const priorityColors = {
@@ -216,7 +119,7 @@ export const StudyPlan = ({ quizResult, learningStyles, onClear }: StudyPlanProp
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={generateStudyPlan} disabled={isLoading}>
+          <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -255,7 +158,7 @@ export const StudyPlan = ({ quizResult, learningStyles, onClear }: StudyPlanProp
                         ? "bg-muted/50 border-muted"
                         : "bg-card border-border hover:border-primary/50"
                     }`}
-                    onClick={() => toggleObjective(obj.id)}
+                    onClick={() => onToggleObjective(obj.id)}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center ${

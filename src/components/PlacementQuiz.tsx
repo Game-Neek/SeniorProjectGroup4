@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { FileQuestion, Loader2, BookOpen, RefreshCw, CheckCircle2, XCircle, ArrowRight, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { StudyPlan } from "./StudyPlan";
+import { QuizResult } from "@/hooks/useStudyPlan";
 
 interface Syllabus {
   id: string;
@@ -25,19 +25,12 @@ interface QuizQuestion {
   explanation: string;
 }
 
-interface QuizResult {
-  className: string;
-  score: number;
-  totalQuestions: number;
-  weakAreas: string[];
-  strongAreas: string[];
-}
-
 interface PlacementQuizProps {
   learningStyles: string[];
+  onQuizComplete: (result: QuizResult) => void;
 }
 
-export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
+export const PlacementQuiz = ({ learningStyles, onQuizComplete }: PlacementQuizProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -47,7 +40,6 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
   const [showResult, setShowResult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -166,13 +158,15 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
       });
 
       const finalScore = calculateScore();
-      setQuizResult({
+      const result: QuizResult = {
         className: selectedClass,
         score: finalScore,
         totalQuestions: questions.length,
         weakAreas,
         strongAreas,
-      });
+      };
+      
+      onQuizComplete(result);
       setQuizCompleted(true);
     }
   };
@@ -193,7 +187,6 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
     setShowResult(false);
     setQuizCompleted(false);
     setSelectedAnswer("");
-    setQuizResult(null);
   };
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -202,7 +195,6 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
 
   return (
-  <>
     <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-lg bg-accent/10">
@@ -280,6 +272,7 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
               onClick={() => {
                 setQuestions([]);
                 setSelectedClass("");
+                setQuizCompleted(false);
               }}
               className="bg-[image:var(--gradient-primary)] hover:opacity-90"
             >
@@ -391,17 +384,5 @@ export const PlacementQuiz = ({ learningStyles }: PlacementQuizProps) => {
         </div>
       )}
     </Card>
-
-    {/* Study Plan - shown after quiz completion */}
-    {quizResult && (
-      <div className="mt-6">
-        <StudyPlan
-          quizResult={quizResult}
-          learningStyles={learningStyles}
-          onClear={() => setQuizResult(null)}
-        />
-      </div>
-    )}
-  </>
   );
 };
