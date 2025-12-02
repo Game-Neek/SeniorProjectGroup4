@@ -124,6 +124,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          canva_access_token: string | null
+          canva_connected_at: string | null
+          canva_refresh_token: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
@@ -132,6 +135,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          canva_access_token?: string | null
+          canva_connected_at?: string | null
+          canva_refresh_token?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -140,6 +146,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          canva_access_token?: string | null
+          canva_connected_at?: string | null
+          canva_refresh_token?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
