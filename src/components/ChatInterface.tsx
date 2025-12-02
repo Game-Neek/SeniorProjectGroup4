@@ -1,55 +1,42 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Send, Sparkles } from "lucide-react";
+import { X, Send, Sparkles, BookOpen, Lightbulb, HelpCircle, FileQuestion } from "lucide-react";
+import { useAgentBChat } from "@/hooks/useAgentBChat";
 
 interface ChatInterfaceProps {
   onClose: () => void;
+  learningStyles?: string[];
 }
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+const quickActions = [
+  { icon: BookOpen, label: "Explain a concept", prompt: "Can you explain " },
+  { icon: Lightbulb, label: "Real-world example", prompt: "Give me a real-world example of " },
+  { icon: HelpCircle, label: "Practice problem", prompt: "Give me a practice problem about " },
+  { icon: FileQuestion, label: "Pre-quiz", prompt: "Create a pre-quiz to test my understanding of " },
+];
 
-export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hi! I'm AgentB, your personal campus assistant. I can help you with study tips, campus information, shuttle times, and more. What can I help you with today?",
-      timestamp: new Date()
-    }
-  ]);
+export const ChatInterface = ({ onClose, learningStyles = [] }: ChatInterfaceProps) => {
+  const { messages, sendMessage, isLoading } = useAgentBChat(learningStyles);
   const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    if (!input.trim() || isLoading) return;
+    sendMessage(input);
     setInput("");
+  };
 
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "I'm currently in demo mode. Once connected to Lovable Cloud, I'll be able to provide personalized assistance based on your learning style, access real-time campus information, and help you with your coursework!",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    }, 1000);
+  const handleQuickAction = (prompt: string) => {
+    setInput(prompt);
   };
 
   return (
@@ -77,7 +64,7 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.map((message) => (
               <div
@@ -91,7 +78,11 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
                       : "bg-muted text-foreground"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                    {message.content || (isLoading && message.role === "assistant" ? (
+                      <span className="animate-pulse">Thinking...</span>
+                    ) : null)}
+                  </div>
                   <span className={`text-xs mt-1 block ${
                     message.role === "user" ? "text-white/70" : "text-muted-foreground"
                   }`}>
@@ -103,26 +94,47 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
           </div>
         </ScrollArea>
 
+        {/* Quick Actions */}
+        {messages.length <= 2 && (
+          <div className="px-4 pb-2">
+            <div className="flex flex-wrap gap-2">
+              {quickActions.map((action) => (
+                <Button
+                  key={action.label}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAction(action.prompt)}
+                  className="text-xs"
+                >
+                  <action.icon className="h-3 w-3 mr-1" />
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Input */}
         <div className="p-4 border-t border-border">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
               placeholder="Ask AgentB anything..."
               className="flex-1 border-2 focus-visible:ring-primary"
+              disabled={isLoading}
             />
             <Button 
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isLoading}
               className="bg-[image:var(--gradient-primary)] hover:opacity-90"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Demo mode - Connect Lovable Cloud for full functionality
+            AI-powered tutoring • Adapts to your learning style
           </p>
         </div>
       </Card>
