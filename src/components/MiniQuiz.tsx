@@ -103,13 +103,33 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
     }
   };
 
-  const handleNext = () => {
+  const saveScore = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      await supabase.from('practice_history').insert({
+        user_id: session.user.id,
+        class_name: className,
+        practice_type: 'mini-quiz',
+        score,
+        total: questions.length,
+        topics_practiced: weakAreas,
+        metadata: { questionsAnswered: questions.length }
+      });
+    } catch (error) {
+      console.error('Failed to save quiz score:', error);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setSelectedAnswer(null);
       setIsAnswered(false);
     } else {
       setIsComplete(true);
+      await saveScore();
     }
   };
 

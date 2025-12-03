@@ -122,6 +122,42 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_history: {
+        Row: {
+          class_name: string
+          completed_at: string
+          id: string
+          metadata: Json | null
+          practice_type: string
+          score: number | null
+          topics_practiced: string[] | null
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          class_name: string
+          completed_at?: string
+          id?: string
+          metadata?: Json | null
+          practice_type: string
+          score?: number | null
+          topics_practiced?: string[] | null
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          class_name?: string
+          completed_at?: string
+          id?: string
+          metadata?: Json | null
+          practice_type?: string
+          score?: number | null
+          topics_practiced?: string[] | null
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           canvas_access_token: string | null

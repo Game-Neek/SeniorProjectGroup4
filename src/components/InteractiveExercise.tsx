@@ -101,7 +101,26 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
     setShowSolution(true);
   };
 
-  const handleNext = () => {
+  const saveProgress = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      await supabase.from('practice_history').insert({
+        user_id: session.user.id,
+        class_name: className,
+        practice_type: 'exercise',
+        score: completed.size,
+        total: exercises.length,
+        topics_practiced: weakAreas,
+        metadata: { exercisesCompleted: Array.from(completed) }
+      });
+    } catch (error) {
+      console.error('Failed to save exercise progress:', error);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentIndex < exercises.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setUserAnswer("");
@@ -109,6 +128,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
       setShowSolution(false);
     } else {
       setIsComplete(true);
+      await saveProgress();
     }
   };
 

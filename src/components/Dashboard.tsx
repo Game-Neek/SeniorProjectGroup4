@@ -14,6 +14,7 @@ import { PlacementQuiz } from "./PlacementQuiz";
 import { StudyPlan } from "./StudyPlan";
 import { MiniQuiz } from "./MiniQuiz";
 import { InteractiveExercise } from "./InteractiveExercise";
+import { PracticeHistory } from "./PracticeHistory";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -208,6 +209,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
             onRefresh={() => quizResult && generateStudyPlan(quizResult)}
           />
         )}
+
+        {/* Practice History - shown after completing quizzes/exercises */}
+        <PracticeHistory className={activeClass || undefined} />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
