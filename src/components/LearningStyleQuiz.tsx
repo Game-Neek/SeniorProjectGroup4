@@ -39,6 +39,26 @@ const questions = [
       { value: "kinesthetic", label: "Work through many practice problems", icon: Hand },
       { value: "reading", label: "Read and re-read my notes", icon: BookOpen },
     ]
+  },
+  {
+    id: 4,
+    question: "In a classroom setting, I learn best when:",
+    options: [
+      { value: "visual", label: "The instructor uses slides and diagrams", icon: Eye },
+      { value: "auditory", label: "There are group discussions", icon: Ear },
+      { value: "kinesthetic", label: "We do labs or hands-on activities", icon: Hand },
+      { value: "writing", label: "I can take detailed written notes", icon: PenTool },
+    ]
+  },
+  {
+    id: 5,
+    question: "When trying to understand a complex concept, I:",
+    options: [
+      { value: "visual", label: "Look for infographics or video tutorials", icon: Eye },
+      { value: "auditory", label: "Listen to podcasts or ask someone to explain", icon: Ear },
+      { value: "kinesthetic", label: "Experiment and learn by doing", icon: Hand },
+      { value: "reading", label: "Research and read multiple sources", icon: BookOpen },
+    ]
   }
 ];
 
