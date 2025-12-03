@@ -207,20 +207,21 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         />
 
         {/* Study Plan - shown after quiz completion */}
-        {quizResult && (
-          <StudyPlan
-            quizResult={quizResult}
-            objectives={objectives}
-            resources={resources}
-            completedObjectives={completedObjectives}
-            completionPercentage={completionPercentage}
-            isLoading={isLoading}
-            learningStyles={learningStyles}
-            onToggleObjective={toggleObjective}
-            onClear={clearStudyPlan}
-            onRefresh={() => quizResult && generateStudyPlan(quizResult)}
-          />
-        )}
+        <StudyPlan
+          quizResult={quizResult}
+          objectives={objectives}
+          resources={resources}
+          completedObjectives={completedObjectives}
+          completionPercentage={completionPercentage}
+          isLoading={isLoading}
+          learningStyles={learningStyles}
+          onToggleObjective={toggleObjective}
+          onClear={clearStudyPlan}
+          onRefresh={() => quizResult && generateStudyPlan(quizResult)}
+          completedClasses={completedClasses}
+          activeClass={activeClass}
+          onClassChange={setActiveClass}
+        />
 
         {/* Practice History - shown after completing quizzes/exercises */}
         <PracticeHistory className={activeClass || undefined} />

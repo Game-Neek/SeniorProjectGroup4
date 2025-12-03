@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Target, BookOpen, Lightbulb, CheckCircle2, Loader2, 
-  RefreshCw, Video, FileText, PenTool, Headphones, ExternalLink, Copy
+  RefreshCw, Video, FileText, PenTool, Headphones, ExternalLink
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizResult, LearningObjective, StudyResource } from "@/hooks/useStudyPlan";
@@ -30,6 +31,9 @@ interface StudyPlanProps {
   onToggleObjective: (id: number) => void;
   onClear: () => void;
   onRefresh: () => void;
+  completedClasses: string[];
+  activeClass: string | null;
+  onClassChange: (className: string) => void;
 }
 
 const resourceIcons = {
@@ -50,6 +54,9 @@ export const StudyPlan = ({
   onToggleObjective,
   onClear,
   onRefresh,
+  completedClasses,
+  activeClass,
+  onClassChange,
 }: StudyPlanProps) => {
   const [selectedResource, setSelectedResource] = useState<StudyResource | null>(null);
   const [resourceContent, setResourceContent] = useState<string>("");
@@ -117,7 +124,7 @@ export const StudyPlan = ({
     }
   };
 
-  if (!quizResult) return null;
+  if (completedClasses.length === 0) return null;
 
   const priorityColors = {
     high: "bg-destructive/10 text-destructive border-destructive/20",
@@ -127,28 +134,43 @@ export const StudyPlan = ({
 
   return (
     <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">
             <Target className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">Your Study Plan</h3>
-            <p className="text-sm text-muted-foreground">
-              Based on your {quizResult.className} quiz ({quizResult.score}/{quizResult.totalQuestions})
-            </p>
+            {quizResult && (
+              <p className="text-sm text-muted-foreground">
+                Based on your {quizResult.className} quiz ({quizResult.score}/{quizResult.totalQuestions})
+              </p>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
+          <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading || !quizResult}>
             <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button variant="ghost" size="sm" onClick={onClear}>
+          <Button variant="ghost" size="sm" onClick={onClear} disabled={!quizResult}>
             Clear
           </Button>
         </div>
       </div>
+
+      {/* Class Tabs */}
+      {completedClasses.length > 1 && (
+        <Tabs value={activeClass || completedClasses[0]} onValueChange={onClassChange} className="mb-6">
+          <TabsList className="flex-wrap h-auto gap-1">
+            {completedClasses.map((className) => (
+              <TabsTrigger key={className} value={className} className="text-sm">
+                {className}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -269,7 +291,7 @@ export const StudyPlan = ({
       )}
 
       {/* Weak Areas Summary */}
-      {quizResult.weakAreas.length > 0 && (
+      {quizResult && quizResult.weakAreas.length > 0 && (
         <div className="mt-6 pt-6 border-t border-border">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="w-5 h-5 text-amber-500" />
