@@ -84,10 +84,10 @@ export const LearningStyleQuiz = ({ onComplete }: LearningStyleQuizProps) => {
         styleCount[style] = (styleCount[style] || 0) + 1;
       });
       
-      // Get top learning styles (those with highest counts)
+      // Get top 2 most prominent learning styles
       const sortedStyles = Object.entries(styleCount)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 4)
+        .slice(0, 2)
         .map(([style]) => style);
       
       onComplete(sortedStyles);
