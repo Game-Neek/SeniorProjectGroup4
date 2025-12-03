@@ -265,6 +265,18 @@ export const useStudyPlan = (learningStyles: string[]) => {
     setActiveClass(remaining.length > 0 ? remaining[0] : null);
   }, [activeClass, classPlans]);
 
+  // Save all progress to database (useful before logout)
+  const saveAllProgress = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return;
+
+    const savePromises = Array.from(classPlans.values()).map(plan => 
+      saveQuizResult(plan, session.user.id)
+    );
+    
+    await Promise.all(savePromises);
+  }, [classPlans, saveQuizResult]);
+
   const completionPercentage = objectives.length > 0
     ? Math.round((completedObjectives.size / objectives.length) * 100)
     : 0;
@@ -280,6 +292,7 @@ export const useStudyPlan = (learningStyles: string[]) => {
     toggleObjective,
     clearStudyPlan,
     generateStudyPlan,
+    saveAllProgress,
     // New exports for multi-class support
     completedClasses,
     activeClass,
