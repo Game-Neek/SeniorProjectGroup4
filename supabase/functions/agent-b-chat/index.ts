@@ -77,33 +77,34 @@ Generate learning objectives that:
 2. Prioritize topics based on importance (high/medium/low)
 3. Include specific, actionable goals
 
-Generate study resources with REAL external links from DIVERSE educational platforms:
+CRITICAL: Every resource MUST include a real, working external URL. Generate 6-8 study resources with REAL external links.
 
-VIDEO RESOURCES (prioritize these channels/platforms):
+For each resource, use these URL patterns (replace TOPIC with URL-encoded topic):
+
+VIDEO RESOURCES (use these exact URL formats):
 - Crash Course: "https://www.youtube.com/results?search_query=crash+course+TOPIC"
-- Khan Academy videos: "https://www.youtube.com/results?search_query=khan+academy+TOPIC"
+- Khan Academy: "https://www.youtube.com/results?search_query=khan+academy+TOPIC"
 - 3Blue1Brown (math): "https://www.youtube.com/results?search_query=3blue1brown+TOPIC"
 - Organic Chemistry Tutor: "https://www.youtube.com/results?search_query=organic+chemistry+tutor+TOPIC"
 - Professor Dave Explains: "https://www.youtube.com/results?search_query=professor+dave+explains+TOPIC"
 - MIT OpenCourseWare: "https://www.youtube.com/results?search_query=MIT+opencourseware+TOPIC"
 
-READING/ARTICLE RESOURCES:
-- Khan Academy: "https://www.khanacademy.org/search?search_query=TOPIC"
+READING RESOURCES (use these exact URL formats):
+- Khan Academy: "https://www.khanacademy.org/search?page_search_query=TOPIC"
 - Coursera: "https://www.coursera.org/search?query=TOPIC"
 - edX: "https://www.edx.org/search?q=TOPIC"
-- GeeksForGeeks (for CS): "https://www.geeksforgeeks.org/search?q=TOPIC"
-- W3Schools (for programming): "https://www.w3schools.com/search/search.asp?q=TOPIC"
-- Brilliant.org: "https://brilliant.org/search/?q=TOPIC"
-- MIT OpenCourseWare: "https://ocw.mit.edu/search/?q=TOPIC"
+- GeeksForGeeks: "https://www.geeksforgeeks.org/TOPIC/"
+- W3Schools: "https://www.w3schools.com/search/searchresult.asp?q=TOPIC"
+- Brilliant.org: "https://brilliant.org/wiki/TOPIC/"
 
-PRACTICE RESOURCES:
-- LeetCode (CS): "https://leetcode.com/problemset/?search=TOPIC"
-- HackerRank (CS): "https://www.hackerrank.com/domains?filters[skills]=TOPIC"
-- Quizlet: "https://quizlet.com/search?query=TOPIC"
+PRACTICE RESOURCES (use these exact URL formats):
+- LeetCode: "https://leetcode.com/problemset/?search=TOPIC"
+- HackerRank: "https://www.hackerrank.com/domains?filters%5Bskills%5D%5B%5D=TOPIC"
+- Quizlet: "https://quizlet.com/search?query=TOPIC&type=sets"
 
-DO NOT USE Wikipedia. Prefer educational platforms with structured learning content.
-Match resources to the student's learning style (${learningStyles?.join(", ") || "general"}).
-Include a good mix of video tutorials, reading materials, and practice exercises.`;
+NEVER use Wikipedia. ALWAYS include the url and source fields for every resource.
+Match resources to learning style: ${learningStyles?.join(", ") || "visual, reading"}.
+Include mix of: 2-3 videos, 2-3 reading materials, 1-2 practice resources.`;
 
       toolConfig = {
         tools: [
