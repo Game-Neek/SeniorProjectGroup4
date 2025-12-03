@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, 
   GraduationCap, Target, TrendingUp, CheckCircle2, FileQuestion, Lightbulb, 
@@ -54,6 +55,10 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
     toggleObjective,
     clearStudyPlan,
     generateStudyPlan,
+    completedClasses,
+    activeClass,
+    setActiveClass,
+    classPlans,
   } = useStudyPlan(learningStyles);
 
   const handleSignOut = async () => {
@@ -199,17 +204,30 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Adaptive Learning */}
           <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)] md:col-span-2 lg:col-span-3">
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-primary/10">
                 <GraduationCap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
-              {!quizResult && (
+              {completedClasses.length === 0 && (
                 <Badge variant="outline" className="ml-auto text-muted-foreground">
                   Complete a quiz to unlock
                 </Badge>
               )}
             </div>
+
+            {/* Class Tabs */}
+            {completedClasses.length > 0 && (
+              <Tabs value={activeClass || completedClasses[0]} onValueChange={setActiveClass} className="mb-6">
+                <TabsList className="flex-wrap h-auto gap-1">
+                  {completedClasses.map((className) => (
+                    <TabsTrigger key={className} value={className} className="text-sm">
+                      {className}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
 
             {/* Progress Bars - Dynamic based on study plan */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -251,9 +269,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                   <FileQuestion className="w-5 h-5 text-primary" />
                   <h4 className="font-medium text-foreground text-sm">Mini-Quizzes</h4>
                 </div>
-                <p className="text-2xl font-bold text-foreground mb-1">{quizResult ? 3 : 0}</p>
+                <p className="text-2xl font-bold text-foreground mb-1">{completedClasses.length > 0 ? 3 : 0}</p>
                 <p className="text-xs text-muted-foreground">Available today</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" disabled={!quizResult}>
+                <Button variant="outline" size="sm" className="w-full mt-3" disabled={completedClasses.length === 0}>
                   Start Quiz
                 </Button>
               </div>
@@ -266,7 +284,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                 </div>
                 <p className="text-2xl font-bold text-foreground mb-1">{resources.length}</p>
                 <p className="text-xs text-muted-foreground">New exercises</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" disabled={!quizResult}>
+                <Button variant="outline" size="sm" className="w-full mt-3" disabled={completedClasses.length === 0}>
                   Practice Now
                 </Button>
               </div>
@@ -297,7 +315,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">{Math.ceil(completionPercentage / 20)}/5 overall confidence</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" disabled={!quizResult}>
+                <Button variant="outline" size="sm" className="w-full mt-3" disabled={completedClasses.length === 0}>
                   Rate Topics
                 </Button>
               </div>
@@ -341,7 +359,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                   <h4 className="font-semibold text-foreground">Reminders</h4>
                 </div>
                 <div className="space-y-2">
-                  {quizResult ? (
+                  {completedClasses.length > 0 && quizResult ? (
                     <>
                       <div className="flex items-start gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
                         <Clock className="w-4 h-4 text-destructive mt-0.5" />
@@ -373,7 +391,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                   <h4 className="font-semibold text-foreground">Chapter Breakdowns</h4>
                 </div>
                 <div className="space-y-2">
-                  {quizResult ? (
+                  {completedClasses.length > 0 && quizResult ? (
                     <>
                       {quizResult.strongAreas.slice(0, 2).map((area, idx) => (
                         <div key={`strong-${idx}`} className="p-2 rounded-lg bg-muted/50">
@@ -425,7 +443,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                   ))
                 ) : (
                   <div className="col-span-2 text-sm text-muted-foreground p-3 rounded-lg bg-muted/30">
-                    {quizResult 
+                    {completedClasses.length > 0
                       ? "Great job! No missing content detected." 
                       : "Complete a placement quiz to identify areas that need attention."}
                   </div>

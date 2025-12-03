@@ -28,6 +28,13 @@ export interface StudyResource {
   content?: string;
 }
 
+export interface ClassStudyPlan {
+  quizResult: QuizResult;
+  objectives: LearningObjective[];
+  resources: StudyResource[];
+  completedObjectives: Set<number>;
+}
+
 export interface StudyPlanState {
   quizResult: QuizResult | null;
   objectives: LearningObjective[];
@@ -37,12 +44,20 @@ export interface StudyPlanState {
 }
 
 export const useStudyPlan = (learningStyles: string[]) => {
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [objectives, setObjectives] = useState<LearningObjective[]>([]);
-  const [resources, setResources] = useState<StudyResource[]>([]);
-  const [completedObjectives, setCompletedObjectives] = useState<Set<number>>(new Set());
+  const [classPlans, setClassPlans] = useState<Map<string, ClassStudyPlan>>(new Map());
+  const [activeClass, setActiveClass] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Get current active plan
+  const currentPlan = activeClass ? classPlans.get(activeClass) : null;
+  const quizResult = currentPlan?.quizResult || null;
+  const objectives = currentPlan?.objectives || [];
+  const resources = currentPlan?.resources || [];
+  const completedObjectives = currentPlan?.completedObjectives || new Set<number>();
+
+  // Get all completed classes
+  const completedClasses = Array.from(classPlans.keys());
 
   const generateStudyPlan = useCallback(async (result: QuizResult) => {
     setIsLoading(true);
@@ -81,16 +96,23 @@ export const useStudyPlan = (learningStyles: string[]) => {
 
       const data = await response.json();
 
-      if (data.objectives) {
-        setObjectives(data.objectives);
-      }
-      if (data.resources) {
-        setResources(data.resources);
-      }
+      const newPlan: ClassStudyPlan = {
+        quizResult: result,
+        objectives: data.objectives || [],
+        resources: data.resources || [],
+        completedObjectives: new Set(),
+      };
+
+      setClassPlans(prev => {
+        const updated = new Map(prev);
+        updated.set(result.className, newPlan);
+        return updated;
+      });
+      setActiveClass(result.className);
 
       toast({
         title: "Study Plan Created",
-        description: "Personalized objectives and resources are ready!",
+        description: `Personalized plan for ${result.className} is ready!`,
       });
     } catch (error) {
       console.error("Study plan generation error:", error);
@@ -105,28 +127,41 @@ export const useStudyPlan = (learningStyles: string[]) => {
   }, [learningStyles, toast]);
 
   const setQuizResultAndGenerate = useCallback((result: QuizResult) => {
-    setQuizResult(result);
     generateStudyPlan(result);
   }, [generateStudyPlan]);
 
   const toggleObjective = useCallback((id: number) => {
-    setCompletedObjectives((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
+    if (!activeClass) return;
+    
+    setClassPlans(prev => {
+      const updated = new Map(prev);
+      const plan = updated.get(activeClass);
+      if (plan) {
+        const newCompleted = new Set(plan.completedObjectives);
+        if (newCompleted.has(id)) {
+          newCompleted.delete(id);
+        } else {
+          newCompleted.add(id);
+        }
+        updated.set(activeClass, { ...plan, completedObjectives: newCompleted });
       }
-      return newSet;
+      return updated;
     });
-  }, []);
+  }, [activeClass]);
 
   const clearStudyPlan = useCallback(() => {
-    setQuizResult(null);
-    setObjectives([]);
-    setResources([]);
-    setCompletedObjectives(new Set());
-  }, []);
+    if (!activeClass) return;
+    
+    setClassPlans(prev => {
+      const updated = new Map(prev);
+      updated.delete(activeClass);
+      return updated;
+    });
+    
+    // Set to next available class or null
+    const remaining = Array.from(classPlans.keys()).filter(c => c !== activeClass);
+    setActiveClass(remaining.length > 0 ? remaining[0] : null);
+  }, [activeClass, classPlans]);
 
   const completionPercentage = objectives.length > 0
     ? Math.round((completedObjectives.size / objectives.length) * 100)
@@ -143,5 +178,10 @@ export const useStudyPlan = (learningStyles: string[]) => {
     toggleObjective,
     clearStudyPlan,
     generateStudyPlan,
+    // New exports for multi-class support
+    completedClasses,
+    activeClass,
+    setActiveClass,
+    classPlans,
   };
 };
