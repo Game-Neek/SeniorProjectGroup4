@@ -179,18 +179,20 @@ Each question must have exactly 4 options with one correct answer.`;
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate a mini quiz with 5 questions",
+              description: "Generate a mini quiz with exactly 5 questions - no more, no less",
               parameters: {
                 type: "object",
                 properties: {
                   questions: {
                     type: "array",
+                    minItems: 5,
+                    maxItems: 5,
                     items: {
                       type: "object",
                       properties: {
                         id: { type: "number" },
                         question: { type: "string" },
-                        options: { type: "array", items: { type: "string" } },
+                        options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
                         explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
                       },
@@ -229,12 +231,14 @@ Create problems that require working through steps, not just multiple choice.`;
             type: "function",
             function: {
               name: "generate_exercises",
-              description: "Generate practice exercises with hints and solutions",
+              description: "Generate exactly 5 practice exercises with hints and solutions - no more, no less",
               parameters: {
                 type: "object",
                 properties: {
                   exercises: {
                     type: "array",
+                    minItems: 5,
+                    maxItems: 5,
                     items: {
                       type: "object",
                       properties: {
