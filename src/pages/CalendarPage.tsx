@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft, Plus, AlertTriangle } from "lucide-react";
+import { format, differenceInDays, parseISO } from "date-fns";
 
 interface CalendarEvent {
   id: string;
@@ -22,6 +22,34 @@ interface CalendarEvent {
   end_time: string | null;
   event_type: string | null;
 }
+
+const TEST_TYPES = ['test', 'exam', 'quiz', 'midterm', 'final'];
+
+const isTestEvent = (eventType: string | null): boolean => {
+  if (!eventType) return false;
+  return TEST_TYPES.some(type => eventType.toLowerCase().includes(type));
+};
+
+const getUrgencyInfo = (eventDate: string): { color: string; bgColor: string; label: string; daysLeft: number } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const eventDay = parseISO(eventDate);
+  const daysLeft = differenceInDays(eventDay, today);
+
+  if (daysLeft < 0) {
+    return { color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Past', daysLeft };
+  } else if (daysLeft === 0) {
+    return { color: 'text-destructive', bgColor: 'bg-destructive/20 border-destructive', label: 'Today!', daysLeft };
+  } else if (daysLeft <= 2) {
+    return { color: 'text-destructive', bgColor: 'bg-destructive/15 border-destructive/50', label: `${daysLeft}d`, daysLeft };
+  } else if (daysLeft <= 7) {
+    return { color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/15 border-orange-500/50', label: `${daysLeft}d`, daysLeft };
+  } else if (daysLeft <= 14) {
+    return { color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-500/15 border-yellow-500/50', label: `${daysLeft}d`, daysLeft };
+  } else {
+    return { color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-500/15 border-green-500/50', label: `${daysLeft}d`, daysLeft };
+  }
+};
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -236,39 +264,83 @@ export default function CalendarPage() {
             <h2 className="text-xl font-semibold text-foreground mb-4">
               Events for {date ? format(date, "MMMM d, yyyy") : "Selected Date"}
             </h2>
+            
+            {/* Urgency Legend for Tests */}
+            <div className="flex flex-wrap gap-3 mb-4 p-3 rounded-lg bg-muted/50">
+              <span className="text-xs text-muted-foreground font-medium">Test Urgency:</span>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-destructive/40" />
+                <span className="text-xs text-muted-foreground">≤2 days</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-orange-500/40" />
+                <span className="text-xs text-muted-foreground">3-7 days</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-yellow-500/40" />
+                <span className="text-xs text-muted-foreground">8-14 days</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-green-500/40" />
+                <span className="text-xs text-muted-foreground">15+ days</span>
+              </div>
+            </div>
+
             {selectedDateEvents.length === 0 ? (
               <p className="text-muted-foreground">No events for this date</p>
             ) : (
               <div className="space-y-4">
-                {selectedDateEvents.map((event) => (
-                  <Card key={event.id} className="p-4 border-border">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">{event.title}</h3>
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                        )}
-                        {event.start_time && event.end_time && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {event.start_time} - {event.end_time}
-                          </p>
-                        )}
-                        {event.event_type && (
-                          <span className="inline-block mt-2 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary capitalize">
-                            {event.event_type}
-                          </span>
-                        )}
+                {selectedDateEvents.map((event) => {
+                  const isTest = isTestEvent(event.event_type);
+                  const urgency = isTest ? getUrgencyInfo(event.event_date) : null;
+                  
+                  return (
+                    <Card 
+                      key={event.id} 
+                      className={`p-4 border transition-colors ${
+                        isTest && urgency ? urgency.bgColor : 'border-border'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {isTest && urgency && urgency.daysLeft >= 0 && urgency.daysLeft <= 2 && (
+                              <AlertTriangle className={`h-4 w-4 ${urgency.color}`} />
+                            )}
+                            <h3 className="font-semibold text-foreground">{event.title}</h3>
+                            {isTest && urgency && (
+                              <span className={`text-xs font-medium ${urgency.color}`}>
+                                {urgency.label}
+                              </span>
+                            )}
+                          </div>
+                          {event.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                          )}
+                          {event.start_time && event.end_time && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              {event.start_time} - {event.end_time}
+                            </p>
+                          )}
+                          {event.event_type && (
+                            <span className={`inline-block mt-2 px-2 py-1 text-xs rounded-full capitalize ${
+                              isTest ? `${urgency?.bgColor} ${urgency?.color}` : 'bg-primary/10 text-primary'
+                            }`}>
+                              {event.event_type}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteEvent(event.id)}
+                        >
+                          Delete
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteEvent(event.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </Card>
