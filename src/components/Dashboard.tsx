@@ -59,9 +59,13 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
     activeClass,
     setActiveClass,
     classPlans,
+    saveAllProgress,
   } = useStudyPlan(learningStyles);
 
   const handleSignOut = async () => {
+    // Save all progress before signing out
+    await saveAllProgress();
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({
