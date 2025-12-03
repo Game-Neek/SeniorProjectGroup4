@@ -205,7 +205,7 @@ export const StudyPlan = ({
                     <div
                       key={resource.id}
                       className="p-3 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
-                      onClick={() => openResource(resource)}
+                      onClick={() => resource.url ? window.open(resource.url, '_blank') : openResource(resource)}
                     >
                       <div className="flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
@@ -220,13 +220,22 @@ export const StudyPlan = ({
                               <Badge variant="outline" className="text-xs">
                                 {resource.estimatedTime}
                               </Badge>
-                              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              {resource.url && (
+                                <ExternalLink className="w-3 h-3 text-primary" />
+                              )}
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground mb-1">{resource.description}</p>
-                          <Badge variant="secondary" className="text-xs">
-                            {resource.topic}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {resource.topic}
+                            </Badge>
+                            {resource.source && (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                {resource.source}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
