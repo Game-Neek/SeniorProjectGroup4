@@ -26,6 +26,8 @@ export interface StudyResource {
   description: string;
   estimatedTime: string;
   content?: string;
+  url?: string;
+  source?: string;
 }
 
 export interface ClassStudyPlan {

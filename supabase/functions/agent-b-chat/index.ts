@@ -77,11 +77,18 @@ Generate learning objectives that:
 2. Prioritize topics based on importance (high/medium/low)
 3. Include specific, actionable goals
 
-Generate study resources that:
-1. Match the student's learning style (${learningStyles?.join(", ") || "general"})
-2. Focus on weak areas first
-3. Include a mix of resource types (videos for visual, readings for reading, practice for kinesthetic, audio for auditory)
-4. Provide realistic time estimates`;
+Generate study resources with REAL external links:
+1. For VIDEO resources: Generate YouTube search URLs like "https://www.youtube.com/results?search_query=TOPIC+CLASSNAME+tutorial" 
+2. For READING resources: Link to educational sites like Khan Academy, Wikipedia, or search URLs
+3. Match the student's learning style (${learningStyles?.join(", ") || "general"})
+4. Focus on weak areas first
+5. Include source name (e.g., "YouTube", "Khan Academy", "Wikipedia")
+
+URL EXAMPLES:
+- YouTube video: "https://www.youtube.com/results?search_query=chemical+bonding+chemistry+tutorial"
+- Khan Academy: "https://www.khanacademy.org/search?search_query=TOPIC"  
+- Wikipedia: "https://en.wikipedia.org/wiki/TOPIC"
+- Google Scholar: "https://scholar.google.com/scholar?q=TOPIC"`;
 
       toolConfig = {
         tools: [
@@ -89,7 +96,7 @@ Generate study resources that:
             type: "function",
             function: {
               name: "generate_study_plan",
-              description: "Generate personalized learning objectives and study resources",
+              description: "Generate personalized learning objectives and study resources with real URLs",
               parameters: {
                 type: "object",
                 properties: {
@@ -117,9 +124,11 @@ Generate study resources that:
                         type: { type: "string", enum: ["video", "reading", "practice", "audio"] },
                         topic: { type: "string" },
                         description: { type: "string" },
-                        estimatedTime: { type: "string" }
+                        estimatedTime: { type: "string" },
+                        url: { type: "string", description: "Direct URL to YouTube search, Khan Academy, Wikipedia, etc." },
+                        source: { type: "string", description: "Source name like YouTube, Khan Academy, Wikipedia" }
                       },
-                      required: ["id", "title", "type", "topic", "description", "estimatedTime"]
+                      required: ["id", "title", "type", "topic", "description", "estimatedTime", "url", "source"]
                     }
                   }
                 },
