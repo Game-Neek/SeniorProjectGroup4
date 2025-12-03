@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Target, BookOpen, Lightbulb, CheckCircle2, Loader2, 
-  RefreshCw, Video, FileText, PenTool, Headphones, ExternalLink
+  RefreshCw, Video, FileText, PenTool, Headphones, ExternalLink, Copy
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizResult, LearningObjective, StudyResource } from "@/hooks/useStudyPlan";
+import { toast } from "sonner";
 
 interface StudyPlanProps {
   quizResult: QuizResult | null;
@@ -53,6 +54,31 @@ export const StudyPlan = ({
   const [selectedResource, setSelectedResource] = useState<StudyResource | null>(null);
   const [resourceContent, setResourceContent] = useState<string>("");
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+
+  const handleResourceClick = (resource: StudyResource) => {
+    if (resource.url) {
+      // Try to open in new tab, with fallback to copy URL
+      const newWindow = window.open(resource.url, '_blank');
+      if (!newWindow || newWindow.closed) {
+        // Window was blocked, copy URL to clipboard instead
+        navigator.clipboard.writeText(resource.url).then(() => {
+          toast.success("Link copied to clipboard!", {
+            description: resource.url,
+            action: {
+              label: "Open",
+              onClick: () => window.open(resource.url, '_blank'),
+            },
+          });
+        }).catch(() => {
+          toast.info("External Link", {
+            description: resource.url,
+          });
+        });
+      }
+    } else {
+      openResource(resource);
+    }
+  };
 
   const openResource = async (resource: StudyResource) => {
     setSelectedResource(resource);
@@ -205,7 +231,7 @@ export const StudyPlan = ({
                     <div
                       key={resource.id}
                       className="p-3 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
-                      onClick={() => resource.url ? window.open(resource.url, '_blank') : openResource(resource)}
+                      onClick={() => handleResourceClick(resource)}
                     >
                       <div className="flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
