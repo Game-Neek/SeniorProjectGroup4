@@ -131,7 +131,8 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
   const handleSubmitAnswer = () => {
     if (!selectedAnswer) return;
     
-    const answerIndex = parseInt(selectedAnswer);
+    // "idk" (I don't know) is treated as -1, always incorrect
+    const answerIndex = selectedAnswer === "idk" ? -1 : parseInt(selectedAnswer);
     setAnswers((prev) => ({ ...prev, [currentQuestionIndex]: answerIndex }));
     setShowResult(true);
   };
@@ -396,6 +397,33 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
                   </div>
                 );
               })}
+              
+              {/* I don't know option */}
+              {currentQuestion && (
+                <div
+                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all border-dashed ${
+                    showResult
+                      ? selectedAnswer === "idk"
+                        ? "border-amber-500 bg-amber-500/10"
+                        : "border-border"
+                      : selectedAnswer === "idk"
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/30 hover:border-primary/50 cursor-pointer"
+                  }`}
+                  onClick={() => !showResult && handleAnswerSelect("idk")}
+                >
+                  <RadioGroupItem value="idk" id="option-idk" />
+                  <Label
+                    htmlFor="option-idk"
+                    className={`flex-1 cursor-pointer italic text-muted-foreground ${showResult ? "cursor-default" : ""}`}
+                  >
+                    I don't know
+                  </Label>
+                  {showResult && selectedAnswer === "idk" && (
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Skipped</span>
+                  )}
+                </div>
+              )}
             </RadioGroup>
           </div>
 
