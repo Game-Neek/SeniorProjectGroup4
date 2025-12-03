@@ -50,13 +50,7 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
 
-  const generateSingleQuiz = async (session: any, variant: number): Promise<QuizSet | null> => {
-    const focusDescriptions = [
-      "foundational concepts and basic understanding",
-      "applied knowledge and problem-solving",
-      "advanced topics and deeper comprehension"
-    ];
-    
+  const generateSingleQuiz = async (session: any, topic: string, index: number): Promise<QuizSet | null> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agent-b-chat`,
@@ -69,12 +63,12 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
           body: JSON.stringify({
             messages: [{
               role: "user",
-              content: `Generate a 5-question mini-quiz focusing on ${focusDescriptions[variant]} for these topics: ${weakAreas.join(", ")}. Make questions targeted and helpful.`
+              content: `Generate a 5-question mini-quiz specifically focused on: "${topic}". Make all questions directly test understanding of this specific topic.`
             }],
             learningStyles,
             requestType: "mini-quiz",
             className,
-            weakAreas,
+            weakAreas: [topic],
           }),
         }
       );
@@ -83,11 +77,12 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
 
       const data = await response.json();
       if (data.questions && data.questions.length > 0) {
-        const titles = ["Foundations Quiz", "Applied Quiz", "Advanced Quiz"];
+        // Truncate long topic names for title
+        const shortTopic = topic.length > 40 ? topic.substring(0, 40) + "..." : topic;
         return {
-          id: variant + 1,
-          title: titles[variant],
-          description: focusDescriptions[variant],
+          id: index + 1,
+          title: shortTopic,
+          description: topic,
           questions: data.questions.slice(0, 5)
         };
       }
@@ -111,12 +106,11 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Generate 3 quiz sets in parallel
-      const results = await Promise.all([
-        generateSingleQuiz(session, 0),
-        generateSingleQuiz(session, 1),
-        generateSingleQuiz(session, 2)
-      ]);
+      // Generate quiz sets for each weak area (up to 3)
+      const topicsToQuiz = weakAreas.slice(0, 3);
+      const results = await Promise.all(
+        topicsToQuiz.map((topic, index) => generateSingleQuiz(session, topic, index))
+      );
 
       const validSets = results.filter((set): set is QuizSet => set !== null);
       

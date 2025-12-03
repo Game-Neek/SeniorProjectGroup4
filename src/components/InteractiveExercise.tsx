@@ -51,13 +51,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
 
-  const generateSingleSet = async (session: any, variant: number): Promise<ExerciseSet | null> => {
-    const focusDescriptions = [
-      "beginner-friendly problems with step-by-step guidance",
-      "intermediate challenges requiring applied knowledge",
-      "advanced problems testing deeper understanding"
-    ];
-    
+  const generateSingleSet = async (session: any, topic: string, index: number): Promise<ExerciseSet | null> => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agent-b-chat`,
@@ -70,12 +64,12 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
           body: JSON.stringify({
             messages: [{
               role: "user",
-              content: `Generate 5 ${focusDescriptions[variant]} for these topics: ${weakAreas.join(", ")}. Each exercise should have a problem, a hint, and a detailed solution.`
+              content: `Generate 5 practice exercises specifically focused on: "${topic}". Each exercise should directly practice this specific topic with a problem, hint, and detailed solution.`
             }],
             learningStyles,
             requestType: "interactive-exercises",
             className,
-            weakAreas,
+            weakAreas: [topic],
           }),
         }
       );
@@ -84,11 +78,12 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
 
       const data = await response.json();
       if (data.exercises && data.exercises.length > 0) {
-        const titles = ["Beginner Exercises", "Intermediate Exercises", "Advanced Exercises"];
+        // Truncate long topic names for title
+        const shortTopic = topic.length > 40 ? topic.substring(0, 40) + "..." : topic;
         return {
-          id: variant + 1,
-          title: titles[variant],
-          description: focusDescriptions[variant],
+          id: index + 1,
+          title: shortTopic,
+          description: topic,
           exercises: data.exercises.slice(0, 5)
         };
       }
@@ -113,12 +108,11 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Generate 3 exercise sets in parallel
-      const results = await Promise.all([
-        generateSingleSet(session, 0),
-        generateSingleSet(session, 1),
-        generateSingleSet(session, 2)
-      ]);
+      // Generate exercise sets for each weak area (up to 3)
+      const topicsToExercise = weakAreas.slice(0, 3);
+      const results = await Promise.all(
+        topicsToExercise.map((topic, index) => generateSingleSet(session, topic, index))
+      );
 
       const validSets = results.filter((set): set is ExerciseSet => set !== null);
       
