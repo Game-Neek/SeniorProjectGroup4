@@ -15,6 +15,7 @@ import { StudyPlan } from "./StudyPlan";
 import { MiniQuiz } from "./MiniQuiz";
 import { InteractiveExercise } from "./InteractiveExercise";
 import { PracticeHistory } from "./PracticeHistory";
+import { TestReminders } from "./TestReminders";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -189,6 +190,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
 
         {/* Syllabus Upload */}
         <SyllabusUpload onUploadComplete={() => setSyllabusRefreshTrigger(prev => prev + 1)} />
+
+        {/* Test Reminders */}
+        <TestReminders />
 
         {/* Placement Quiz */}
         <PlacementQuiz 
