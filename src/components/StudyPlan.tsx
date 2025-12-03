@@ -57,24 +57,19 @@ export const StudyPlan = ({
 
   const handleResourceClick = (resource: StudyResource) => {
     if (resource.url) {
-      // Try to open in new tab, with fallback to copy URL
-      const newWindow = window.open(resource.url, '_blank');
-      if (!newWindow || newWindow.closed) {
-        // Window was blocked, copy URL to clipboard instead
-        navigator.clipboard.writeText(resource.url).then(() => {
-          toast.success("Link copied to clipboard!", {
-            description: resource.url,
-            action: {
-              label: "Open",
-              onClick: () => window.open(resource.url, '_blank'),
-            },
-          });
-        }).catch(() => {
-          toast.info("External Link", {
-            description: resource.url,
-          });
+      // Copy URL to clipboard and show toast - sandbox blocks window.open
+      navigator.clipboard.writeText(resource.url).then(() => {
+        toast.success("Link copied to clipboard!", {
+          description: "Open in a new browser tab to view the resource.",
+          duration: 5000,
         });
-      }
+      }).catch(() => {
+        // Fallback: show the URL in an alert
+        toast.info("Resource Link", {
+          description: resource.url,
+          duration: 8000,
+        });
+      });
     } else {
       openResource(resource);
     }
