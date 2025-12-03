@@ -25,6 +25,7 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [className, setClassName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -52,9 +53,22 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
     setSyllabi(data || []);
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a syllabus file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!className.trim()) {
       toast({
@@ -71,13 +85,12 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const filePath = `${user.id}/${Date.now()}-${selectedFile.name}`;
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
         .from("syllabi")
-        .upload(filePath, file);
+        .upload(filePath, selectedFile);
 
       if (uploadError) throw uploadError;
 
@@ -85,9 +98,9 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       const { error: dbError } = await supabase.from("syllabi").insert({
         user_id: user.id,
         class_name: className.trim(),
-        file_name: file.name,
+        file_name: selectedFile.name,
         file_path: filePath,
-        file_size: file.size,
+        file_size: selectedFile.size,
       });
 
       if (dbError) throw dbError;
@@ -111,10 +124,11 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
 
       toast({
         title: "Syllabus uploaded",
-        description: `${file.name} has been uploaded successfully`,
+        description: `${selectedFile.name} has been uploaded successfully`,
       });
 
       setClassName("");
+      setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchSyllabi();
       onUploadComplete?.();
@@ -215,25 +229,39 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="syllabus">Syllabus File (PDF)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="syllabus"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                ref={fileInputRef}
-                onChange={handleUpload}
-                disabled={isUploading}
-                className="file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-              />
-            </div>
+            <Input
+              id="syllabus"
+              type="file"
+              accept=".pdf,.doc,.docx"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              disabled={isUploading}
+              className="file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
           </div>
         </div>
-        {isUploading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Uploading...
-          </div>
+        {selectedFile && (
+          <p className="text-sm text-muted-foreground">
+            Selected: {selectedFile.name}
+          </p>
         )}
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isUploading || !selectedFile || !className.trim()}
+          className="w-full md:w-auto"
+        >
+          {isUploading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Syllabus
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Uploaded Syllabi List */}
