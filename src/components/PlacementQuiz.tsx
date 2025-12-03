@@ -29,9 +29,10 @@ interface PlacementQuizProps {
   learningStyles: string[];
   onQuizComplete: (result: QuizResult) => void;
   refreshTrigger?: number;
+  completedClasses?: string[];
 }
 
-export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger }: PlacementQuizProps) => {
+export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, completedClasses = [] }: PlacementQuizProps) => {
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -215,37 +216,90 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger }
         </div>
       ) : questions.length === 0 ? (
         <div className="space-y-4">
-          <div className="flex gap-3">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {syllabi.map((s) => (
-                  <SelectItem key={s.id} value={s.class_name}>
-                    {s.class_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={generateQuiz}
-              disabled={isGenerating || !selectedClass}
-              className="bg-[image:var(--gradient-primary)] hover:opacity-90"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <FileQuestion className="w-4 h-4 mr-2" />
-                  Generate Quiz
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Show completed classes summary */}
+          {completedClasses.length > 0 && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 mb-4">
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="font-medium">Completed quizzes:</span>
+                <span>{completedClasses.join(", ")}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Classes without quizzes */}
+          {syllabi.filter(s => !completedClasses.includes(s.class_name)).length > 0 ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Select a class to take a placement quiz:
+              </p>
+              <div className="flex gap-3">
+                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {syllabi.map((s) => {
+                      const isCompleted = completedClasses.includes(s.class_name);
+                      return (
+                        <SelectItem key={s.id} value={s.class_name}>
+                          <div className="flex items-center gap-2">
+                            {isCompleted && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                            <span>{s.class_name}</span>
+                            {isCompleted && <span className="text-xs text-muted-foreground">(completed)</span>}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={generateQuiz}
+                  disabled={isGenerating || !selectedClass}
+                  className="bg-[image:var(--gradient-primary)] hover:opacity-90"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileQuestion className="w-4 h-4 mr-2" />
+                      {completedClasses.includes(selectedClass) ? "Retake Quiz" : "Generate Quiz"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-500" />
+              <p className="text-foreground font-medium">All classes completed!</p>
+              <p className="text-sm text-muted-foreground">You can retake any quiz by selecting a class above.</p>
+              <div className="flex gap-3 mt-4 justify-center">
+                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Retake a quiz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {syllabi.map((s) => (
+                      <SelectItem key={s.id} value={s.class_name}>
+                        {s.class_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={generateQuiz}
+                  disabled={isGenerating || !selectedClass}
+                  variant="outline"
+                >
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Retake"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       ) : quizCompleted ? (
         // Results Screen

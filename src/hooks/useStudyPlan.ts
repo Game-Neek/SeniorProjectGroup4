@@ -118,10 +118,37 @@ export const useStudyPlan = (learningStyles: string[]) => {
     plan: ClassStudyPlan,
     userId: string
   ) => {
-    const { error } = await supabase
+    // First try to update existing record
+    const { data: existing } = await supabase
       .from('quiz_results')
-      .upsert(
-        {
+      .select('id')
+      .eq('user_id', userId)
+      .eq('class_name', plan.quizResult.className)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing record
+      const { error } = await supabase
+        .from('quiz_results')
+        .update({
+          score: plan.quizResult.score,
+          total_questions: plan.quizResult.totalQuestions,
+          weak_areas: plan.quizResult.weakAreas,
+          strong_areas: plan.quizResult.strongAreas,
+          objectives: plan.objectives as never,
+          resources: plan.resources as never,
+          completed_objectives: Array.from(plan.completedObjectives),
+        })
+        .eq('id', existing.id);
+
+      if (error) {
+        console.error('Error updating quiz result:', error);
+      }
+    } else {
+      // Insert new record
+      const { error } = await supabase
+        .from('quiz_results')
+        .insert({
           user_id: userId,
           class_name: plan.quizResult.className,
           score: plan.quizResult.score,
@@ -131,11 +158,11 @@ export const useStudyPlan = (learningStyles: string[]) => {
           objectives: plan.objectives as unknown as Record<string, unknown>,
           resources: plan.resources as unknown as Record<string, unknown>,
           completed_objectives: Array.from(plan.completedObjectives),
-        } as never
-      );
+        } as never);
 
-    if (error) {
-      console.error('Error saving quiz result:', error);
+      if (error) {
+        console.error('Error inserting quiz result:', error);
+      }
     }
   }, []);
 

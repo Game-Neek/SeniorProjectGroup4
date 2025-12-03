@@ -186,6 +186,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           learningStyles={learningStyles} 
           onQuizComplete={setQuizResultAndGenerate}
           refreshTrigger={syllabusRefreshTrigger}
+          completedClasses={completedClasses}
         />
 
         {/* Study Plan - shown after quiz completion */}
