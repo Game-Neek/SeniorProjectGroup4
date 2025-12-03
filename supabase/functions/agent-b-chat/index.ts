@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic } = await req.json();
+    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic, weakAreas: requestWeakAreas } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -153,6 +153,107 @@ Include a good mix of video tutorials, reading materials, and practice exercises
           }
         ],
         tool_choice: { type: "function", function: { name: "generate_study_plan" } }
+      };
+    } else if (requestType === "mini-quiz") {
+      // Generate a quick 5-question mini quiz for weak areas
+      useToolCalling = true;
+      const focusAreas = requestWeakAreas || [];
+      systemPrompt = `You are AgentB creating a quick mini-quiz to help a student review their weak areas.
+
+Class: ${className || "the course"}
+Focus Areas: ${focusAreas.join(", ") || "general review"}
+${learningStyleContext}
+
+Generate exactly 5 multiple-choice questions that:
+1. Target the specific weak areas mentioned
+2. Help reinforce understanding of difficult concepts
+3. Include clear explanations for each answer
+4. Progress from easier to slightly harder questions
+
+Each question must have exactly 4 options with one correct answer.`;
+
+      toolConfig = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generate_quiz",
+              description: "Generate a mini quiz with 5 questions",
+              parameters: {
+                type: "object",
+                properties: {
+                  questions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        question: { type: "string" },
+                        options: { type: "array", items: { type: "string" } },
+                        correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
+                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                      },
+                      required: ["id", "question", "options", "correctIndex", "explanation"]
+                    }
+                  }
+                },
+                required: ["questions"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "generate_quiz" } }
+      };
+    } else if (requestType === "interactive-exercises") {
+      // Generate practice exercises with hints and solutions
+      useToolCalling = true;
+      const focusAreas = requestWeakAreas || [];
+      systemPrompt = `You are AgentB creating interactive practice exercises for a student.
+
+Class: ${className || "the course"}
+Focus Areas: ${focusAreas.join(", ") || "general practice"}
+${learningStyleContext}
+
+Generate exactly 5 practice problems that:
+1. Target the specific weak areas mentioned
+2. Include varying difficulty levels (easy, medium, hard)
+3. Provide helpful hints that guide without giving away the answer
+4. Include detailed step-by-step solutions
+
+Create problems that require working through steps, not just multiple choice.`;
+
+      toolConfig = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generate_exercises",
+              description: "Generate practice exercises with hints and solutions",
+              parameters: {
+                type: "object",
+                properties: {
+                  exercises: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        problem: { type: "string", description: "The problem statement" },
+                        hint: { type: "string", description: "A helpful hint without giving away the answer" },
+                        solution: { type: "string", description: "Step-by-step solution" },
+                        topic: { type: "string", description: "The topic this problem covers" },
+                        difficulty: { type: "string", enum: ["easy", "medium", "hard"] }
+                      },
+                      required: ["id", "problem", "hint", "solution", "topic", "difficulty"]
+                    }
+                  }
+                },
+                required: ["exercises"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "generate_exercises" } }
       };
     } else if (requestType === "placement-quiz-interactive") {
       // Return structured JSON for interactive quiz

@@ -12,6 +12,8 @@ import {
 import { SyllabusUpload } from "./SyllabusUpload";
 import { PlacementQuiz } from "./PlacementQuiz";
 import { StudyPlan } from "./StudyPlan";
+import { MiniQuiz } from "./MiniQuiz";
+import { InteractiveExercise } from "./InteractiveExercise";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +45,8 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const navigate = useNavigate();
   const { toast } = useToast();
   const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
+  const [showMiniQuiz, setShowMiniQuiz] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
   
   const {
     quizResult,
@@ -276,7 +280,13 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                 </div>
                 <p className="text-2xl font-bold text-foreground mb-1">{completedClasses.length > 0 ? 3 : 0}</p>
                 <p className="text-xs text-muted-foreground">Available today</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" disabled={completedClasses.length === 0}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-3" 
+                  disabled={completedClasses.length === 0 || !quizResult}
+                  onClick={() => setShowMiniQuiz(true)}
+                >
                   Start Quiz
                 </Button>
               </div>
@@ -289,7 +299,13 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                 </div>
                 <p className="text-2xl font-bold text-foreground mb-1">{resources.length}</p>
                 <p className="text-xs text-muted-foreground">New exercises</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" disabled={completedClasses.length === 0}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-3" 
+                  disabled={completedClasses.length === 0 || !quizResult}
+                  onClick={() => setShowExercises(true)}
+                >
                   Practice Now
                 </Button>
               </div>
@@ -302,7 +318,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                 </div>
                 <p className="text-2xl font-bold text-foreground mb-1">∞</p>
                 <p className="text-xs text-muted-foreground">Unlimited hints</p>
-                <Button variant="outline" size="sm" className="w-full mt-3">View Tips</Button>
+                <Button variant="outline" size="sm" className="w-full mt-3" onClick={onOpenChat}>View Tips</Button>
               </div>
 
               {/* Confidence Rating */}
@@ -664,6 +680,28 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           </div>
         </Card>
       </main>
+
+      {/* Mini Quiz Modal */}
+      {quizResult && (
+        <MiniQuiz
+          isOpen={showMiniQuiz}
+          onClose={() => setShowMiniQuiz(false)}
+          className={quizResult.className}
+          weakAreas={quizResult.weakAreas}
+          learningStyles={learningStyles}
+        />
+      )}
+
+      {/* Interactive Exercises Modal */}
+      {quizResult && (
+        <InteractiveExercise
+          isOpen={showExercises}
+          onClose={() => setShowExercises(false)}
+          className={quizResult.className}
+          weakAreas={quizResult.weakAreas}
+          learningStyles={learningStyles}
+        />
+      )}
     </div>
   );
 };
