@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          assignment_title: string
+          class_name: string
+          due_date: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          learning_objectives: string[] | null
+          parsed_content: string | null
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_title: string
+          class_name: string
+          due_date?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          learning_objectives?: string[] | null
+          parsed_content?: string | null
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_title?: string
+          class_name?: string
+          due_date?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          learning_objectives?: string[] | null
+          parsed_content?: string | null
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string | null

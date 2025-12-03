@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic, weakAreas: requestWeakAreas } = await req.json();
+    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic, weakAreas: requestWeakAreas, assignmentId, assignmentTitle, fileUrl } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -305,6 +305,64 @@ ${learningStyleContext}
 ${resourceTypeGuide[resourceType as keyof typeof resourceTypeGuide] || "Create helpful educational content."}
 
 Create comprehensive, engaging content that helps the student understand and master this topic. Use clear formatting with headers, bullet points, and examples where appropriate.`;
+    } else if (requestType === "parse-assignment") {
+      // Parse assignment and extract learning objectives
+      useToolCalling = true;
+      systemPrompt = `You are AgentB analyzing a student's assignment to extract learning objectives.
+
+Assignment: ${assignmentTitle || "Assignment"}
+Class: ${className || "the course"}
+${learningStyleContext}
+
+Analyze this assignment and extract:
+1. The main learning objectives the professor expects students to master
+2. Key topics and concepts covered
+3. Skills being assessed
+
+Be specific and actionable. These objectives will be used to generate personalized study content.`;
+
+      toolConfig = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_assignment_objectives",
+              description: "Extract learning objectives and key topics from an assignment",
+              parameters: {
+                type: "object",
+                properties: {
+                  learningObjectives: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "List of specific learning objectives from the assignment"
+                  },
+                  keyTopics: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Key topics and concepts covered"
+                  },
+                  skillsAssessed: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Skills being tested or developed"
+                  },
+                  suggestedStudyAreas: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Recommended areas to focus on for this assignment"
+                  },
+                  parsedContent: {
+                    type: "string",
+                    description: "Brief summary of the assignment content"
+                  }
+                },
+                required: ["learningObjectives", "keyTopics", "parsedContent"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "extract_assignment_objectives" } }
+      };
     } else if (requestType === "placement-quiz") {
       systemPrompt = `You are AgentB, an intelligent AI tutor creating a placement quiz for a student.
       

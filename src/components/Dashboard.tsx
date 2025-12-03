@@ -10,6 +10,7 @@ import {
   ClipboardList, Bell, BookMarked, AlertTriangle, Star, Zap, Clock
 } from "lucide-react";
 import { SyllabusUpload } from "./SyllabusUpload";
+import { AssignmentUpload } from "./AssignmentUpload";
 import { PlacementQuiz } from "./PlacementQuiz";
 import { StudyPlan } from "./StudyPlan";
 import { MiniQuiz } from "./MiniQuiz";
@@ -190,6 +191,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
 
         {/* Syllabus Upload */}
         <SyllabusUpload onUploadComplete={() => setSyllabusRefreshTrigger(prev => prev + 1)} />
+
+        {/* Assignment Upload */}
+        <AssignmentUpload learningStyles={learningStyles} />
 
         {/* Test Reminders */}
         <TestReminders />
