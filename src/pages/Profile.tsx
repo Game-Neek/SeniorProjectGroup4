@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2 } from "lucide-react";
 
 interface UserClass {
@@ -44,7 +45,6 @@ interface LearningResource {
 }
 
 export default function Profile() {
-  const [profile, setProfile] = useState<Profile>({ full_name: "", email: "", university_id: "" });
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [universities, setUniversities] = useState<{ id: string; name: string }[]>([]);
@@ -58,6 +58,21 @@ export default function Profile() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile, updateProfile, saveProfile, hasChanges } = useProfile();
+
+  // Save profile when navigating away
+  const handleNavigateBack = async () => {
+    if (hasChanges) {
+      const saved = await saveProfile();
+      if (saved) {
+        toast({
+          title: "Profile saved",
+          description: "Your profile has been automatically saved",
+        });
+      }
+    }
+    navigate("/");
+  };
 
   useEffect(() => {
     checkAuthAndFetchData();
@@ -68,17 +83,6 @@ export default function Profile() {
     if (!session) {
       navigate("/auth");
       return;
-    }
-
-    // Fetch profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileData) {
-      setProfile(profileData);
     }
 
     // Fetch universities
@@ -177,18 +181,8 @@ export default function Profile() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: profile.full_name,
-        university_id: profile.university_id,
-      })
-      .eq("id", session.user.id);
-
-    if (error) {
+    const saved = await saveProfile();
+    if (!saved) {
       toast({
         title: "Error",
         description: "Failed to update profile",
@@ -312,7 +306,7 @@ export default function Profile() {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="icon" onClick={handleNavigateBack}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Profile & Classes</h1>
@@ -330,7 +324,7 @@ export default function Profile() {
               <Input
                 id="full_name"
                 value={profile.full_name || ""}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                onChange={(e) => updateProfile({ full_name: e.target.value })}
               />
             </div>
 
@@ -348,7 +342,7 @@ export default function Profile() {
               <Label htmlFor="university">University</Label>
               <Select
                 value={profile.university_id || ""}
-                onValueChange={(value) => setProfile({ ...profile, university_id: value })}
+                onValueChange={(value) => updateProfile({ university_id: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your university" />

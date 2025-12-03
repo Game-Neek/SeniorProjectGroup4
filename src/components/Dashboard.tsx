@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useStudyPlan } from "@/hooks/useStudyPlan";
+import { useProfile } from "@/hooks/useProfile";
 
 interface DashboardProps {
   learningStyles: string[];
@@ -48,6 +49,8 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
   const [showMiniQuiz, setShowMiniQuiz] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
+
+  const { saveProfile } = useProfile();
   
   const {
     quizResult,
@@ -68,8 +71,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   } = useStudyPlan(learningStyles);
 
   const handleSignOut = async () => {
-    // Save all progress before signing out
+    // Save all progress and profile before signing out
     await saveAllProgress();
+    await saveProfile();
     
     const { error } = await supabase.auth.signOut();
     if (error) {
