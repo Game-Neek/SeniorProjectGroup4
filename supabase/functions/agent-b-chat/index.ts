@@ -133,15 +133,33 @@ Generate study resources that:
     } else if (requestType === "placement-quiz-interactive") {
       // Return structured JSON for interactive quiz
       useToolCalling = true;
-      systemPrompt = `You are AgentB creating a placement quiz. Generate exactly 10 multiple-choice questions for: ${className || "the subject"}.
+      systemPrompt = `You are AgentB creating a comprehensive placement quiz. Generate exactly 20 multiple-choice questions for: ${className || "the subject"}.
 
 ${learningStyleContext}
 
-Requirements:
-- Questions should progress from basic to advanced
-- Each question must have exactly 4 options
-- Include clear explanations for the correct answer
-- Cover key foundational concepts for this course`;
+IMPORTANT: Create a thorough assessment that covers ALL key topics from this course.
+
+Structure the questions in 4 sections:
+1. **Section 1: Fundamentals (Questions 1-5)** - Basic foundational concepts every student should know
+2. **Section 2: Core Concepts (Questions 6-10)** - Essential course material and key principles  
+3. **Section 3: Applied Knowledge (Questions 11-15)** - Application of concepts to real problems
+4. **Section 4: Advanced Topics (Questions 16-20)** - Challenging questions testing deeper understanding
+
+Requirements for EACH question:
+- Must have exactly 4 distinct options (no duplicates, no "all of the above")
+- Include a detailed explanation (2-3 sentences) that teaches the concept
+- Explanations should help visual/reading learners understand WHY the answer is correct
+- Cover different subtopics within the course (don't repeat the same concept)
+- Questions should test understanding, not just memorization
+- Include real-world applications where relevant
+
+Topics to cover (adapt to the specific course):
+- Key definitions and terminology
+- Core principles and theories
+- Common formulas/processes/methodologies
+- Problem-solving applications
+- Connections between concepts
+- Edge cases and exceptions`;
     } else if (requestType === "resource-content") {
       // Generate detailed content for a study resource
       const resourceTypeGuide = {
