@@ -6,10 +6,10 @@ import { LearningStyleQuiz } from "@/components/LearningStyleQuiz";
 import { Dashboard } from "@/components/Dashboard";
 import { ChatInterface } from "@/components/ChatInterface";
 
-type AppState = "hero" | "quiz" | "dashboard";
+type AppState = "hero" | "quiz" | "dashboard" | "loading";
 
 const Index = () => {
-  const [appState, setAppState] = useState<AppState>("hero");
+  const [appState, setAppState] = useState<AppState>("loading");
   const [learningStyles, setLearningStyles] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -17,6 +17,16 @@ const Index = () => {
 
   useEffect(() => {
     checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (!session) {
+        setAppState("hero");
+        setLearningStyles([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const checkAuth = async () => {
@@ -24,9 +34,22 @@ const Index = () => {
     setIsAuthenticated(!!session);
     
     if (session) {
-      setAppState("dashboard");
-      // Mock learning styles for now - could fetch from user preferences
-      setLearningStyles(["visual", "reading"]);
+      // Check if user has completed learning style quiz
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('learning_styles')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profile?.learning_styles && profile.learning_styles.length > 0) {
+        setLearningStyles(profile.learning_styles);
+        setAppState("dashboard");
+      } else {
+        // Force quiz for new users without learning styles
+        setAppState("quiz");
+      }
+    } else {
+      setAppState("hero");
     }
   };
 
@@ -38,10 +61,27 @@ const Index = () => {
     }
   };
 
-  const handleQuizComplete = (styles: string[]) => {
+  const handleQuizComplete = async (styles: string[]) => {
+    // Save learning styles to profile
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase
+        .from('profiles')
+        .update({ learning_styles: styles })
+        .eq('id', session.user.id);
+    }
+    
     setLearningStyles(styles);
     setAppState("dashboard");
   };
+
+  if (appState === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>
