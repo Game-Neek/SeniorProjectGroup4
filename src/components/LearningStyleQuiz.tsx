@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { BookOpen, Eye, Ear, Hand, PenTool, ArrowRight } from "lucide-react";
 
@@ -44,26 +44,30 @@ const questions = [
 
 export const LearningStyleQuiz = ({ onComplete }: LearningStyleQuizProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, string[]>>({});
 
-  const handleAnswer = (value: string) => {
-    setAnswers({ ...answers, [currentQuestion]: value });
+  const handleAnswerToggle = (value: string) => {
+    const currentAnswers = answers[currentQuestion] || [];
+    const newAnswers = currentAnswers.includes(value)
+      ? currentAnswers.filter(v => v !== value)
+      : [...currentAnswers, value];
+    setAnswers({ ...answers, [currentQuestion]: newAnswers });
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Calculate learning styles from answers
+      // Calculate learning styles from all answers
       const styleCount: Record<string, number> = {};
-      Object.values(answers).forEach(style => {
+      Object.values(answers).flat().forEach(style => {
         styleCount[style] = (styleCount[style] || 0) + 1;
       });
       
-      // Get top 2-3 learning styles
+      // Get top learning styles (those with highest counts)
       const sortedStyles = Object.entries(styleCount)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(([style]) => style);
       
       onComplete(sortedStyles);
@@ -71,7 +75,8 @@ export const LearningStyleQuiz = ({ onComplete }: LearningStyleQuizProps) => {
   };
 
   const question = questions[currentQuestion];
-  const isAnswered = answers[currentQuestion] !== undefined;
+  const currentAnswers = answers[currentQuestion] || [];
+  const isAnswered = currentAnswers.length > 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
@@ -93,23 +98,27 @@ export const LearningStyleQuiz = ({ onComplete }: LearningStyleQuizProps) => {
 
           {/* Question */}
           <div className="pt-4">
-            <h2 className="text-2xl font-bold text-foreground mb-6">{question.question}</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{question.question}</h2>
+            <p className="text-sm text-muted-foreground mb-6">Select all that apply</p>
             
-            <RadioGroup 
-              value={answers[currentQuestion] || ""} 
-              onValueChange={handleAnswer}
-              className="space-y-3"
-            >
+            <div className="space-y-3">
               {question.options.map((option) => {
                 const Icon = option.icon;
+                const isSelected = currentAnswers.includes(option.value);
                 return (
                   <div
                     key={option.value}
-                    className="flex items-center space-x-3 p-4 rounded-xl border-2 border-border hover:border-primary transition-[var(--transition-smooth)] cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                    onClick={() => handleAnswerToggle(option.value)}
+                    className={`flex items-center space-x-3 p-4 rounded-xl border-2 transition-[var(--transition-smooth)] cursor-pointer ${
+                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                    }`}
                   >
-                    <RadioGroupItem value={option.value} id={option.value} className="border-2" />
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => handleAnswerToggle(option.value)}
+                      className="border-2"
+                    />
                     <Label 
-                      htmlFor={option.value} 
                       className="flex items-center gap-3 cursor-pointer flex-1"
                     >
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -120,7 +129,7 @@ export const LearningStyleQuiz = ({ onComplete }: LearningStyleQuizProps) => {
                   </div>
                 );
               })}
-            </RadioGroup>
+            </div>
           </div>
 
           {/* Navigation */}
