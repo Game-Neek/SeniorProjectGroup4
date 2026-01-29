@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SyllabusUpload } from "./SyllabusUpload";
 
 interface DashboardProps {
   learningStyles: string[];
@@ -426,7 +427,13 @@ export const Dashboard = ({ learningStyles, onOpenChat }: DashboardProps) => {
               </div>
             </div>
           </Card>
+        </div>
 
+        {/* Syllabus Upload Section */}
+        <SyllabusUpload />
+
+        {/* Quick Access Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Study Resources */}
           <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)]">
             <div className="flex items-center gap-3 mb-4">
