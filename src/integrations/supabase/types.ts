@@ -121,6 +121,50 @@ export type Database = {
           },
         ]
       }
+      syllabi: {
+        Row: {
+          class_id: string | null
+          content: string
+          file_name: string | null
+          id: string
+          processed: boolean | null
+          title: string
+          topics_extracted: Json | null
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          content: string
+          file_name?: string | null
+          id?: string
+          processed?: boolean | null
+          title: string
+          topics_extracted?: Json | null
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string | null
+          content?: string
+          file_name?: string | null
+          id?: string
+          processed?: boolean | null
+          title?: string
+          topics_extracted?: Json | null
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabi_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "user_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       universities: {
         Row: {
           created_at: string | null
