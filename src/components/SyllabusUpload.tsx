@@ -228,11 +228,11 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="syllabus">Syllabus File (PDF)</Label>
+            <Label htmlFor="syllabus">Syllabus File (PDF, Word, PowerPoint)</Label>
             <Input
               id="syllabus"
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.ppt,.pptx"
               ref={fileInputRef}
               onChange={handleFileSelect}
               disabled={isUploading}
