@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SyllabusOutline } from "./SyllabusOutline";
 
 interface Syllabus {
   id: string;
@@ -15,6 +16,12 @@ interface Syllabus {
   file_path: string;
   file_size: number | null;
   uploaded_at: string;
+  parsed_at: string | null;
+  course_description: string | null;
+  learning_objectives: string[] | null;
+  weekly_schedule: any;
+  grading_policy: any;
+  required_materials: string[] | null;
 }
 
 interface SyllabusUploadProps {
@@ -274,37 +281,62 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
           </div>
         ) : (
           syllabi.map((syllabus) => (
-            <div
-              key={syllabus.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="w-5 h-5 text-primary flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground truncate">{syllabus.class_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{syllabus.file_name}</p>
+            <div key={syllabus.id} className="space-y-0">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{syllabus.class_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{syllabus.file_name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Badge variant="secondary" className="text-xs">
+                    {formatFileSize(syllabus.file_size)}
+                  </Badge>
+                  <SyllabusOutline
+                    syllabusId={syllabus.id}
+                    className={syllabus.class_name}
+                    filePath={syllabus.file_path}
+                    parsedAt={syllabus.parsed_at}
+                    courseDescription={syllabus.course_description}
+                    learningObjectives={syllabus.learning_objectives}
+                    weeklySchedule={syllabus.weekly_schedule}
+                    gradingPolicy={syllabus.grading_policy}
+                    requiredMaterials={syllabus.required_materials}
+                    onParseComplete={fetchSyllabi}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDownload(syllabus)}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(syllabus)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Badge variant="secondary" className="text-xs">
-                  {formatFileSize(syllabus.file_size)}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDownload(syllabus)}
-                >
-                  View
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(syllabus)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              {syllabus.parsed_at && (
+                <SyllabusOutline
+                  syllabusId={syllabus.id}
+                  className={syllabus.class_name}
+                  filePath={syllabus.file_path}
+                  parsedAt={syllabus.parsed_at}
+                  courseDescription={syllabus.course_description}
+                  learningObjectives={syllabus.learning_objectives}
+                  weeklySchedule={syllabus.weekly_schedule}
+                  gradingPolicy={syllabus.grading_policy}
+                  requiredMaterials={syllabus.required_materials}
+                  onParseComplete={fetchSyllabi}
+                />
+              )}
             </div>
           ))
         )}
