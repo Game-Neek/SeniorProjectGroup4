@@ -367,6 +367,84 @@ Be specific and actionable. These objectives will be used to generate personaliz
         ],
         tool_choice: { type: "function", function: { name: "extract_assignment_objectives" } }
       };
+    } else if (requestType === "parse-syllabus") {
+      // AI-driven Outline Builder: extract key components from a syllabus
+      useToolCalling = true;
+      systemPrompt = `You are AgentB analyzing a course syllabus to extract its key structural components.
+
+Class: ${className || "the course"}
+${learningStyleContext}
+
+Carefully read the syllabus content and extract:
+1. **Course Description**: A concise summary of what the course covers
+2. **Learning Objectives**: Specific outcomes students should achieve
+3. **Weekly Schedule**: Week-by-week breakdown of topics (if available)
+4. **Grading Policy**: How grades are determined (exams, homework, participation percentages)
+5. **Required Materials**: Textbooks, software, or other required items
+
+Be thorough and precise. Extract exactly what the syllabus states — do not invent information not present in the document.`;
+
+      toolConfig = {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_syllabus_outline",
+              description: "Extract structured outline from a course syllabus",
+              parameters: {
+                type: "object",
+                properties: {
+                  courseDescription: {
+                    type: "string",
+                    description: "Concise course description summarizing what the course covers"
+                  },
+                  learningObjectives: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "List of specific learning objectives from the syllabus"
+                  },
+                  weeklySchedule: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        week: { type: "number" },
+                        topic: { type: "string" },
+                        details: { type: "string" }
+                      },
+                      required: ["week", "topic"]
+                    },
+                    description: "Week-by-week topic schedule"
+                  },
+                  gradingPolicy: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        component: { type: "string" },
+                        weight: { type: "string" }
+                      },
+                      required: ["component", "weight"]
+                    },
+                    description: "Grading breakdown (e.g., Midterm 30%, Final 40%)"
+                  },
+                  requiredMaterials: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Required textbooks, software, or materials"
+                  },
+                  parsedSummary: {
+                    type: "string",
+                    description: "Brief overall summary of the syllabus content"
+                  }
+                },
+                required: ["courseDescription", "learningObjectives", "parsedSummary"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "extract_syllabus_outline" } }
+      };
     } else if (requestType === "placement-quiz") {
       systemPrompt = `You are AgentB, an intelligent AI tutor creating a placement quiz for a student.
       

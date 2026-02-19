@@ -298,30 +298,51 @@ export type Database = {
       syllabi: {
         Row: {
           class_name: string
+          course_description: string | null
           file_name: string
           file_path: string
           file_size: number | null
+          grading_policy: Json | null
           id: string
+          learning_objectives: string[] | null
+          parsed_at: string | null
+          parsed_content: string | null
+          required_materials: string[] | null
           uploaded_at: string
           user_id: string
+          weekly_schedule: Json | null
         }
         Insert: {
           class_name: string
+          course_description?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
+          grading_policy?: Json | null
           id?: string
+          learning_objectives?: string[] | null
+          parsed_at?: string | null
+          parsed_content?: string | null
+          required_materials?: string[] | null
           uploaded_at?: string
           user_id: string
+          weekly_schedule?: Json | null
         }
         Update: {
           class_name?: string
+          course_description?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
+          grading_policy?: Json | null
           id?: string
+          learning_objectives?: string[] | null
+          parsed_at?: string | null
+          parsed_content?: string | null
+          required_materials?: string[] | null
           uploaded_at?: string
           user_id?: string
+          weekly_schedule?: Json | null
         }
         Relationships: []
       }
