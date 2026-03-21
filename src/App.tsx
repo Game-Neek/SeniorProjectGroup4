@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CalendarPage from "./pages/CalendarPage";
 import Profile from "./pages/Profile";
+import ReadAloudDemo from "./pages/ReadAloudDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/read-aloud" element={<ReadAloudDemo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
