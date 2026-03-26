@@ -35,6 +35,8 @@ interface Assignment {
   due_date: string | null;
   learning_objectives: string[] | null;
   uploaded_at: string;
+  assessment_type: string | null;
+  assessment_metadata: unknown;
 }
 
 interface Syllabus {
@@ -226,14 +228,21 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
 
       const data = await response.json();
       
-      // Update assignment with parsed content
+      // Update assignment with parsed content and assessment classification
       if (data.learningObjectives) {
+        const updatePayload: Record<string, unknown> = {
+          learning_objectives: data.learningObjectives,
+          parsed_content: data.parsedContent,
+        };
+        if (data.assessmentType) {
+          updatePayload.assessment_type = data.assessmentType;
+        }
+        if (data.assessmentMetadata) {
+          updatePayload.assessment_metadata = data.assessmentMetadata;
+        }
         await supabase
           .from('assignments')
-          .update({
-            learning_objectives: data.learningObjectives,
-            parsed_content: data.parsedContent,
-          })
+          .update(updatePayload)
           .eq('id', assignment.id);
 
         fetchAssignments();
@@ -456,13 +465,27 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
                         </span>
                       )}
                     </div>
+                    {assignment.assessment_type && (
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          assignment.assessment_type === 'summative' ? 'border-destructive/50 text-destructive' :
+                          assignment.assessment_type === 'formative' ? 'border-primary/50 text-primary' :
+                          assignment.assessment_type === 'pre_assessment' ? 'border-accent/50 text-accent' :
+                          'border-muted-foreground/50 text-muted-foreground'
+                        }`}
+                      >
+                        {assignment.assessment_type === 'pre_assessment' ? 'Pre-Assessment' : 
+                         assignment.assessment_type.charAt(0).toUpperCase() + assignment.assessment_type.slice(1)}
+                      </Badge>
+                    )}
                     {assignment.learning_objectives && assignment.learning_objectives.length > 0 && (
                       <div className="mt-2 flex items-center gap-1">
                         <Target className="w-3 h-3 text-primary" />
                         <span className="text-xs text-primary">
                           {assignment.learning_objectives.length} objectives extracted
                         </span>
-                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <Sparkles className="w-3 h-3 text-primary" />
                       </div>
                     )}
                   </div>

@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       assignments: {
         Row: {
+          assessment_metadata: Json | null
+          assessment_type: Database["public"]["Enums"]["assessment_type"] | null
           assignment_title: string
           class_name: string
           due_date: string | null
@@ -29,6 +31,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assessment_metadata?: Json | null
+          assessment_type?:
+            | Database["public"]["Enums"]["assessment_type"]
+            | null
           assignment_title: string
           class_name: string
           due_date?: string | null
@@ -42,6 +48,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assessment_metadata?: Json | null
+          assessment_type?:
+            | Database["public"]["Enums"]["assessment_type"]
+            | null
           assignment_title?: string
           class_name?: string
           due_date?: string | null
@@ -402,7 +412,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      assessment_type:
+        | "summative"
+        | "formative"
+        | "pre_assessment"
+        | "benchmark"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -529,6 +543,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      assessment_type: [
+        "summative",
+        "formative",
+        "pre_assessment",
+        "benchmark",
+      ],
+    },
   },
 } as const

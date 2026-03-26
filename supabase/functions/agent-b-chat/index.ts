@@ -310,9 +310,9 @@ ${resourceTypeGuide[resourceType as keyof typeof resourceTypeGuide] || "Create h
 
 Create comprehensive, engaging content that helps the student understand and master this topic. Use clear formatting with headers, bullet points, and examples where appropriate.`;
     } else if (requestType === "parse-assignment") {
-      // Parse assignment and extract learning objectives
+      // Parse assignment, extract learning objectives, and auto-classify assessment type
       useToolCalling = true;
-      systemPrompt = `You are AgentB analyzing a student's assignment to extract learning objectives.
+      systemPrompt = `You are AgentB analyzing a student's assignment to extract learning objectives and classify its assessment type.
 
 Assignment: ${assignmentTitle || "Assignment"}
 Class: ${className || "the course"}
@@ -322,6 +322,11 @@ Analyze this assignment and extract:
 1. The main learning objectives the professor expects students to master
 2. Key topics and concepts covered
 3. Skills being assessed
+4. The assessment type classification:
+   - "summative": End-of-cycle evaluations (finals, midterms, capstone projects, final papers)
+   - "formative": Ongoing feedback assignments (homework, in-class activities, drafts, weekly problem sets)
+   - "pre_assessment": Diagnostic/baseline assessments (placement tests, pre-quizzes, prerequisite checks)
+   - "benchmark": Periodic checkpoints (unit tests, progress checks, module exams)
 
 Be specific and actionable. These objectives will be used to generate personalized study content.`;
 
@@ -331,7 +336,7 @@ Be specific and actionable. These objectives will be used to generate personaliz
             type: "function",
             function: {
               name: "extract_assignment_objectives",
-              description: "Extract learning objectives and key topics from an assignment",
+              description: "Extract learning objectives, key topics, and assessment classification from an assignment",
               parameters: {
                 type: "object",
                 properties: {
@@ -358,9 +363,24 @@ Be specific and actionable. These objectives will be used to generate personaliz
                   parsedContent: {
                     type: "string",
                     description: "Brief summary of the assignment content"
+                  },
+                  assessmentType: {
+                    type: "string",
+                    enum: ["summative", "formative", "pre_assessment", "benchmark"],
+                    description: "Classification of the assignment: summative (end-of-cycle), formative (ongoing feedback), pre_assessment (diagnostic), benchmark (periodic checkpoint)"
+                  },
+                  assessmentMetadata: {
+                    type: "object",
+                    properties: {
+                      weight: { type: "string", description: "Estimated grade weight if mentioned (e.g. '20%')" },
+                      estimatedDuration: { type: "string", description: "Estimated time to complete" },
+                      isGroupWork: { type: "boolean", description: "Whether this is a group assignment" },
+                      reasonForClassification: { type: "string", description: "Brief explanation of why this assessment type was chosen" }
+                    },
+                    description: "Additional metadata about the assessment"
                   }
                 },
-                required: ["learningObjectives", "keyTopics", "parsedContent"]
+                required: ["learningObjectives", "keyTopics", "parsedContent", "assessmentType"]
               }
             }
           }
