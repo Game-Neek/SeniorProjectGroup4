@@ -35,6 +35,8 @@ interface Assignment {
   due_date: string | null;
   learning_objectives: string[] | null;
   uploaded_at: string;
+  assessment_type: string | null;
+  assessment_metadata: Record<string, unknown> | null;
 }
 
 interface Syllabus {
@@ -226,14 +228,21 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
 
       const data = await response.json();
       
-      // Update assignment with parsed content
+      // Update assignment with parsed content and assessment classification
       if (data.learningObjectives) {
+        const updatePayload: Record<string, unknown> = {
+          learning_objectives: data.learningObjectives,
+          parsed_content: data.parsedContent,
+        };
+        if (data.assessmentType) {
+          updatePayload.assessment_type = data.assessmentType;
+        }
+        if (data.assessmentMetadata) {
+          updatePayload.assessment_metadata = data.assessmentMetadata;
+        }
         await supabase
           .from('assignments')
-          .update({
-            learning_objectives: data.learningObjectives,
-            parsed_content: data.parsedContent,
-          })
+          .update(updatePayload)
           .eq('id', assignment.id);
 
         fetchAssignments();
