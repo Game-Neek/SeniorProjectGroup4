@@ -2,12 +2,9 @@ import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, 
-  GraduationCap, Target, TrendingUp, CheckCircle2, FileQuestion, Lightbulb, 
-  ClipboardList, Bell, BookMarked, AlertTriangle, Star, Zap, Clock
+  GraduationCap
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
@@ -17,11 +14,6 @@ import { TestReminders } from "./TestReminders";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useProfile } from "@/hooks/useProfile";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useStudyPlan } from "@/hooks/useStudyPlan";
 import { useProfile } from "@/hooks/useProfile";
 
 interface DashboardProps {
