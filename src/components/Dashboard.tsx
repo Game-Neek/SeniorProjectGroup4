@@ -52,6 +52,8 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
   const [showMiniQuiz, setShowMiniQuiz] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
+  const [isReadAloudActive, setIsReadAloudActive] = useState(false);
+  const mainContentRef = useRef<HTMLElement>(null);
 
   const { saveProfile } = useProfile();
   
