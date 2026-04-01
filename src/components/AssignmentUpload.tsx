@@ -46,16 +46,17 @@ interface Syllabus {
 
 interface AssignmentUploadProps {
   learningStyles: string[];
+  courseName?: string;
   onAssignmentParsed?: (assignment: Assignment) => void;
 }
 
-export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: AssignmentUploadProps) => {
+export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParsed }: AssignmentUploadProps) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedClass, setSelectedClass] = useState(courseName || "");
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -70,11 +71,17 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('assignments')
       .select('*')
       .eq('user_id', session.user.id)
       .order('uploaded_at', { ascending: false });
+
+    if (courseName) {
+      query = query.eq('class_name', courseName);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       setAssignments(data);
@@ -342,6 +349,7 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
               <DialogTitle>Upload Assignment</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
+              {!courseName && (
               <div className="space-y-2">
                 <Label htmlFor="class">Class *</Label>
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
@@ -362,6 +370,7 @@ export const AssignmentUpload = ({ learningStyles, onAssignmentParsed }: Assignm
                   </p>
                 )}
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="title">Assignment Title *</Label>

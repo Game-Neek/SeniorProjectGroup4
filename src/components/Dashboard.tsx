@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
-import { AssignmentUpload } from "./AssignmentUpload";
+
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
 import { useNavigate } from "react-router-dom";
@@ -151,8 +151,6 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         {/* Course Hub */}
         <CourseHub />
 
-        {/* Assignment Upload */}
-        <AssignmentUpload learningStyles={learningStyles} />
 
         {/* Test Reminders */}
         <TestReminders />
