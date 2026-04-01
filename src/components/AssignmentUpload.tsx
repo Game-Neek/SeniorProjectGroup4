@@ -71,11 +71,17 @@ export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParse
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('assignments')
       .select('*')
       .eq('user_id', session.user.id)
       .order('uploaded_at', { ascending: false });
+
+    if (courseName) {
+      query = query.eq('class_name', courseName);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       setAssignments(data);
