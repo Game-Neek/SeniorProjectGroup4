@@ -23,6 +23,7 @@ import { StudyPlan } from "@/components/StudyPlan";
 import { MiniQuiz } from "@/components/MiniQuiz";
 import { InteractiveExercise } from "@/components/InteractiveExercise";
 import { PracticeHistory } from "@/components/PracticeHistory";
+import { AssignmentUpload } from "@/components/AssignmentUpload";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
