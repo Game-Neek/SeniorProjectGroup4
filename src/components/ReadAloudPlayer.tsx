@@ -103,7 +103,6 @@ export function ReadAloudPlayer({
       role="region"
       aria-label="Read Aloud Player"
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50",
         "border-t bg-card/95 backdrop-blur-lg shadow-[var(--shadow-elevated)]",
         "transition-transform duration-300",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

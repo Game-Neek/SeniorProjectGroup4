@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import {
   GraduationCap, Target, TrendingUp, CheckCircle2, FileQuestion, Lightbulb, 
   ClipboardList, Bell, BookMarked, AlertTriangle, Star, Zap, Clock
 } from "lucide-react";
+import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
 import { AssignmentUpload } from "./AssignmentUpload";
 import { PlacementQuiz } from "./PlacementQuiz";
@@ -51,6 +52,8 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
   const [showMiniQuiz, setShowMiniQuiz] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
+  const [isReadAloudActive, setIsReadAloudActive] = useState(false);
+  const mainContentRef = useRef<HTMLElement>(null);
 
   const { saveProfile } = useProfile();
   
@@ -130,6 +133,11 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
               <h1 className="text-2xl font-bold text-foreground">AgentB</h1>
             </button>
             <div className="flex items-center gap-3">
+              <DashboardReadAloud
+                isActive={isReadAloudActive}
+                onToggle={() => setIsReadAloudActive((v) => !v)}
+                contentRef={mainContentRef}
+              />
               <Button
                 variant="outline"
                 onClick={() => navigate("/profile")}
@@ -156,7 +164,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main ref={mainContentRef} className={`container mx-auto px-4 py-8 space-y-8 ${isReadAloudActive ? "pb-32" : ""}`}>
         {/* Welcome Section */}
         <div className="space-y-4">
           <h2 className="text-3xl font-bold text-foreground">Welcome back!</h2>
