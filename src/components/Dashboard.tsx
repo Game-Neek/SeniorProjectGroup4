@@ -149,7 +149,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
         <SyllabusUpload onUploadComplete={() => setSyllabusRefreshTrigger(prev => prev + 1)} />
 
         {/* Course Hub */}
-        <CourseHub />
+        <CourseHub refreshTrigger={syllabusRefreshTrigger} />
 
 
         {/* Test Reminders */}

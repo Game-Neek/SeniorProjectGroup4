@@ -21,7 +21,11 @@ interface UserClass {
 
 const MAX_ACTIVE_COURSES = 3;
 
-export const CourseHub = () => {
+interface CourseHubProps {
+  refreshTrigger?: number;
+}
+
+export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -29,7 +33,7 @@ export const CourseHub = () => {
 
   useEffect(() => {
     fetchClasses();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
