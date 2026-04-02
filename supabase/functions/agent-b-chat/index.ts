@@ -338,11 +338,6 @@ Requirements for EACH question:
 - Exactly 4 distinct options
 - Include a brief explanation showing solution steps
 - Cover different subtopics`;
-
-Requirements for EACH question:
-- Must have exactly 4 distinct options (no duplicates, no "all of the above")
-- Include a detailed explanation (2-3 sentences) that teaches the concept and shows the solution steps
-- Cover different subtopics within the course (don't repeat the same concept)`;
     } else if (requestType === "resource-content") {
       // Generate detailed content for a study resource
       const resourceTypeGuide = {
