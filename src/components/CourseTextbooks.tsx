@@ -244,7 +244,7 @@ export const CourseTextbooks = ({ className }: CourseTextbooksProps) => {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {tb.source === "parsed" && (
-                  <Sparkles className="w-3 h-3 text-primary" title="Auto-detected from syllabus" />
+                  <span title="Auto-detected from syllabus"><Sparkles className="w-3 h-3 text-primary" /></span>
                 )}
                 <Badge
                   variant="outline"
