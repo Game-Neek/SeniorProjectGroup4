@@ -84,6 +84,9 @@ export const SyllabusOutline = ({
         description: `Extracted course outline for ${className}`,
       });
 
+      // Dispatch event so course page components (ChapterBreakdowns, CourseTextbooks) can refresh
+      window.dispatchEvent(new CustomEvent("syllabus-reparsed", { detail: { className } }));
+
       onParseComplete();
     } catch (error) {
       console.error("Parse error:", error);
