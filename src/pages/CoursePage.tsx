@@ -24,6 +24,8 @@ import { MiniQuiz } from "@/components/MiniQuiz";
 import { InteractiveExercise } from "@/components/InteractiveExercise";
 import { PracticeHistory } from "@/components/PracticeHistory";
 import { AssignmentUpload } from "@/components/AssignmentUpload";
+import { ChapterBreakdowns } from "@/components/ChapterBreakdowns";
+import { CourseTextbooks } from "@/components/CourseTextbooks";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -459,6 +461,7 @@ const CoursePage = () => {
                   <BookMarked className="w-5 h-5 text-accent" />
                   <h4 className="font-medium text-foreground text-sm">Chapter Breakdowns</h4>
                 </div>
+                <p className="text-xs text-muted-foreground mb-2">Topics from syllabus with progress</p>
                 <div className="space-y-1 mt-2">
                   {classQuizResult.strongAreas.slice(0, 2).map((area, i) => (
                     <div key={i} className="flex items-center gap-1">
@@ -520,6 +523,12 @@ const CoursePage = () => {
             </div>
           )}
         </Card>
+
+        {/* Chapter Breakdowns - Real data from syllabus */}
+        <ChapterBreakdowns className={decodedClassName} />
+
+        {/* Course Textbooks */}
+        <CourseTextbooks className={decodedClassName} />
 
         {/* Placement Quiz */}
         <PlacementQuiz
