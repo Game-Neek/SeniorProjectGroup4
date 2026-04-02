@@ -323,7 +323,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <span className="font-medium text-foreground">Solution</span>
                   </div>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{currentExercise?.solution}</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap"><MathText text={currentExercise?.solution || ""} /></p>
                 </div>
               )}
 

@@ -291,7 +291,7 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
                       htmlFor={`option-${idx}`} 
                       className={`flex-1 cursor-pointer ${isAnswered ? "cursor-default" : ""}`}
                     >
-                      {option}
+                      <MathText text={option} />
                     </Label>
                     {isAnswered && isCorrect && (
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
