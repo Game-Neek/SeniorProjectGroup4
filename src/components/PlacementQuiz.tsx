@@ -353,7 +353,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
 
           {/* Question */}
           <div className="p-4 rounded-xl bg-muted/30 border border-border">
-            <p className="text-lg font-medium text-foreground mb-6">{currentQuestion?.question}</p>
+            <p className="text-lg font-medium text-foreground mb-6"><MathText text={currentQuestion?.question || ""} /></p>
 
             <RadioGroup
               value={selectedAnswer}
