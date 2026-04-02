@@ -105,6 +105,42 @@ export type Database = {
         }
         Relationships: []
       }
+      course_textbooks: {
+        Row: {
+          author: string | null
+          class_name: string
+          created_at: string
+          id: string
+          isbn: string | null
+          requirement_type: string
+          source: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          class_name: string
+          created_at?: string
+          id?: string
+          isbn?: string | null
+          requirement_type?: string
+          source?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          class_name?: string
+          created_at?: string
+          id?: string
+          isbn?: string | null
+          requirement_type?: string
+          source?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       generated_resources: {
         Row: {
           content: string
