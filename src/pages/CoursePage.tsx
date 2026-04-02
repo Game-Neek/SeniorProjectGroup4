@@ -24,6 +24,8 @@ import { MiniQuiz } from "@/components/MiniQuiz";
 import { InteractiveExercise } from "@/components/InteractiveExercise";
 import { PracticeHistory } from "@/components/PracticeHistory";
 import { AssignmentUpload } from "@/components/AssignmentUpload";
+import { ChapterBreakdowns } from "@/components/ChapterBreakdowns";
+import { CourseTextbooks } from "@/components/CourseTextbooks";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
