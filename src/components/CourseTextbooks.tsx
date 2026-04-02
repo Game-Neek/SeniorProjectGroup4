@@ -38,6 +38,17 @@ export const CourseTextbooks = ({ className }: CourseTextbooksProps) => {
     loadTextbooks();
   }, [className]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.className === className) {
+        loadTextbooks();
+      }
+    };
+    window.addEventListener("syllabus-reparsed", handler);
+    return () => window.removeEventListener("syllabus-reparsed", handler);
+  }, [className]);
+
   const loadTextbooks = async () => {
     setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();

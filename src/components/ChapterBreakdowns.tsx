@@ -21,9 +21,24 @@ export const ChapterBreakdowns = ({ className }: ChapterBreakdownsProps) => {
   const [topics, setTopics] = useState<TopicProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadTopicProgressCb = useCallback(() => {
     loadTopicProgress();
   }, [className]);
+
+  useEffect(() => {
+    loadTopicProgressCb();
+  }, [loadTopicProgressCb]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.className === className) {
+        loadTopicProgressCb();
+      }
+    };
+    window.addEventListener("syllabus-reparsed", handler);
+    return () => window.removeEventListener("syllabus-reparsed", handler);
+  }, [className, loadTopicProgressCb]);
 
   const loadTopicProgress = async () => {
     setLoading(true);
