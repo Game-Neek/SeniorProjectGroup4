@@ -33,7 +33,7 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
 
   useEffect(() => {
     fetchClasses();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
