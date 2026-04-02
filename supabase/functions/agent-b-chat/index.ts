@@ -26,6 +26,8 @@ serve(async (req) => {
     let syllabiContext = "";
     let userId = null;
 
+    let syllabusTopics = "";
+
     if (authHeader && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       
@@ -39,12 +41,35 @@ serve(async (req) => {
         // Fetch user's syllabi metadata
         const { data: syllabi, error: syllabiError } = await supabase
           .from("syllabi")
-          .select("class_name, file_name")
+          .select("class_name, file_name, learning_objectives, weekly_schedule, course_description")
           .eq("user_id", user.id);
 
         if (syllabi && syllabi.length > 0 && !syllabiError) {
           const classList = syllabi.map(s => `- ${s.class_name} (${s.file_name})`).join("\n");
           syllabiContext = `\n\nThe student has uploaded syllabi for the following classes:\n${classList}\n\nWhen the student asks about these classes, provide relevant academic support. If they ask about a specific class, focus your responses on that subject area.`;
+
+          // Extract topics for the specific class being quizzed
+          if (className) {
+            const matchedSyllabus = syllabi.find(s => s.class_name === className);
+            if (matchedSyllabus) {
+              const objectives = matchedSyllabus.learning_objectives || [];
+              const schedule = matchedSyllabus.weekly_schedule || [];
+              const courseDesc = matchedSyllabus.course_description || "";
+
+              const weeklyTopics = Array.isArray(schedule)
+                ? schedule.map((w: any) => w.topic).filter(Boolean)
+                : [];
+
+              const allTopics = [...new Set([...objectives, ...weeklyTopics])];
+
+              if (allTopics.length > 0) {
+                syllabusTopics = `\n\nACTUAL SYLLABUS TOPICS for "${className}" (use ONLY these as quiz content sources):\n${allTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}`;
+                if (courseDesc) {
+                  syllabusTopics += `\n\nCourse Description: ${courseDesc}`;
+                }
+              }
+            }
+          }
         }
       }
     }
