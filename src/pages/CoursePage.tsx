@@ -461,6 +461,7 @@ const CoursePage = () => {
                   <BookMarked className="w-5 h-5 text-accent" />
                   <h4 className="font-medium text-foreground text-sm">Chapter Breakdowns</h4>
                 </div>
+                <p className="text-xs text-muted-foreground mb-2">Topics from syllabus with progress</p>
                 <div className="space-y-1 mt-2">
                   {classQuizResult.strongAreas.slice(0, 2).map((area, i) => (
                     <div key={i} className="flex items-center gap-1">
