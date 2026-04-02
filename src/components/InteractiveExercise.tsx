@@ -312,7 +312,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
                     <Lightbulb className="w-4 h-4 text-amber-600" />
                     <span className="font-medium text-foreground">Hint</span>
                   </div>
-                  <p className="text-sm text-foreground">{currentExercise?.hint}</p>
+                  <p className="text-sm text-foreground"><MathText text={currentExercise?.hint || ""} /></p>
                 </div>
               )}
 
