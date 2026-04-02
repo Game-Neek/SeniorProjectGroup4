@@ -26,6 +26,8 @@ serve(async (req) => {
     let syllabiContext = "";
     let userId = null;
 
+    let syllabusTopics = "";
+
     if (authHeader && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       
@@ -39,12 +41,35 @@ serve(async (req) => {
         // Fetch user's syllabi metadata
         const { data: syllabi, error: syllabiError } = await supabase
           .from("syllabi")
-          .select("class_name, file_name")
+          .select("class_name, file_name, learning_objectives, weekly_schedule, course_description")
           .eq("user_id", user.id);
 
         if (syllabi && syllabi.length > 0 && !syllabiError) {
           const classList = syllabi.map(s => `- ${s.class_name} (${s.file_name})`).join("\n");
           syllabiContext = `\n\nThe student has uploaded syllabi for the following classes:\n${classList}\n\nWhen the student asks about these classes, provide relevant academic support. If they ask about a specific class, focus your responses on that subject area.`;
+
+          // Extract topics for the specific class being quizzed
+          if (className) {
+            const matchedSyllabus = syllabi.find(s => s.class_name === className);
+            if (matchedSyllabus) {
+              const objectives = matchedSyllabus.learning_objectives || [];
+              const schedule = matchedSyllabus.weekly_schedule || [];
+              const courseDesc = matchedSyllabus.course_description || "";
+
+              const weeklyTopics = Array.isArray(schedule)
+                ? schedule.map((w: any) => w.topic).filter(Boolean)
+                : [];
+
+              const allTopics = [...new Set([...objectives, ...weeklyTopics])];
+
+              if (allTopics.length > 0) {
+                syllabusTopics = `\n\nACTUAL SYLLABUS TOPICS for "${className}" (use ONLY these as quiz content sources):\n${allTopics.map((t, i) => `${i + 1}. ${t}`).join("\n")}`;
+                if (courseDesc) {
+                  syllabusTopics += `\n\nCourse Description: ${courseDesc}`;
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -159,19 +184,32 @@ Include mix of: 2-3 videos, 2-3 reading materials, 1-2 practice resources.`;
       // Generate a quick 5-question mini quiz for weak areas
       useToolCalling = true;
       const focusAreas = requestWeakAreas || [];
-      systemPrompt = `You are AgentB creating a quick mini-quiz to help a student review their weak areas.
+      systemPrompt = `You are AgentB creating a mini-quiz to test APPLIED understanding.
 
 Class: ${className || "the course"}
 Focus Areas: ${focusAreas.join(", ") || "general review"}
 ${learningStyleContext}
+${syllabusTopics}
 
-Generate exactly 5 multiple-choice questions that:
-1. Target the specific weak areas mentioned
-2. Help reinforce understanding of difficult concepts
-3. Include clear explanations for each answer
-4. Progress from easier to slightly harder questions
+QUESTION QUALITY RULES — MANDATORY:
+- 80% of questions (4 out of 5) MUST be application/problem-solving questions
+- Maximum 1 out of 5 may be conceptual (and even then, test understanding, not recall)
+- NEVER generate basic definition questions like "What is X?" or "Define Y"
+- Every question must require the student to: compute, solve, apply a formula, analyze a scenario, debug code, or work through steps
 
-Each question must have exactly 4 options with one correct answer.`;
+SUBJECT-AWARE FORMATTING:
+- Math: Include actual equations, expressions, derivatives, integrals, word problems
+- CS: Include code snippets, algorithm tracing, debugging scenarios, output prediction
+- Chemistry: Include reactions, formula balancing, stoichiometry calculations
+- Physics: Include formulas with values, unit conversions, applied force/energy problems
+- General: Scenario-based questions requiring analysis and reasoning
+
+EXAMPLE TRANSFORMATIONS:
+❌ "What is a derivative?" → ✅ "Find the derivative of f(x) = 3x² + 2x − 5"
+❌ "What is a scalar?" → ✅ "A force of 10N is applied at 30°. Find the horizontal component."
+❌ "Define polymorphism" → ✅ "Given class Animal with method speak(), what output does this code produce: ..."
+
+Generate exactly 5 multiple-choice questions with 4 options each and clear explanations.`;
 
       toolConfig = {
         tools: [
@@ -211,19 +249,26 @@ Each question must have exactly 4 options with one correct answer.`;
       // Generate practice exercises with hints and solutions
       useToolCalling = true;
       const focusAreas = requestWeakAreas || [];
-      systemPrompt = `You are AgentB creating interactive practice exercises for a student.
+      systemPrompt = `You are AgentB creating interactive practice exercises requiring APPLIED problem solving.
 
 Class: ${className || "the course"}
 Focus Areas: ${focusAreas.join(", ") || "general practice"}
 ${learningStyleContext}
+${syllabusTopics}
 
-Generate exactly 5 practice problems that:
-1. Target the specific weak areas mentioned
-2. Include varying difficulty levels (easy, medium, hard)
-3. Provide helpful hints that guide without giving away the answer
-4. Include detailed step-by-step solutions
+EXERCISE QUALITY RULES — MANDATORY:
+- ALL exercises must require computation, multi-step reasoning, or hands-on problem solving
+- NEVER create exercises that only ask to define, list, or recall terms
+- Every problem must require the student to work through steps to arrive at an answer
 
-Create problems that require working through steps, not just multiple choice.`;
+SUBJECT-AWARE FORMATTING:
+- Math: Provide equations to solve, proofs to complete, expressions to simplify, word problems with numerical answers
+- CS: Provide code to debug, functions to implement, algorithm outputs to trace, complexity to analyze
+- Chemistry: Provide reactions to balance, concentrations to calculate, molecular structures to analyze
+- Physics: Provide scenarios with given values requiring formula application and numerical solutions
+
+Generate exactly 5 practice problems with varying difficulty (easy, medium, hard).
+Each must include a helpful hint and a detailed step-by-step solution.`;
 
       toolConfig = {
         tools: [
@@ -263,33 +308,45 @@ Create problems that require working through steps, not just multiple choice.`;
     } else if (requestType === "placement-quiz-interactive") {
       // Return structured JSON for interactive quiz
       useToolCalling = true;
-      systemPrompt = `You are AgentB creating a comprehensive placement quiz. Generate exactly 20 multiple-choice questions for: ${className || "the subject"}.
+      systemPrompt = `You are AgentB creating a rigorous placement quiz that assesses REAL understanding through application. Generate exactly 20 multiple-choice questions for: ${className || "the subject"}.
 
 ${learningStyleContext}
+${syllabusTopics}
 
-IMPORTANT: Create a thorough assessment that covers ALL key topics from this course.
+CRITICAL — QUESTION QUALITY RULES:
+- 80% of questions (16 out of 20) MUST be application/problem-solving questions
+- Maximum 20% (4 out of 20) may be conceptual — and even those must test understanding, NOT simple recall
+- NEVER generate basic definition questions like "What is X?", "Define Y", or "Which term describes Z?"
+- Every question must require the student to: compute, solve, apply a formula, analyze a scenario, debug, trace logic, or work through multi-step reasoning
+
+SUBJECT-AWARE QUESTION FORMATTING (detect subject from course name/syllabus):
+- Math: equations to solve, derivatives/integrals to compute, algebraic expressions to simplify, word problems
+- CS: code snippets to trace, debugging questions, algorithm analysis, output prediction
+- Chemistry: reactions to balance, stoichiometry calculations, molecular formula problems
+- Physics: formulas with given values, unit-based problems, applied force/energy/motion scenarios
+- General: scenario-based analysis requiring reasoning and application
+
+EXAMPLE TRANSFORMATIONS (FOLLOW THESE):
+❌ "What is a derivative?" → ✅ "Find the derivative of f(x) = 3x² + 2x − 5"
+❌ "What is a scalar?" → ✅ "A force of 10N is applied at 30°. Find the horizontal component."
+❌ "Define Big-O notation" → ✅ "What is the time complexity of this nested loop: for(i=0;i<n;i++) for(j=0;j<n;j++) sum++?"
+❌ "What is pH?" → ✅ "Calculate the pH of a 0.01M HCl solution"
+
+SYLLABUS ALIGNMENT:
+- If syllabus topics are provided above, derive ALL questions from those specific topics
+- Do NOT invent topics outside the syllabus
+- Questions should reflect the expected rigor and depth of this specific course
 
 Structure the questions in 4 sections:
-1. **Section 1: Fundamentals (Questions 1-5)** - Basic foundational concepts every student should know
-2. **Section 2: Core Concepts (Questions 6-10)** - Essential course material and key principles  
-3. **Section 3: Applied Knowledge (Questions 11-15)** - Application of concepts to real problems
-4. **Section 4: Advanced Topics (Questions 16-20)** - Challenging questions testing deeper understanding
+1. **Section 1: Foundational Application (Questions 1-5)** - Apply basic concepts with straightforward problems
+2. **Section 2: Core Problem Solving (Questions 6-10)** - Multi-step problems using essential course principles
+3. **Section 3: Applied Analysis (Questions 11-15)** - Real-world scenarios and complex applications
+4. **Section 4: Advanced Challenges (Questions 16-20)** - Challenging multi-concept problems
 
 Requirements for EACH question:
 - Must have exactly 4 distinct options (no duplicates, no "all of the above")
-- Include a detailed explanation (2-3 sentences) that teaches the concept
-- Explanations should help visual/reading learners understand WHY the answer is correct
-- Cover different subtopics within the course (don't repeat the same concept)
-- Questions should test understanding, not just memorization
-- Include real-world applications where relevant
-
-Topics to cover (adapt to the specific course):
-- Key definitions and terminology
-- Core principles and theories
-- Common formulas/processes/methodologies
-- Problem-solving applications
-- Connections between concepts
-- Edge cases and exceptions`;
+- Include a detailed explanation (2-3 sentences) that teaches the concept and shows the solution steps
+- Cover different subtopics within the course (don't repeat the same concept)`;
     } else if (requestType === "resource-content") {
       // Generate detailed content for a study resource
       const resourceTypeGuide = {
