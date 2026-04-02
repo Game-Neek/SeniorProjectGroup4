@@ -387,7 +387,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
                       htmlFor={`option-${idx}`}
                       className={`flex-1 cursor-pointer ${showResult ? "cursor-default" : ""}`}
                     >
-                      {option}
+                      <MathText text={option} />
                     </Label>
                     {showResult && isCorrectOption && (
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
