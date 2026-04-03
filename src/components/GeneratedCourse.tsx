@@ -231,7 +231,7 @@ export const GeneratedCourse = ({ className }: GeneratedCourseProps) => {
     }
   };
 
-
+  const generateAllPending = async () => {
     setGeneratingAll(true);
     const pending = chapters.filter((c) => c.generation_status === "pending");
 
