@@ -195,7 +195,43 @@ export const GeneratedCourse = ({ className }: GeneratedCourseProps) => {
     }
   };
 
-  const generateAllPending = async () => {
+  const refineChapter = async (chapter: CourseChapter, mode: string) => {
+    setRefining((prev) => new Set(prev).add(chapter.id));
+    try {
+      const { data, error } = await supabase.functions.invoke("refine-content", {
+        body: {
+          contentId: chapter.id,
+          lessonContent: chapter.lesson_content,
+          quizQuestions: chapter.quiz_questions,
+          exercises: chapter.exercises,
+          refinementMode: mode,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await loadChapters();
+      toast({
+        title: "Content refined",
+        description: data?.changesSummary || `"${chapter.topic}" has been polished`,
+      });
+    } catch (error) {
+      console.error("Refinement error:", error);
+      toast({
+        title: "Refinement failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+      await supabase.from("course_content").update({ generation_status: "complete" }).eq("id", chapter.id);
+    } finally {
+      setRefining((prev) => {
+        const next = new Set(prev);
+        next.delete(chapter.id);
+        return next;
+      });
+    }
+  };
+
+
     setGeneratingAll(true);
     const pending = chapters.filter((c) => c.generation_status === "pending");
 
