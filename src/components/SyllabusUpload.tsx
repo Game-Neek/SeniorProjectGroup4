@@ -8,6 +8,7 @@ import { Upload, FileText, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SyllabusOutline } from "./SyllabusOutline";
+import { validateFile, uploadFile, SYLLABUS_VALIDATION } from "@/lib/uploadEngine";
 
 interface Syllabus {
   id: string;
