@@ -72,9 +72,10 @@ export const SyllabusOutline = ({
           weekly_schedule: data.weeklySchedule || null,
           grading_policy: data.gradingPolicy || null,
           required_materials: data.requiredMaterials || null,
+          bloom_classifications: data.bloomClassifications || null,
           parsed_content: data.parsedSummary,
           parsed_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", syllabusId);
 
       if (updateError) throw updateError;

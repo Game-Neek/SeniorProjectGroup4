@@ -1,0 +1,1 @@
+ALTER TABLE public.syllabi ADD COLUMN bloom_classifications jsonb DEFAULT NULL;
