@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select";
 import { 
   Upload, FileText, Trash2, Calendar, Loader2, 
-  ClipboardList, Target, Sparkles 
+  ClipboardList, Target, Sparkles, Brain, BarChart3,
+  ChevronDown, ChevronUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
