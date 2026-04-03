@@ -343,6 +343,7 @@ export type Database = {
       }
       syllabi: {
         Row: {
+          bloom_classifications: Json | null
           class_name: string
           course_description: string | null
           file_name: string
@@ -359,6 +360,7 @@ export type Database = {
           weekly_schedule: Json | null
         }
         Insert: {
+          bloom_classifications?: Json | null
           class_name: string
           course_description?: string | null
           file_name: string
@@ -375,6 +377,7 @@ export type Database = {
           weekly_schedule?: Json | null
         }
         Update: {
+          bloom_classifications?: Json | null
           class_name?: string
           course_description?: string | null
           file_name?: string
