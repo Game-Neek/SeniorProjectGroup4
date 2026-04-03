@@ -516,6 +516,9 @@ export default function Profile() {
           )}
         </Card>
 
+        {/* Privacy & Compliance Settings */}
+        <PrivacySettings />
+
         {/* Available Learning Resources */}
         <Card className="p-6 shadow-[var(--shadow-medium)]">
           <h2 className="text-xl font-semibold text-foreground mb-6">Available Learning Resources</h2>
