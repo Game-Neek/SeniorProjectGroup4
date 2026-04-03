@@ -100,14 +100,8 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       if (!session?.user) throw new Error("Not authenticated. Please sign out and sign back in.");
       const user = session.user;
 
-      const filePath = `${user.id}/${Date.now()}-${selectedFile.name}`;
-
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from("syllabi")
-        .upload(filePath, selectedFile);
-
-      if (uploadError) throw uploadError;
+      // Upload file to storage with retry & collision-safe path
+      const { filePath } = await uploadFile("syllabi", user.id, selectedFile);
 
       // Save metadata to database
       const { error: dbError } = await supabase.from("syllabi").insert({
