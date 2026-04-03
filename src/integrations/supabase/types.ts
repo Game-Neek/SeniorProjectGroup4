@@ -20,11 +20,15 @@ export type Database = {
           assessment_type: Database["public"]["Enums"]["assessment_type"] | null
           assignment_title: string
           class_name: string
+          difficulty_analyzed_at: string | null
+          difficulty_level: string | null
           due_date: string | null
           file_name: string
           file_path: string
           file_size: number | null
           id: string
+          irt_parameters: Json | null
+          knowledge_dependencies: string[] | null
           learning_objectives: string[] | null
           parsed_content: string | null
           uploaded_at: string
@@ -37,11 +41,15 @@ export type Database = {
             | null
           assignment_title: string
           class_name: string
+          difficulty_analyzed_at?: string | null
+          difficulty_level?: string | null
           due_date?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
           id?: string
+          irt_parameters?: Json | null
+          knowledge_dependencies?: string[] | null
           learning_objectives?: string[] | null
           parsed_content?: string | null
           uploaded_at?: string
@@ -54,11 +62,15 @@ export type Database = {
             | null
           assignment_title?: string
           class_name?: string
+          difficulty_analyzed_at?: string | null
+          difficulty_level?: string | null
           due_date?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
           id?: string
+          irt_parameters?: Json | null
+          knowledge_dependencies?: string[] | null
           learning_objectives?: string[] | null
           parsed_content?: string | null
           uploaded_at?: string
