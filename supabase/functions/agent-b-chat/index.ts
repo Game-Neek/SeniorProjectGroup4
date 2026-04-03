@@ -515,9 +515,27 @@ For Bloom classification, analyze the ACTION VERB in each objective to determine
                   parsedSummary: {
                     type: "string",
                     description: "Brief overall summary of the syllabus content"
+                  },
+                  bloomClassifications: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        objective: { type: "string", description: "The learning objective text" },
+                        bloomLevel: { 
+                          type: "string", 
+                          enum: ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"],
+                          description: "The Revised Bloom's Taxonomy cognitive level"
+                        },
+                        actionVerb: { type: "string", description: "The key action verb that determined the classification" },
+                        justification: { type: "string", description: "Brief explanation of why this level was assigned" }
+                      },
+                      required: ["objective", "bloomLevel", "actionVerb"]
+                    },
+                    description: "Bloom's Taxonomy classification for each learning objective"
                   }
                 },
-                required: ["courseDescription", "learningObjectives", "parsedSummary"]
+                required: ["courseDescription", "learningObjectives", "parsedSummary", "bloomClassifications"]
               }
             }
           }
