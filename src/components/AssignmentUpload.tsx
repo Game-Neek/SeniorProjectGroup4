@@ -39,7 +39,7 @@ interface Assignment {
   assessment_type: string | null;
   assessment_metadata: unknown;
   difficulty_level: string | null;
-  irt_parameters: Record<string, unknown> | null;
+  irt_parameters: any;
   knowledge_dependencies: string[] | null;
   difficulty_analyzed_at: string | null;
 }
