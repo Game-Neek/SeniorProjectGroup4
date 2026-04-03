@@ -78,9 +78,36 @@ serve(async (req) => {
       ? `The student's preferred learning styles are: ${learningStyles.join(", ")}. Adapt your explanations accordingly.`
       : "";
 
+    // AI Bias Prevention Directives (applied to all AI requests)
+    const biasGuardrails = `
+ALGORITHMIC FAIRNESS DIRECTIVES (MANDATORY):
+- Generate content that is culturally neutral and inclusive of diverse backgrounds
+- Do NOT assume student demographics, socioeconomic status, or cultural context
+- Use gender-neutral language and diverse name representations in examples
+- Avoid stereotypes in scenarios (e.g., do not associate specific demographics with specific fields)
+- Assessment difficulty must be based ONLY on cognitive complexity, never cultural familiarity
+- Ensure examples are accessible to international students and non-native English speakers
+- Do not favor or penalize any learning style — adapt content equitably
+- If generating scenarios, rotate cultural contexts and avoid Western-centric defaults
+- Mathematical and scientific content must use universal notation standards`;
+
     let systemPrompt = "";
     let useToolCalling = false;
     let toolConfig = null;
+
+    // Audit logging helper
+    const logAuditEvent = async (action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) => {
+      if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        await adminClient.from("audit_logs").insert({
+          user_id: userId,
+          action,
+          entity_type: entityType,
+          entity_id: entityId || null,
+          metadata: metadata || {},
+        });
+      }
+    };
 
     if (requestType === "study-plan") {
       // Generate personalized study plan based on quiz results
