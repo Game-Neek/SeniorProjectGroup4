@@ -285,6 +285,36 @@ export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParse
     }
   };
 
+  const analyzeDifficulty = async (assignmentId: string) => {
+    setIsAnalyzing((prev) => new Set(prev).add(assignmentId));
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-difficulty", {
+        body: { assignmentId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      await fetchAssignments();
+      toast({
+        title: "Difficulty analyzed",
+        description: `Level: ${data.difficultyLevel} — ${data.rationale?.slice(0, 80)}...`,
+      });
+    } catch (error) {
+      console.error("Difficulty analysis error:", error);
+      toast({
+        title: "Difficulty analysis incomplete",
+        description: error instanceof Error ? error.message : "Could not analyze difficulty.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing((prev) => {
+        const next = new Set(prev);
+        next.delete(assignmentId);
+        return next;
+      });
+    }
+  };
+
   const handleDelete = async (assignment: Assignment) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
