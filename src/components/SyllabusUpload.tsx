@@ -8,6 +8,7 @@ import { Upload, FileText, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SyllabusOutline } from "./SyllabusOutline";
+import { validateFile, uploadFile, SYLLABUS_VALIDATION } from "@/lib/uploadEngine";
 
 interface Syllabus {
   id: string;
@@ -63,6 +64,12 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const result = validateFile(file, SYLLABUS_VALIDATION);
+      if (!result.valid) {
+        toast({ title: "Invalid file", description: result.error, variant: "destructive" });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
       setSelectedFile(file);
     }
   };
@@ -93,14 +100,8 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       if (!session?.user) throw new Error("Not authenticated. Please sign out and sign back in.");
       const user = session.user;
 
-      const filePath = `${user.id}/${Date.now()}-${selectedFile.name}`;
-
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from("syllabi")
-        .upload(filePath, selectedFile);
-
-      if (uploadError) throw uploadError;
+      // Upload file to storage with retry & collision-safe path
+      const { filePath } = await uploadFile("syllabi", user.id, selectedFile);
 
       // Save metadata to database
       const { error: dbError } = await supabase.from("syllabi").insert({

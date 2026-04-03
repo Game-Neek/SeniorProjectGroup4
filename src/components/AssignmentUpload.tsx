@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { validateFile, uploadFile, ASSIGNMENT_VALIDATION } from "@/lib/uploadEngine";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -112,21 +113,9 @@ export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParse
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a PDF or Word document.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Maximum file size is 10MB.",
-          variant: "destructive",
-        });
+      const result = validateFile(file, ASSIGNMENT_VALIDATION);
+      if (!result.valid) {
+        toast({ title: "Invalid file", description: result.error, variant: "destructive" });
         return;
       }
       setSelectedFile(file);
@@ -149,14 +138,8 @@ export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParse
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const filePath = `${session.user.id}/${Date.now()}_${selectedFile.name}`;
-      
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('assignments')
-        .upload(filePath, selectedFile);
-
-      if (uploadError) throw uploadError;
+      // Upload with retry & collision-safe path
+      const { filePath } = await uploadFile("assignments", session.user.id, selectedFile);
 
       // Create assignment record
       const { data: assignment, error: dbError } = await supabase
