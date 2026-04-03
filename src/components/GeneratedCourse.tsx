@@ -356,15 +356,20 @@ function ChapterContent({
   chapter,
   onRegenerate,
   isRegenerating,
+  onRefine,
+  isRefining,
 }: {
   chapter: CourseChapter;
   onRegenerate: () => void;
   isRegenerating: boolean;
+  onRefine: (mode: string) => void;
+  isRefining: boolean;
 }) {
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [showExplanations, setShowExplanations] = useState<Set<number>>(new Set());
   const [showHints, setShowHints] = useState<Set<number>>(new Set());
   const [showSolutions, setShowSolutions] = useState<Set<number>>(new Set());
+  const [refineMode, setRefineMode] = useState("full");
 
   return (
     <Tabs defaultValue="lesson" className="w-full">
