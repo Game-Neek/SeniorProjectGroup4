@@ -695,7 +695,7 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate a structured placement quiz with multiple choice questions",
+              description: "Generate a structured placement quiz with multiple choice questions, including visual data when applicable",
               parameters: {
                 type: "object",
                 properties: {
@@ -708,7 +708,22 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
                         question: { type: "string" },
                         options: { type: "array", items: { type: "string" } },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
-                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" },
+                        visual_required: { type: "boolean", description: "Whether this question benefits from a visual" },
+                        visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"] },
+                        visual_data: {
+                          type: "object",
+                          properties: {
+                            function: { type: "string" },
+                            range: { type: "array", items: { type: "number" } },
+                            dataPoints: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } } },
+                            xLabel: { type: "string" },
+                            yLabel: { type: "string" },
+                            forces: { type: "array", items: { type: "object", properties: { label: { type: "string" }, direction: { type: "string" } } } },
+                            formula: { type: "string" },
+                            points: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" }, label: { type: "string" } } } }
+                          }
+                        }
                       },
                       required: ["id", "question", "options", "correctIndex", "explanation"]
                     }
