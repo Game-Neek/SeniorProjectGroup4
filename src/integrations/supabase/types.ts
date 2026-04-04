@@ -183,6 +183,66 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reviews: {
+        Row: {
+          accuracy_score: number | null
+          alignment_score: number | null
+          bloom_match_score: number | null
+          content_id: string
+          created_at: string
+          id: string
+          inclusivity_score: number | null
+          inline_annotations: Json | null
+          objectives_covered: number | null
+          objectives_total: number | null
+          overall_comments: string | null
+          pedagogy_score: number | null
+          reviewer_id: string
+          revision_notes: string | null
+          status: string
+          syllabus_objectives_checked: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy_score?: number | null
+          alignment_score?: number | null
+          bloom_match_score?: number | null
+          content_id: string
+          created_at?: string
+          id?: string
+          inclusivity_score?: number | null
+          inline_annotations?: Json | null
+          objectives_covered?: number | null
+          objectives_total?: number | null
+          overall_comments?: string | null
+          pedagogy_score?: number | null
+          reviewer_id: string
+          revision_notes?: string | null
+          status?: string
+          syllabus_objectives_checked?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy_score?: number | null
+          alignment_score?: number | null
+          bloom_match_score?: number | null
+          content_id?: string
+          created_at?: string
+          id?: string
+          inclusivity_score?: number | null
+          inline_annotations?: Json | null
+          objectives_covered?: number | null
+          objectives_total?: number | null
+          overall_comments?: string | null
+          pedagogy_score?: number | null
+          reviewer_id?: string
+          revision_notes?: string | null
+          status?: string
+          syllabus_objectives_checked?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       course_content: {
         Row: {
           bloom_level: string | null
