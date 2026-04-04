@@ -205,19 +205,19 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
             </Button>
           </Card>
 
-          {/* Shuttle Information */}
+          {/* Shuttle & Transit */}
           <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)]">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Bus className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">Shuttle Information</h3>
+              <h3 className="text-lg font-semibold text-foreground">Transit & Shuttles</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Real-time shuttle schedules and routes
+              Campus shuttles & public metro schedules with interactive map
             </p>
-            <Button variant="outline" className="w-full">
-              View Schedule
+            <Button variant="outline" className="w-full" onClick={() => navigate("/transit")}>
+              View Transit Map
             </Button>
           </Card>
 
