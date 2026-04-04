@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MathText } from "@/components/MathText";
 import { ContentReview } from "@/components/ContentReview";
+import { BiasAudit } from "@/components/BiasAudit";
 
 interface CourseChapter {
   id: string;
