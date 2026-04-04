@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MathText } from "@/components/MathText";
+import { ContentReview } from "@/components/ContentReview";
 
 interface CourseChapter {
   id: string;
