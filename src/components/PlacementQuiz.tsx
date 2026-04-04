@@ -34,9 +34,10 @@ interface PlacementQuizProps {
   className?: string;
 }
 
-export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, completedClasses = [] }: PlacementQuizProps) => {
+export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, completedClasses = [], className }: PlacementQuizProps) => {
+  const isCourseScoped = !!className;
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>(className || "");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
@@ -44,6 +45,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
   const [showResult, setShowResult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [autoGenTriggered, setAutoGenTriggered] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
