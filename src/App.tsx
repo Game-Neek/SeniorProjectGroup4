@@ -10,6 +10,7 @@ import CalendarPage from "./pages/CalendarPage";
 import Profile from "./pages/Profile";
 import ReadAloudDemo from "./pages/ReadAloudDemo";
 import CoursePage from "./pages/CoursePage";
+import TransitPage from "./pages/TransitPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
