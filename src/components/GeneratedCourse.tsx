@@ -346,7 +346,7 @@ export const GeneratedCourse = ({ className }: GeneratedCourseProps) => {
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   {chapter.generation_status === "complete" ? (
-                    <ChapterContent chapter={chapter} onRegenerate={() => generateChapter(chapter)} isRegenerating={generating.has(chapter.id)} onRefine={(mode) => refineChapter(chapter, mode)} isRefining={refining.has(chapter.id)} />
+                    <ChapterContent chapter={chapter} courseName={className} onRegenerate={() => generateChapter(chapter)} isRegenerating={generating.has(chapter.id)} onRefine={(mode) => refineChapter(chapter, mode)} isRefining={refining.has(chapter.id)} />
                   ) : (
                     <div className="text-center py-6">
                       <Brain className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
