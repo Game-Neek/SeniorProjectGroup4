@@ -602,6 +602,11 @@ function ChapterContent({
           bloomLevel={chapter.bloom_level}
         />
       </TabsContent>
+
+      {/* Equity Audit */}
+      <TabsContent value="equity" className="mt-0">
+        <BiasAudit contentId={chapter.id} topic={chapter.topic} />
+      </TabsContent>
     </Tabs>
   );
 }
