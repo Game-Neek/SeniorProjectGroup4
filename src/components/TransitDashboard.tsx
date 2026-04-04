@@ -8,6 +8,7 @@ import { useTransitRoutes, useAllTransitStops, type TransitRoute } from "@/hooks
 import { TransitMap } from "@/components/TransitMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 const RouteCard = ({
   route,
