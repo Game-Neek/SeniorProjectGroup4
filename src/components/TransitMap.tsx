@@ -20,7 +20,7 @@ export const TransitMap = ({ routes, stops, selectedRouteId, onStopClick }: Tran
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [40.7580, -73.9855],
+      center: [38.9225, -77.0210],
       zoom: 14,
       scrollWheelZoom: true,
     });
