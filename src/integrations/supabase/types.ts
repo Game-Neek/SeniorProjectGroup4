@@ -632,6 +632,97 @@ export type Database = {
         }
         Relationships: []
       }
+      transit_routes: {
+        Row: {
+          color: string
+          created_at: string
+          days_of_week: string[]
+          frequency_minutes: number
+          id: string
+          is_active: boolean
+          operating_hours: string
+          route_name: string
+          route_type: string
+          university_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          days_of_week?: string[]
+          frequency_minutes?: number
+          id?: string
+          is_active?: boolean
+          operating_hours?: string
+          route_name: string
+          route_type?: string
+          university_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          days_of_week?: string[]
+          frequency_minutes?: number
+          id?: string
+          is_active?: boolean
+          operating_hours?: string
+          route_name?: string
+          route_type?: string
+          university_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transit_routes_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transit_stops: {
+        Row: {
+          arrival_offset_minutes: number
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          route_id: string
+          stop_name: string
+          stop_order: number
+        }
+        Insert: {
+          arrival_offset_minutes?: number
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          route_id: string
+          stop_name: string
+          stop_order?: number
+        }
+        Update: {
+          arrival_offset_minutes?: number
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          route_id?: string
+          stop_name?: string
+          stop_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transit_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "transit_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       universities: {
         Row: {
           created_at: string | null
