@@ -23,9 +23,9 @@ export type TransitStop = {
   arrival_offset_minutes: number;
 };
 
-export const useTransitRoutes = (type?: "shuttle" | "metro") => {
+export const useTransitRoutes = (universityId?: string | null) => {
   return useQuery({
-    queryKey: ["transit-routes", type],
+    queryKey: ["transit-routes", universityId],
     queryFn: async () => {
       let query = supabase
         .from("transit_routes")
@@ -33,8 +33,9 @@ export const useTransitRoutes = (type?: "shuttle" | "metro") => {
         .eq("is_active", true)
         .order("route_name");
 
-      if (type) {
-        query = query.eq("route_type", type);
+      if (universityId) {
+        // Show routes for this university OR routes with no university (shared/public)
+        query = query.or(`university_id.eq.${universityId},university_id.is.null`);
       }
 
       const { data, error } = await query;
