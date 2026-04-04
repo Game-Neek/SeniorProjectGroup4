@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MathText } from "@/components/MathText";
+import { QuestionVisual } from "@/components/QuestionVisual";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,9 @@ interface QuizQuestion {
   options: string[];
   correctIndex: number;
   explanation: string;
+  visual_required?: boolean;
+  visual_type?: string;
+  visual_data?: any;
 }
 
 interface PlacementQuizProps {
