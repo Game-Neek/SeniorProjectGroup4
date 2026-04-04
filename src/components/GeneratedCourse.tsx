@@ -392,12 +392,14 @@ export const GeneratedCourse = ({ className }: GeneratedCourseProps) => {
 // Sub-component for displaying generated chapter content
 function ChapterContent({
   chapter,
+  courseName,
   onRegenerate,
   isRegenerating,
   onRefine,
   isRefining,
 }: {
   chapter: CourseChapter;
+  courseName: string;
   onRegenerate: () => void;
   isRegenerating: boolean;
   onRefine: (mode: string) => void;
