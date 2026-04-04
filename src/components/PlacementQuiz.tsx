@@ -60,6 +60,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [autoGenTriggered, setAutoGenTriggered] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
