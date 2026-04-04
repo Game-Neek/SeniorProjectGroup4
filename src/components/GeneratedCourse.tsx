@@ -587,6 +587,17 @@ function ChapterContent({
           </a>
         ))}
       </TabsContent>
+
+      {/* SME Review */}
+      <TabsContent value="review" className="mt-0">
+        <ContentReview
+          contentId={chapter.id}
+          lessonContent={chapter.lesson_content}
+          topic={chapter.topic}
+          className={courseName}
+          bloomLevel={chapter.bloom_level}
+        />
+      </TabsContent>
     </Tabs>
   );
 }
