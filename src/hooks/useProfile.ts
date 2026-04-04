@@ -29,8 +29,14 @@ export const useProfile = () => {
         .single();
 
       if (profileData && !error) {
-        setProfile(profileData);
-        setOriginalProfile(profileData);
+        const normalized = {
+          full_name: profileData.full_name ?? null,
+          email: profileData.email ?? null,
+          university_id: profileData.university_id ?? null,
+        };
+        setProfile(normalized);
+        setOriginalProfile(normalized);
+        setHasChanges(false);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -62,15 +68,16 @@ export const useProfile = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return false;
 
-      // Only save if there are changes
       if (!hasChanges) return true;
+
+      const updates: Record<string, unknown> = {
+        full_name: profile.full_name,
+        university_id: profile.university_id || null,
+      };
 
       const { error } = await supabase
         .from("profiles")
-        .update({
-          full_name: profile.full_name,
-          university_id: profile.university_id,
-        })
+        .update(updates)
         .eq("id", session.user.id);
 
       if (error) {
@@ -78,7 +85,9 @@ export const useProfile = () => {
         return false;
       }
 
-      setOriginalProfile(profile);
+      // Re-sync original to current so hasChanges resets
+      const saved = { ...profile };
+      setOriginalProfile(saved);
       setHasChanges(false);
       return true;
     } catch (error) {
