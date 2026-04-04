@@ -31,11 +31,13 @@ interface PlacementQuizProps {
   onQuizComplete: (result: QuizResult) => void;
   refreshTrigger?: number;
   completedClasses?: string[];
+  className?: string;
 }
 
-export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, completedClasses = [] }: PlacementQuizProps) => {
+export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, completedClasses = [], className }: PlacementQuizProps) => {
+  const isCourseScoped = !!className;
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>(className || "");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
@@ -43,6 +45,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
   const [showResult, setShowResult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [autoGenTriggered, setAutoGenTriggered] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,8 +63,21 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
     }
   };
 
-  const generateQuiz = async () => {
-    if (!selectedClass) {
+  // Auto-generate quiz when on a course-scoped page and syllabus exists
+  useEffect(() => {
+    if (isCourseScoped && !autoGenTriggered && syllabi.length > 0 && !completedClasses.includes(className!)) {
+      const hasSyllabus = syllabi.some(s => s.class_name === className);
+      if (hasSyllabus && questions.length === 0 && !isGenerating) {
+        setAutoGenTriggered(true);
+        setSelectedClass(className!);
+        generateQuiz(className!);
+      }
+    }
+  }, [isCourseScoped, syllabi, autoGenTriggered, className, completedClasses]);
+
+  const generateQuiz = async (overrideClass?: string) => {
+    const quizClass = overrideClass || selectedClass;
+    if (!quizClass) {
       toast({
         title: "Select a class",
         description: "Please select a class to generate a placement quiz",
@@ -90,10 +106,10 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
             Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [{ role: "user", content: `Generate an interactive placement quiz for ${selectedClass}` }],
+            messages: [{ role: "user", content: `Generate an interactive placement quiz for ${quizClass}` }],
             learningStyles,
             requestType: "placement-quiz-interactive",
-            className: selectedClass,
+            className: quizClass,
           }),
         }
       );
@@ -108,7 +124,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
         setQuestions(data.questions);
         toast({
           title: "Quiz Generated",
-          description: `${data.questions.length} questions ready for ${selectedClass}!`,
+          description: `${data.questions.length} questions ready for ${quizClass}!`,
         });
       } else {
         throw new Error("Invalid quiz format received");
@@ -216,6 +232,33 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
           <p>Upload a syllabus first to generate placement quizzes</p>
           <p className="text-sm">Go to "Class Syllabi" section above</p>
         </div>
+      ) : questions.length === 0 && isCourseScoped ? (
+        <div className="space-y-4">
+          {completedClasses.includes(className!) ? (
+            <div className="text-center py-4">
+              <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-500" />
+              <p className="text-foreground font-medium">Placement quiz completed for {className}!</p>
+              <Button variant="outline" className="mt-3" onClick={() => { setAutoGenTriggered(false); generateQuiz(className!); }}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retake Quiz
+              </Button>
+            </div>
+          ) : isGenerating ? (
+            <div className="text-center py-8">
+              <Loader2 className="w-10 h-10 mx-auto mb-3 animate-spin text-primary" />
+              <p className="text-foreground font-medium">Generating placement quiz for {className}...</p>
+              <p className="text-sm text-muted-foreground">This may take a moment</p>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground">Waiting for syllabus data to generate quiz...</p>
+              <Button className="mt-3 bg-[image:var(--gradient-primary)] hover:opacity-90" onClick={() => generateQuiz(className!)}>
+                <FileQuestion className="w-4 h-4 mr-2" />
+                Generate Quiz
+              </Button>
+            </div>
+          )}
+        </div>
       ) : questions.length === 0 ? (
         <div className="space-y-4">
           {/* Show completed classes summary */}
@@ -256,7 +299,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
                   </SelectContent>
                 </Select>
                 <Button
-                  onClick={generateQuiz}
+                  onClick={() => generateQuiz()}
                   disabled={isGenerating || !selectedClass}
                   className="bg-[image:var(--gradient-primary)] hover:opacity-90"
                 >
@@ -293,7 +336,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
                   </SelectContent>
                 </Select>
                 <Button
-                  onClick={generateQuiz}
+                  onClick={() => generateQuiz()}
                   disabled={isGenerating || !selectedClass}
                   variant="outline"
                 >

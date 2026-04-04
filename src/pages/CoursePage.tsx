@@ -543,6 +543,7 @@ const CoursePage = () => {
           learningStyles={learningStyles}
           onQuizComplete={setQuizResultAndGenerate}
           completedClasses={completedClasses}
+          className={decodedClassName}
         />
 
         {/* Study Plan */}
