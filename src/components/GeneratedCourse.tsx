@@ -414,7 +414,7 @@ function ChapterContent({
 
   return (
     <Tabs defaultValue="lesson" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 mb-4">
+      <TabsList className="grid w-full grid-cols-6 mb-4">
         <TabsTrigger value="lesson" className="text-xs gap-1">
           <BookOpen className="w-3 h-3" /> Lesson
         </TabsTrigger>
@@ -429,6 +429,9 @@ function ChapterContent({
         </TabsTrigger>
         <TabsTrigger value="review" className="text-xs gap-1">
           <ClipboardCheck className="w-3 h-3" /> Review
+        </TabsTrigger>
+        <TabsTrigger value="equity" className="text-xs gap-1">
+          <Shield className="w-3 h-3" /> Equity
         </TabsTrigger>
       </TabsList>
 
