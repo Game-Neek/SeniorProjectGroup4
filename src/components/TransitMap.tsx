@@ -20,7 +20,7 @@ export const TransitMap = ({ routes, stops, selectedRouteId, onStopClick }: Tran
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [40.7580, -73.9855],
+      center: [38.9225, -77.0210],
       zoom: 14,
       scrollWheelZoom: true,
     });
@@ -64,9 +64,13 @@ export const TransitMap = ({ routes, stops, selectedRouteId, onStopClick }: Tran
       if (!route) return;
       if (selectedRouteId && routeId !== selectedRouteId) return;
 
-      const positions = routeStops
-        .sort((a, b) => a.stop_order - b.stop_order)
-        .map((s) => [s.latitude, s.longitude] as [number, number]);
+      const sorted = routeStops.sort((a, b) => a.stop_order - b.stop_order);
+      const positions = sorted.map((s) => [s.latitude, s.longitude] as [number, number]);
+
+      // Close the loop for shuttle routes
+      if (route.route_type === "shuttle" && positions.length > 2) {
+        positions.push(positions[0]);
+      }
 
       const polyline = L.polyline(positions, {
         color: route.color,
