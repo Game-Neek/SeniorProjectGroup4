@@ -84,60 +84,123 @@ const RouteCard = ({
 const SchedulePanel = ({
   route,
   stops,
+  arrivals,
 }: {
   route: TransitRoute;
-  stops: { stop_name: string; arrival_offset_minutes: number; stop_order: number }[];
+  stops: { stop_name: string; arrival_offset_minutes: number; stop_order: number; id: string }[];
+  arrivals: TransitArrival[];
 }) => {
   const routeStops = stops.sort((a, b) => a.stop_order - b.stop_order);
 
-  // Generate next departures based on frequency
+  // Group arrivals by stop
+  const arrivalsByStop = useMemo(() => {
+    const map: Record<string, TransitArrival[]> = {};
+    arrivals.forEach((a) => {
+      if (!map[a.stop_id]) map[a.stop_id] = [];
+      map[a.stop_id].push(a);
+    });
+    // Sort each group by time
+    Object.values(map).forEach((arr) =>
+      arr.sort((a, b) => new Date(a.predicted_arrival_time).getTime() - new Date(b.predicted_arrival_time).getTime())
+    );
+    return map;
+  }, [arrivals]);
+
+  const hasLiveData = arrivals.length > 0;
+
+  // Fallback to generated departures if no live data
   const now = new Date();
-  const nextDepartures = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(now.getTime() + route.frequency_minutes * 60000 * i);
-    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  });
+  const nextDepartures = hasLiveData
+    ? // Use first stop's arrivals
+      (arrivalsByStop[routeStops[0]?.id] || []).slice(0, 5).map((a) => ({
+        time: new Date(a.predicted_arrival_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+        status: a.status,
+        source: a.data_source,
+      }))
+    : Array.from({ length: 5 }, (_, i) => ({
+        time: new Date(now.getTime() + route.frequency_minutes * 60000 * i).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+        status: "scheduled" as string,
+        source: "schedule" as string,
+      }));
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case "on_time": case "early": return "bg-emerald-500/90";
+      case "delayed": return "bg-amber-500";
+      case "arriving": case "boarding": return "bg-primary";
+      default: return "";
+    }
+  };
 
   return (
     <Card className="p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: route.color }} />
-        <h3 className="font-semibold text-foreground">{route.route_name}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: route.color }} />
+          <h3 className="font-semibold text-foreground">{route.route_name}</h3>
+        </div>
+        {hasLiveData ? (
+          <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 border-emerald-300">
+            <Wifi className="w-3 h-3" /> Live
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
+            <WifiOff className="w-3 h-3" /> Scheduled
+          </Badge>
+        )}
       </div>
 
       {/* Next departures */}
       <div className="mb-4">
         <p className="text-xs font-medium text-muted-foreground mb-2">NEXT DEPARTURES</p>
         <div className="flex flex-wrap gap-2">
-          {nextDepartures.map((time, i) => (
-            <Badge key={i} variant={i === 0 ? "default" : "outline"} className="text-xs">
-              {time}
+          {nextDepartures.map((dep, i) => (
+            <Badge key={i} variant={i === 0 ? "default" : "outline"} className={`text-xs ${i === 0 && hasLiveData ? statusColor(dep.status) : ""}`}>
+              {dep.time}
+              {dep.status === "delayed" && " ⚠"}
+              {dep.status === "arriving" && " 🚌"}
+              {dep.status === "boarding" && " 🚇"}
             </Badge>
           ))}
         </div>
       </div>
 
-      {/* Stop timeline */}
+      {/* Stop timeline with live ETAs */}
       <div className="space-y-0">
         <p className="text-xs font-medium text-muted-foreground mb-2">ROUTE STOPS</p>
-        {routeStops.map((stop, i) => (
-          <div key={i} className="flex items-start gap-3">
-            <div className="flex flex-col items-center">
-              <div
-                className="w-3 h-3 rounded-full border-2 shrink-0"
-                style={{ borderColor: route.color, backgroundColor: i === 0 ? route.color : "transparent" }}
-              />
-              {i < routeStops.length - 1 && (
-                <div className="w-0.5 h-6" style={{ backgroundColor: route.color, opacity: 0.3 }} />
-              )}
+        {routeStops.map((stop, i) => {
+          const stopArrivals = arrivalsByStop[stop.id] || [];
+          const nextArrival = stopArrivals[0];
+
+          return (
+            <div key={i} className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                <div
+                  className="w-3 h-3 rounded-full border-2 shrink-0"
+                  style={{ borderColor: route.color, backgroundColor: i === 0 ? route.color : "transparent" }}
+                />
+                {i < routeStops.length - 1 && (
+                  <div className="w-0.5 h-6" style={{ backgroundColor: route.color, opacity: 0.3 }} />
+                )}
+              </div>
+              <div className="pb-4 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground leading-none">{stop.stop_name}</p>
+                  {nextArrival && (
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusColor(nextArrival.status)} ${nextArrival.status !== "on_time" ? "text-white" : ""}`}>
+                      {nextArrival.estimated_minutes <= 0 ? "Now" : `${nextArrival.estimated_minutes} min`}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {nextArrival
+                    ? `Next: ${new Date(nextArrival.predicted_arrival_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} · ${nextArrival.data_source === "wmata" ? "WMATA" : "Est."}`
+                    : `+${stop.arrival_offset_minutes} min from start`}
+                </p>
+              </div>
             </div>
-            <div className="pb-4">
-              <p className="text-sm font-medium text-foreground leading-none">{stop.stop_name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                +{stop.arrival_offset_minutes} min from start
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Operating info */}
@@ -151,6 +214,11 @@ const SchedulePanel = ({
         <p>
           <span className="font-medium">Frequency:</span> Every {route.frequency_minutes} minutes
         </p>
+        {hasLiveData && (
+          <p className="text-emerald-600">
+            <span className="font-medium">🔴 Live data</span> · Updates automatically
+          </p>
+        )}
       </div>
     </Card>
   );
