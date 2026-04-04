@@ -316,7 +316,7 @@ export const TransitDashboard = () => {
               {/* Schedule panel */}
               <div>
                 {selectedRoute ? (
-                  <SchedulePanel route={selectedRoute} stops={selectedStops} />
+                  <SchedulePanel route={selectedRoute} stops={selectedStops} arrivals={arrivals} />
                 ) : (
                   <Card className="p-8 text-center text-muted-foreground text-sm">
                     <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
