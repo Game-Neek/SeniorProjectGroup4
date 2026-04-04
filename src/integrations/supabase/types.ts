@@ -632,6 +632,60 @@ export type Database = {
         }
         Relationships: []
       }
+      transit_arrivals: {
+        Row: {
+          created_at: string
+          data_source: string
+          estimated_minutes: number
+          id: string
+          predicted_arrival_time: string
+          route_id: string
+          status: string
+          stop_id: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_source?: string
+          estimated_minutes?: number
+          id?: string
+          predicted_arrival_time: string
+          route_id: string
+          status?: string
+          stop_id: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_source?: string
+          estimated_minutes?: number
+          id?: string
+          predicted_arrival_time?: string
+          route_id?: string
+          status?: string
+          stop_id?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transit_arrivals_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "transit_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transit_arrivals_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "transit_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transit_routes: {
         Row: {
           color: string

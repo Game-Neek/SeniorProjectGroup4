@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type TransitRoute = {
@@ -23,6 +24,17 @@ export type TransitStop = {
   arrival_offset_minutes: number;
 };
 
+export type TransitArrival = {
+  id: string;
+  route_id: string;
+  stop_id: string;
+  predicted_arrival_time: string;
+  estimated_minutes: number;
+  data_source: "wmata" | "simulated";
+  vehicle_id: string | null;
+  status: string;
+};
+
 export const useTransitRoutes = (universityId?: string | null) => {
   return useQuery({
     queryKey: ["transit-routes", universityId],
@@ -34,7 +46,6 @@ export const useTransitRoutes = (universityId?: string | null) => {
         .order("route_name");
 
       if (universityId) {
-        // Show routes for this university OR routes with no university (shared/public)
         query = query.or(`university_id.eq.${universityId},university_id.is.null`);
       }
 
@@ -77,4 +88,48 @@ export const useAllTransitStops = (routeIds: string[]) => {
       return (data || []) as TransitStop[];
     },
   });
+};
+
+export const useTransitArrivals = (routeId?: string | null) => {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ["transit-arrivals", routeId],
+    queryFn: async () => {
+      let q = supabase
+        .from("transit_arrivals")
+        .select("*")
+        .gte("predicted_arrival_time", new Date().toISOString())
+        .order("predicted_arrival_time");
+
+      if (routeId) {
+        q = q.eq("route_id", routeId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []) as TransitArrival[];
+    },
+    refetchInterval: 30000, // fallback polling every 30s
+  });
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("transit-arrivals-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transit_arrivals" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["transit-arrivals"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return query;
 };
