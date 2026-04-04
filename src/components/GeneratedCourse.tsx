@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   BookOpen, FileQuestion, Zap, Link2, Loader2, Sparkles, RefreshCw,
-  CheckCircle2, Clock, Brain, Wand2, ClipboardCheck
+  CheckCircle2, Clock, Brain, Wand2, ClipboardCheck, Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MathText } from "@/components/MathText";
 import { ContentReview } from "@/components/ContentReview";
+import { BiasAudit } from "@/components/BiasAudit";
 
 interface CourseChapter {
   id: string;
@@ -413,7 +414,7 @@ function ChapterContent({
 
   return (
     <Tabs defaultValue="lesson" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 mb-4">
+      <TabsList className="grid w-full grid-cols-6 mb-4">
         <TabsTrigger value="lesson" className="text-xs gap-1">
           <BookOpen className="w-3 h-3" /> Lesson
         </TabsTrigger>
@@ -428,6 +429,9 @@ function ChapterContent({
         </TabsTrigger>
         <TabsTrigger value="review" className="text-xs gap-1">
           <ClipboardCheck className="w-3 h-3" /> Review
+        </TabsTrigger>
+        <TabsTrigger value="equity" className="text-xs gap-1">
+          <Shield className="w-3 h-3" /> Equity
         </TabsTrigger>
       </TabsList>
 
@@ -597,6 +601,11 @@ function ChapterContent({
           className={courseName}
           bloomLevel={chapter.bloom_level}
         />
+      </TabsContent>
+
+      {/* Equity Audit */}
+      <TabsContent value="equity" className="mt-0">
+        <BiasAudit contentId={chapter.id} topic={chapter.topic} />
       </TabsContent>
     </Tabs>
   );

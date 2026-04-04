@@ -111,6 +111,57 @@ export type Database = {
         }
         Relationships: []
       }
+      bias_audits: {
+        Row: {
+          auto_fixed: boolean
+          content_id: string
+          created_at: string
+          flags: Json
+          gender_score: number
+          id: string
+          language_score: number
+          overall_score: number
+          racial_score: number
+          socioeconomic_score: number
+          status: string
+          suggestions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_fixed?: boolean
+          content_id: string
+          created_at?: string
+          flags?: Json
+          gender_score?: number
+          id?: string
+          language_score?: number
+          overall_score?: number
+          racial_score?: number
+          socioeconomic_score?: number
+          status?: string
+          suggestions?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_fixed?: boolean
+          content_id?: string
+          created_at?: string
+          flags?: Json
+          gender_score?: number
+          id?: string
+          language_score?: number
+          overall_score?: number
+          racial_score?: number
+          socioeconomic_score?: number
+          status?: string
+          suggestions?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string | null
