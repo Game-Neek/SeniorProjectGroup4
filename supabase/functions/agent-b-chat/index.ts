@@ -231,6 +231,16 @@ SUBJECT-AWARE FORMATTING:
 - Physics: Include formulas with values, unit conversions, applied force/energy problems
 - General: Scenario-based questions requiring analysis and reasoning
 
+VISUAL QUESTION GENERATION — IMPORTANT:
+- For 30-50% of questions, include a visual component when applicable
+- Set visual_required=true and provide visual_type + visual_data for rendering
+- Supported visual_type values: "graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"
+- For graph visuals: provide { "function": "y = x^2 - 4x + 3", "range": [-2, 6] }
+- For physics graphs: provide { "dataPoints": [...], "xLabel": "Time (s)", "yLabel": "Velocity (m/s)" }
+- For free body diagrams: provide { "forces": [{ "label": "Gravity", "direction": "down" }, ...] }
+- For molecule: provide { "formula": "H2O" }
+- Only use visual types that match the subject matter
+
 EXAMPLE TRANSFORMATIONS:
 ❌ "What is a derivative?" → ✅ "Find the derivative of f(x) = 3x² + 2x − 5"
 ❌ "What is a scalar?" → ✅ "A force of 10N is applied at 30°. Find the horizontal component."
@@ -245,7 +255,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate a mini quiz with exactly 5 questions - no more, no less",
+              description: "Generate a mini quiz with exactly 5 questions - no more, no less. Include visual data when applicable.",
               parameters: {
                 type: "object",
                 properties: {
@@ -260,7 +270,23 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                         question: { type: "string" },
                         options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
-                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" },
+                        visual_required: { type: "boolean", description: "Whether this question benefits from a visual representation" },
+                        visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"], description: "Type of visual to render" },
+                        visual_data: {
+                          type: "object",
+                          description: "Structured data for rendering the visual. For graphs: { function, range }. For physics: { dataPoints, xLabel, yLabel }. For forces: { forces: [{ label, direction }] }. For molecules: { formula }.",
+                          properties: {
+                            function: { type: "string" },
+                            range: { type: "array", items: { type: "number" } },
+                            dataPoints: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } } },
+                            xLabel: { type: "string" },
+                            yLabel: { type: "string" },
+                            forces: { type: "array", items: { type: "object", properties: { label: { type: "string" }, direction: { type: "string" } } } },
+                            formula: { type: "string" },
+                            points: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" }, label: { type: "string" } } } }
+                          }
+                        }
                       },
                       required: ["id", "question", "options", "correctIndex", "explanation"]
                     }
@@ -295,6 +321,14 @@ SUBJECT-AWARE FORMATTING:
 - Chemistry: Provide reactions to balance, concentrations to calculate, molecular structures to analyze
 - Physics: Provide scenarios with given values requiring formula application and numerical solutions
 
+VISUAL EXERCISE GENERATION — IMPORTANT:
+- For 30-50% of exercises, include a visual component when applicable
+- Set visual_required=true and provide visual_type + visual_data for rendering
+- Supported visual_type values: "graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"
+- For graph visuals: provide { "function": "y = x^2 - 4x + 3", "range": [-2, 6] }
+- For physics: provide { "dataPoints": [...], "xLabel": "Time (s)", "yLabel": "Velocity (m/s)" } or { "forces": [...] }
+- For molecules: provide { "formula": "H2O" }
+
 Generate exactly 5 practice problems with varying difficulty (easy, medium, hard).
 Each must include a helpful hint and a detailed step-by-step solution.
 IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathematical expressions (e.g. $f(x) = 3x^2$, $\\theta = 30^\\circ$). This applies to problems, hints, AND solutions.`;
@@ -305,7 +339,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
             type: "function",
             function: {
               name: "generate_exercises",
-              description: "Generate exactly 5 practice exercises with hints and solutions - no more, no less",
+              description: "Generate exactly 5 practice exercises with hints, solutions, and optional visual data",
               parameters: {
                 type: "object",
                 properties: {
@@ -321,7 +355,23 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                         hint: { type: "string", description: "A helpful hint without giving away the answer" },
                         solution: { type: "string", description: "Step-by-step solution" },
                         topic: { type: "string", description: "The topic this problem covers" },
-                        difficulty: { type: "string", enum: ["easy", "medium", "hard"] }
+                        difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+                        visual_required: { type: "boolean", description: "Whether this exercise benefits from a visual" },
+                        visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"] },
+                        visual_data: {
+                          type: "object",
+                          description: "Structured data for rendering the visual",
+                          properties: {
+                            function: { type: "string" },
+                            range: { type: "array", items: { type: "number" } },
+                            dataPoints: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } } },
+                            xLabel: { type: "string" },
+                            yLabel: { type: "string" },
+                            forces: { type: "array", items: { type: "object", properties: { label: { type: "string" }, direction: { type: "string" } } } },
+                            formula: { type: "string" },
+                            points: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" }, label: { type: "string" } } } }
+                          }
+                        }
                       },
                       required: ["id", "problem", "hint", "solution", "topic", "difficulty"]
                     }
@@ -354,6 +404,16 @@ SUBJECT-AWARE QUESTION FORMATTING (detect subject from course name/syllabus):
 - Chemistry: reactions to balance, stoichiometry calculations, molecular formula problems
 - Physics: formulas with given values, unit-based problems, applied force/energy/motion scenarios
 - General: scenario-based analysis requiring reasoning and application
+
+VISUAL QUESTION GENERATION — IMPORTANT:
+- For 30-50% of questions (3-5 out of 10), include a visual component when the subject supports it
+- Set visual_required=true and provide visual_type + visual_data for rendering
+- Supported visual_type values: "graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"
+- For graph visuals: provide { "function": "y = x^2 - 4x + 3", "range": [-2, 6] }
+- For physics graphs: provide { "dataPoints": [{"x":0,"y":0},{"x":1,"y":5},...], "xLabel": "Time (s)", "yLabel": "Velocity (m/s)" }
+- For free body diagrams: provide { "forces": [{ "label": "Gravity", "direction": "down" }, { "label": "Normal", "direction": "up" }] }
+- For molecule: provide { "formula": "H2O" }
+- Only use visual types that match the subject matter
 
 SYLLABUS ALIGNMENT:
 - If syllabus topics are provided above, derive ALL questions from those specific topics
@@ -659,7 +719,7 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate a structured placement quiz with multiple choice questions",
+              description: "Generate a structured placement quiz with multiple choice questions, including visual data when applicable",
               parameters: {
                 type: "object",
                 properties: {
@@ -672,7 +732,22 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
                         question: { type: "string" },
                         options: { type: "array", items: { type: "string" } },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
-                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" }
+                        explanation: { type: "string", description: "Brief explanation of why the answer is correct" },
+                        visual_required: { type: "boolean", description: "Whether this question benefits from a visual" },
+                        visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"] },
+                        visual_data: {
+                          type: "object",
+                          properties: {
+                            function: { type: "string" },
+                            range: { type: "array", items: { type: "number" } },
+                            dataPoints: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } } },
+                            xLabel: { type: "string" },
+                            yLabel: { type: "string" },
+                            forces: { type: "array", items: { type: "object", properties: { label: { type: "string" }, direction: { type: "string" } } } },
+                            formula: { type: "string" },
+                            points: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" }, label: { type: "string" } } } }
+                          }
+                        }
                       },
                       required: ["id", "question", "options", "correctIndex", "explanation"]
                     }

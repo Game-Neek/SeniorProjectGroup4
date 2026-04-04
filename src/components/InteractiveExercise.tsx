@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MathText } from "@/components/MathText";
+import { QuestionVisual } from "@/components/QuestionVisual";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,9 @@ interface Exercise {
   solution: string;
   topic: string;
   difficulty: "easy" | "medium" | "hard";
+  visual_required?: boolean;
+  visual_type?: string;
+  visual_data?: any;
 }
 
 interface InteractiveExerciseProps {
@@ -284,6 +288,10 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
               <div className="p-4 rounded-lg bg-muted/50 border border-border">
                 <h4 className="font-semibold text-foreground mb-2">Problem:</h4>
                 <p className="text-foreground whitespace-pre-wrap"><MathText text={currentExercise?.problem || ""} /></p>
+                {/* Visual rendering */}
+                {currentExercise?.visual_required && currentExercise?.visual_type && currentExercise?.visual_data && (
+                  <QuestionVisual visualType={currentExercise.visual_type} visualData={currentExercise.visual_data} />
+                )}
               </div>
 
               {/* User Answer Area */}

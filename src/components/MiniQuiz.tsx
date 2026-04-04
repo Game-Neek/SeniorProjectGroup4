@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MathText } from "@/components/MathText";
+import { QuestionVisual } from "@/components/QuestionVisual";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,9 @@ interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  visual_required?: boolean;
+  visual_type?: string;
+  visual_data?: any;
 }
 
 interface MiniQuizProps {
@@ -260,6 +264,10 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
 
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
               <p className="font-medium text-foreground"><MathText text={currentQuestion?.question || ""} /></p>
+              {/* Visual rendering */}
+              {currentQuestion?.visual_required && currentQuestion?.visual_type && currentQuestion?.visual_data && (
+                <QuestionVisual visualType={currentQuestion.visual_type} visualData={currentQuestion.visual_data} />
+              )}
             </div>
 
             <RadioGroup

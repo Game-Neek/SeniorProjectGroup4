@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MathText } from "@/components/MathText";
+import { QuestionVisual } from "@/components/QuestionVisual";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,9 @@ interface QuizQuestion {
   options: string[];
   correctIndex: number;
   explanation: string;
+  visual_required?: boolean;
+  visual_type?: string;
+  visual_data?: any;
 }
 
 interface PlacementQuizProps {
@@ -396,7 +400,12 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
 
           {/* Question */}
           <div className="p-4 rounded-xl bg-muted/30 border border-border">
-            <p className="text-lg font-medium text-foreground mb-6"><MathText text={currentQuestion?.question || ""} /></p>
+            <p className="text-lg font-medium text-foreground mb-4"><MathText text={currentQuestion?.question || ""} /></p>
+
+            {/* Visual rendering */}
+            {currentQuestion?.visual_required && currentQuestion?.visual_type && currentQuestion?.visual_data && (
+              <QuestionVisual visualType={currentQuestion.visual_type} visualData={currentQuestion.visual_data} />
+            )}
 
             <RadioGroup
               value={selectedAnswer}
