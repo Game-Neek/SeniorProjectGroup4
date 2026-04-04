@@ -75,8 +75,9 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
     }
   }, [isCourseScoped, syllabi, autoGenTriggered, className, completedClasses]);
 
-
-    if (!selectedClass) {
+  const generateQuiz = async (overrideClass?: string) => {
+    const quizClass = overrideClass || selectedClass;
+    if (!quizClass) {
       toast({
         title: "Select a class",
         description: "Please select a class to generate a placement quiz",
