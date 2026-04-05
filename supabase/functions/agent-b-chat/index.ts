@@ -242,7 +242,7 @@ If "quiz":
 - This should NOT generate content — the quiz is handled separately
 - Return a brief message: "This module contains the benchmark quiz."
 
-Keep content engaging and focused. Use markdown formatting.
+Keep content engaging and focused. Use markdown formatting.`;
 
     } else if (requestType === "study-plan") {
       // Generate personalized study plan based on quiz results
