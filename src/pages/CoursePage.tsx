@@ -424,7 +424,6 @@ const CoursePage = () => {
         <StructuredStudyPlan
           className={decodedClassName}
           learningStyles={learningStyles}
-          hasPlacementQuiz={hasQuiz}
         />
 
         {/* Bloom's Taxonomy Analysis */}
