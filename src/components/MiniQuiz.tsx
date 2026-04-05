@@ -23,6 +23,8 @@ interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  misconception?: string;
+  trap_explanation?: string;
   visual_required?: boolean;
   visual_type?: string;
   visual_data?: any;
