@@ -973,6 +973,37 @@ When the user asks about their uploaded classes/syllabi, provide targeted help f
       });
     }
 
+    // Non-streaming response for module content
+    if (requestType === "module-content") {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        return new Response(JSON.stringify({ error: "Failed to generate module content" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || "Content generation failed.";
+      return new Response(JSON.stringify({ content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Non-streaming response for resource content with caching
     if (requestType === "resource-content") {
       const sortedStyles = [...(learningStyles || [])].sort();
