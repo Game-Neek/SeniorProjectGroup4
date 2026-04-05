@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useStudyPlan, QuizResult } from "@/hooks/useStudyPlan";
 import { PlacementQuiz } from "@/components/PlacementQuiz";
 import { StudyPlan } from "@/components/StudyPlan";
+import { StructuredStudyPlan } from "@/components/StructuredStudyPlan";
 import { MiniQuiz } from "@/components/MiniQuiz";
 import { InteractiveExercise } from "@/components/InteractiveExercise";
 import { PracticeHistory } from "@/components/PracticeHistory";
