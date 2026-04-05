@@ -133,14 +133,18 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
 
       toast({
         title: "Syllabus uploaded",
-        description: `${selectedFile.name} has been uploaded successfully`,
+        description: `${selectedFile.name} uploaded — extracting outline...`,
       });
 
+      const uploadedClassName = className.trim();
       setClassName("");
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      fetchSyllabi();
+      await fetchSyllabi();
       onUploadComplete?.();
+
+      // Auto-trigger syllabus parsing
+      autoParseNewSyllabus(uploadedClassName, filePath);
     } catch (error) {
       console.error("Upload error:", error);
       toast({
