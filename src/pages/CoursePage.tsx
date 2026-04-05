@@ -451,6 +451,12 @@ const CoursePage = () => {
           />
         </div>
 
+        {/* Personalized Practice */}
+        <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />
+
+        {/* Topic Checklist */}
+        <TopicChecklist className={decodedClassName} />
+
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
 
