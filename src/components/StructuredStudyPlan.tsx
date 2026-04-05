@@ -40,6 +40,9 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
   const [quizGateAreaId, setQuizGateAreaId] = useState<string | null>(null);
   const [reviewContent, setReviewContent] = useState<string | null>(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [topicPlacementOpen, setTopicPlacementOpen] = useState(false);
+  const [topicPlacementAreaId, setTopicPlacementAreaId] = useState<string | null>(null);
+  const [topicPlacementQuestions, setTopicPlacementQuestions] = useState<any>(null);
 
   const activeArea = plan.focusAreas.find(a => a.id === plan.activeFocusAreaId);
   const openModule = activeArea?.modules.find(m => m.id === openModuleId) || null;
