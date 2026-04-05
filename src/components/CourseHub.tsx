@@ -32,7 +32,7 @@ interface CourseHubProps {
 export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<UserClass | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
