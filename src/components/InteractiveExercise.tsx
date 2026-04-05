@@ -56,6 +56,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   const generateSingleSet = async (session: any, topic: string, index: number): Promise<ExerciseSet | null> => {
     try {
