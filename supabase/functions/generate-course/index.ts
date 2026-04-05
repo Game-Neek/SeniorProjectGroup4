@@ -72,7 +72,16 @@ ${BIAS_GUARDRAILS}
 
 Generate a complete chapter/lesson for this specific topic. The content should be suitable for a "solid first draft" of an interactive course module.
 
-IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathematical expressions (e.g. $f(x) = 3x^2$).`;
+IMPORTANT FORMATTING RULES:
+- Use LaTeX math notation with dollar sign delimiters for ALL mathematical expressions (e.g. $f(x) = 3x^2$).
+- NEVER use ASCII art, text-based diagrams, or code blocks to represent molecular structures, chemical diagrams, circuit diagrams, biological structures, or any visual/spatial concept.
+- Instead, use this marker format: [STRUCTURE: clear description of what to draw]
+  Examples:
+  - [STRUCTURE: ethane molecule (C2H6) showing all carbon-hydrogen bonds in 3D tetrahedral geometry]
+  - [STRUCTURE: ATP molecule structure with adenine base, ribose sugar, and three phosphate groups]
+  - [STRUCTURE: simple series circuit with battery, resistor, and ammeter]
+- The description inside [STRUCTURE: ...] should be detailed enough to generate an accurate scientific diagram.
+- Do NOT wrap structures in code blocks or backticks.`;
 
     // Generate all content via tool calling
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
