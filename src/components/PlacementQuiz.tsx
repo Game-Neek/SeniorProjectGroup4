@@ -213,6 +213,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
         outcome: finalScore >= questions.length * 0.7 ? "pass" : "needs_improvement",
       });
       snapshotWeek(selectedClass);
+    }
   };
 
   const calculateScore = () => {
