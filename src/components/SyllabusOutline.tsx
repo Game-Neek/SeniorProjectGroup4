@@ -291,6 +291,14 @@ export const SyllabusOutline = ({
           </>
         )}
       </Button>
+
+      <ChapterSelectionDialog
+        open={showChapterSelection}
+        onOpenChange={setShowChapterSelection}
+        className={className}
+        topics={extractedTopics}
+        onConfirm={handleChapterConfirm}
+      />
     </Card>
   );
 };
