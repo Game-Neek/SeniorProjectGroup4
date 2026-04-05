@@ -93,7 +93,36 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
     fetchClasses();
   };
 
-  if (loading) {
+  const handleDeleteCourse = async () => {
+    if (!deleteTarget) return;
+    const className = deleteTarget.class_name;
+
+    const deletes = [
+      supabase.from("user_classes").delete().eq("id", deleteTarget.id),
+      supabase.from("syllabi").delete().eq("class_name", className),
+      supabase.from("course_content").delete().eq("class_name", className),
+      supabase.from("assignments").delete().eq("class_name", className),
+      supabase.from("quiz_results").delete().eq("class_name", className),
+      supabase.from("study_focus_areas").delete().eq("class_name", className),
+      supabase.from("course_textbooks").delete().eq("class_name", className),
+      supabase.from("practice_history").delete().eq("class_name", className),
+      supabase.from("learning_events").delete().eq("class_name", className),
+      supabase.from("weekly_performance_snapshots").delete().eq("class_name", className),
+    ];
+
+    const results = await Promise.all(deletes);
+    const hasError = results.some((r) => r.error);
+
+    if (hasError) {
+      toast({ title: "Error", description: "Some course data could not be deleted", variant: "destructive" });
+    } else {
+      toast({ title: "Course deleted", description: `${className} and all related data have been permanently removed` });
+    }
+    setDeleteTarget(null);
+    fetchClasses();
+  };
+
+
     return (
       <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
         <div className="flex items-center justify-center py-12">
