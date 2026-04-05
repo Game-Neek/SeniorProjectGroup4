@@ -242,11 +242,13 @@ If "lesson":
 - Provide a clear, thorough explanation of the concept
 - Use analogies and real-world connections
 - Include key definitions and formulas (use LaTeX with $ delimiters)
+- If textbooks are listed above, reference relevant chapters, use the textbook's terminology and notation
+- Suggest specific textbook sections for deeper reading as supplementary references
 - Adapt to learning style:
   Visual → describe diagrams, include step-by-step visuals, flowcharts
   Practical → worked examples with real-world context
   Conceptual → deep explanations, reasoning chains, compare/contrast
-- Structure: Introduction → Core Concepts → Key Formulas → Examples → Summary
+- Structure: Introduction → Core Concepts → Key Formulas → Examples → Textbook References → Summary
 
 If "practice":
 - Present 3-5 guided practice problems with progressive difficulty
