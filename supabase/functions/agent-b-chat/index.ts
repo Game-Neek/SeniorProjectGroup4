@@ -27,6 +27,7 @@ serve(async (req) => {
     let userId = null;
 
     let syllabusTopics = "";
+    let textbookContext = "";
 
     if (authHeader && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -69,6 +70,22 @@ serve(async (req) => {
                 }
               }
             }
+          }
+        }
+
+        // Fetch assigned textbooks for the class
+        if (className) {
+          const { data: textbooks } = await supabase
+            .from("course_textbooks")
+            .select("title, author, requirement_type")
+            .eq("user_id", user.id)
+            .eq("class_name", className);
+
+          if (textbooks && textbooks.length > 0) {
+            const tbList = textbooks.map(tb => 
+              `- "${tb.title}"${tb.author ? ` by ${tb.author}` : ""} (${tb.requirement_type})`
+            ).join("\n");
+            textbookContext = `\n\nASSIGNED TEXTBOOKS for "${className}":\n${tbList}\n\nIMPORTANT: When recommending study materials, ALIGN with these textbooks. Suggest supplementary resources that COMPLEMENT (not replace) the assigned textbook. Reference textbook chapters, terminology, and notation where possible.`;
           }
         }
       }
