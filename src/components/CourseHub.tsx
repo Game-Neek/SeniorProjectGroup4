@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   GraduationCap, BookOpen, Archive, ArchiveRestore, ChevronRight, 
-  AlertCircle, Loader2 
+  AlertCircle, Loader2, Trash2 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserClass {
   id: string;
@@ -28,6 +32,7 @@ interface CourseHubProps {
 export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<UserClass | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -88,6 +93,35 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
     fetchClasses();
   };
 
+  const handleDeleteCourse = async () => {
+    if (!deleteTarget) return;
+    const className = deleteTarget.class_name;
+
+    const deletes = [
+      supabase.from("user_classes").delete().eq("id", deleteTarget.id),
+      supabase.from("syllabi").delete().eq("class_name", className),
+      supabase.from("course_content").delete().eq("class_name", className),
+      supabase.from("assignments").delete().eq("class_name", className),
+      supabase.from("quiz_results").delete().eq("class_name", className),
+      supabase.from("study_focus_areas").delete().eq("class_name", className),
+      supabase.from("course_textbooks").delete().eq("class_name", className),
+      supabase.from("practice_history").delete().eq("class_name", className),
+      supabase.from("learning_events").delete().eq("class_name", className),
+      supabase.from("weekly_performance_snapshots").delete().eq("class_name", className),
+    ];
+
+    const results = await Promise.all(deletes);
+    const hasError = results.some((r) => r.error);
+
+    if (hasError) {
+      toast({ title: "Error", description: "Some course data could not be deleted", variant: "destructive" });
+    } else {
+      toast({ title: "Course deleted", description: `${className} and all related data have been permanently removed` });
+    }
+    setDeleteTarget(null);
+    fetchClasses();
+  };
+
   if (loading) {
     return (
       <Card className="p-6 shadow-[var(--shadow-soft)] border-border">
@@ -145,18 +179,32 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
                   <div className="p-2 rounded-lg bg-primary/10">
                     <BookOpen className="w-5 h-5 text-primary" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleArchive(course);
-                    }}
-                    title="Archive course"
-                  >
-                    <Archive className="w-4 h-4 text-muted-foreground" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArchive(course);
+                      }}
+                      title="Archive course"
+                    >
+                      <Archive className="w-4 h-4 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(course);
+                      }}
+                      title="Delete course"
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
                 <h4 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
                   {course.class_name}
@@ -223,12 +271,41 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
                     <ArchiveRestore className="w-3 h-3 mr-1" />
                     Restore
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteTarget(course)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Delete
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteTarget?.class_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deleting this course will permanently remove all associated data including syllabi, lessons, quizzes, assignments, study plans, practice history, and performance reports. You will not be able to reference anything for this course in the future.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCourse}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
