@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { BookOpen, Target, Calendar, GraduationCap, Package, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ChapterSelectionDialog } from "@/components/ChapterSelectionDialog";
 
 interface SyllabusOutlineProps {
   syllabusId: string;
@@ -33,6 +34,8 @@ export const SyllabusOutline = ({
   onParseComplete,
 }: SyllabusOutlineProps) => {
   const [isParsing, setIsParsing] = useState(false);
+  const [showChapterSelection, setShowChapterSelection] = useState(false);
+  const [extractedTopics, setExtractedTopics] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleParseSyllabus = async () => {
