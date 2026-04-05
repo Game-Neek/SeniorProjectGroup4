@@ -224,13 +224,15 @@ CRITICAL RULES:
 
     } else if (requestType === "module-content") {
       // Generate content for a specific learning module
+      const learningStyleName = (learningStyles && learningStyles.length > 0) ? learningStyles[0] : "Visual";
+
       systemPrompt = `You are AgentB generating learning content for a specific module.
 
 Class: ${className || "the course"}
 Topic: ${topic || "general"}
-Module Type: ${moduleType || "concept"}
+Module Type: ${moduleType || "lesson"}
 Module Title: ${moduleTitle || "Module"}
-${learningStyleContext}
+Student's Primary Learning Style: ${learningStyleName}
 ${syllabusTopics}
 ${textbookContext}
 
@@ -238,33 +240,109 @@ ${biasGuardrails}
 
 CONTENT GENERATION RULES based on module type:
 
-If "lesson":
-- Provide a clear, thorough explanation of the concept
-- Use analogies and real-world connections
-- Include key definitions and formulas (use LaTeX with $ delimiters)
-- If textbooks are listed above, reference relevant chapters, use the textbook's terminology and notation
-- Suggest specific textbook sections for deeper reading as supplementary references
-- Adapt to learning style:
-  Visual → describe diagrams, include step-by-step visuals, flowcharts
-  Practical → worked examples with real-world context
-  Conceptual → deep explanations, reasoning chains, compare/contrast
-- Structure: Introduction → Core Concepts → Key Formulas → Examples → Textbook References → Summary
+═══════════════════════════════════════
+IF MODULE TYPE IS "lesson":
+═══════════════════════════════════════
 
-If "practice":
-- Present 3-5 guided practice problems with progressive difficulty
-- Start with basic application, progress to multi-step problems
-- For each problem:
-  1. Problem statement
-  2. Hint (without giving away answer)
-  3. Step-by-step solution
-- 80% must be application/problem-solving, max 20% conceptual
-- Use subject-aware formatting (math equations, code snippets, reactions, etc.)
+Generate a structured lesson with these EXACT sections:
 
-If "quiz":
-- This should NOT generate content — the quiz is handled separately
-- Return a brief message: "This module contains the benchmark quiz."
+## 1. Concept Overview
+- Clear explanation of the topic
+- Define key ideas in context (not just definitions)
+- Why this concept matters
 
-Keep content engaging and focused. Use markdown formatting.`;
+## 2. Intuition
+- Explain WHY the concept works
+- Use real-world or practical examples
+- Connect to prior knowledge
+
+## 3. Step-by-Step Example
+- Walk through a FULL example problem
+- Show each step clearly with reasoning
+- Use LaTeX with $ delimiters for math
+
+## 4. Key Takeaways
+- Bullet points summarizing what to remember
+- Common mistakes to avoid
+
+## 5. Preparation for Practice
+- Briefly explain how this concept will appear in problems
+- What skills the student should be ready to apply
+
+LEARNING STYLE ADAPTATION (CRITICAL — adapt the DELIVERY, not the content):
+
+If student is "Visual":
+- Describe diagrams, charts, labeled visuals
+- Use step-by-step visual breakdowns
+- Describe color-coded processes
+- Use tables and structured layouts
+- Help the student SEE how the concept works
+
+If student is "Auditory":
+- Write in a conversational, tutor-speaking style
+- Use "talk-through" explanations ("Imagine I'm explaining this to you...")
+- Include verbal reasoning chains
+- Add discussion prompts and "think about it" moments
+- Help the student HEAR and follow the logic
+
+If student is "Reading/Writing":
+- Use structured written explanations with clear headers
+- Provide definitions in context
+- Include note-friendly summaries
+- Add written examples and bullet point takeaways
+- Include reflection prompts or short written response ideas
+- Help the student learn through TEXT and NOTES
+
+If student is "Kinesthetic":
+- Emphasize hands-on problem solving
+- Include guided "do this now" activities
+- Use interactive step-by-step tasks
+- Frame learning through action and applied examples
+- Help the student learn by DOING, not just reading
+
+TEXTBOOK INTEGRATION:
+- If textbooks are listed above, reference relevant chapters and use the textbook's terminology and notation
+- Suggest specific textbook sections for deeper reading as supplementary (not replacement) references
+- Frame examples using textbook notation conventions
+
+CONSTRAINTS:
+- Do NOT give definitions only — must prepare student for solving problems
+- Keep content concise but instructional (800-1200 words ideal)
+- Use LaTeX with $ delimiters for all math
+- Use markdown formatting with proper headers
+
+═══════════════════════════════════════
+IF MODULE TYPE IS "practice":
+═══════════════════════════════════════
+
+Present 4-5 guided practice problems with PROGRESSIVE DIFFICULTY:
+
+Start → basic application
+Middle → multi-step problems
+End → analysis / real-world scenarios
+
+For EACH problem provide:
+1. **Problem Statement** (clear, specific)
+2. **Hint** (guide thinking without giving away the answer)
+3. **Step-by-Step Solution** (show all work)
+
+RULES:
+- 80% must be application/problem-solving questions
+- Maximum 20% conceptual (and even then, test understanding not recall)
+- NEVER generate "What is X?" or "Define Y" problems
+- Every problem must require: computing, applying formulas, multi-step reasoning, or analysis
+- Use subject-aware formatting:
+  Math → equations, derivatives, integrals
+  CS → code snippets, debugging, algorithm tracing
+  Chemistry → reactions, stoichiometry, calculations
+  Physics → formulas with values, unit conversions
+
+═══════════════════════════════════════
+IF MODULE TYPE IS "quiz":
+═══════════════════════════════════════
+- Return: "This module contains the benchmark quiz. Click the quiz button to begin."
+
+Use markdown formatting throughout. Be engaging and focused.`;
 
     } else if (requestType === "study-plan") {
       // Generate personalized study plan based on quiz results
