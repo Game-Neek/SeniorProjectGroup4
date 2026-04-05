@@ -232,6 +232,7 @@ Module Type: ${moduleType || "concept"}
 Module Title: ${moduleTitle || "Module"}
 ${learningStyleContext}
 ${syllabusTopics}
+${textbookContext}
 
 ${biasGuardrails}
 
