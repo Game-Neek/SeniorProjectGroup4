@@ -302,6 +302,18 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
             </div>
 
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                {currentQuestion?.bloom_level && BLOOM_BADGE_CONFIG[currentQuestion.bloom_level] && (() => {
+                  const cfg = BLOOM_BADGE_CONFIG[currentQuestion.bloom_level!];
+                  const BloomIcon = cfg.Icon;
+                  return (
+                    <Badge variant="outline" className={`text-xs ${cfg.color}`}>
+                      <BloomIcon className="w-3 h-3 mr-1" />
+                      {cfg.emoji} {cfg.label}
+                    </Badge>
+                  );
+                })()}
+              </div>
               <p className="font-medium text-foreground"><MathText text={currentQuestion?.question || ""} /></p>
               {/* Visual rendering */}
               {currentQuestion?.visual_required && currentQuestion?.visual_type && currentQuestion?.visual_data && (
