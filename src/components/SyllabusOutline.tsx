@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { BookOpen, Target, Calendar, GraduationCap, Package, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ChapterSelectionDialog } from "@/components/ChapterSelectionDialog";
 
 interface SyllabusOutlineProps {
   syllabusId: string;
@@ -33,6 +34,8 @@ export const SyllabusOutline = ({
   onParseComplete,
 }: SyllabusOutlineProps) => {
   const [isParsing, setIsParsing] = useState(false);
+  const [showChapterSelection, setShowChapterSelection] = useState(false);
+  const [extractedTopics, setExtractedTopics] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleParseSyllabus = async () => {
@@ -85,6 +88,20 @@ export const SyllabusOutline = ({
         description: `Extracted course outline for ${className}`,
       });
 
+      // Extract topics for chapter selection
+      const topics: string[] = [];
+      if (data.weeklySchedule) {
+        data.weeklySchedule.forEach((w: any) => { if (w.topic) topics.push(w.topic); });
+      }
+      if (topics.length === 0 && data.learningObjectives) {
+        topics.push(...data.learningObjectives.slice(0, 15));
+      }
+
+      if (topics.length > 0) {
+        setExtractedTopics(topics);
+        setShowChapterSelection(true);
+      }
+
       // Dispatch event so course page components (ChapterBreakdowns, CourseTextbooks) can refresh
       window.dispatchEvent(new CustomEvent("syllabus-reparsed", { detail: { className } }));
 
@@ -99,6 +116,17 @@ export const SyllabusOutline = ({
     } finally {
       setIsParsing(false);
     }
+  };
+
+  const handleChapterConfirm = async (selectedTopics: string[]) => {
+    // Store the selected chapters in localStorage for use by study plan generation
+    localStorage.setItem(`chapters-${className}`, JSON.stringify(selectedTopics));
+    toast({
+      title: "Chapters confirmed",
+      description: `${selectedTopics.length} chapters selected for ${className}`,
+    });
+    // Dispatch event so adaptive learning picks up selected chapters
+    window.dispatchEvent(new CustomEvent("chapters-selected", { detail: { className, topics: selectedTopics } }));
   };
 
   const hasParsedData = !!parsedAt;
@@ -263,6 +291,14 @@ export const SyllabusOutline = ({
           </>
         )}
       </Button>
+
+      <ChapterSelectionDialog
+        open={showChapterSelection}
+        onOpenChange={setShowChapterSelection}
+        className={className}
+        topics={extractedTopics}
+        onConfirm={handleChapterConfirm}
+      />
     </Card>
   );
 };

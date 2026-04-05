@@ -213,15 +213,7 @@ export const PersonalizedPractice = ({ className, learningStyles }: Personalized
           </div>
         </div>
 
-        {problems.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-muted-foreground">{completedIds.size}/{problems.length} completed</span>
-              <span className="text-xs text-muted-foreground">{progressPct}%</span>
-            </div>
-            <Progress value={progressPct} className="h-2" />
-          </div>
-        )}
+        {/* Removed progress bar per design spec */}
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">

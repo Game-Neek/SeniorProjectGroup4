@@ -250,17 +250,17 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
       ) : questions.length === 0 && isCourseScoped ? (
         <div className="space-y-4">
            {completedClasses.includes(className!) ? (
-             <div className="text-center py-6 space-y-3">
-               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10">
-                 <CheckCircle2 className="w-8 h-8 text-green-500" />
-               </div>
-               <p className="text-lg font-semibold text-foreground">Placement Quiz Completed</p>
-               <p className="text-sm text-muted-foreground">Your study plan has been generated based on your results.</p>
-               <Button variant="outline" className="mt-2" onClick={() => setShowRegenerateConfirm(true)}>
-                 <RefreshCw className="w-4 h-4 mr-2" />
-                 Regenerate Placement Quiz
-               </Button>
-             </div>
+             <div className="text-center py-6 space-y-3 opacity-75">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-500/10">
+                  <CheckCircle2 className="w-7 h-7 text-green-500" />
+                </div>
+                <p className="text-base font-semibold text-foreground">Placement Quiz Completed</p>
+                <p className="text-sm text-muted-foreground">Your study plan has been generated based on your results.</p>
+                <Button variant="ghost" size="sm" className="mt-1 text-muted-foreground" onClick={() => setShowRegenerateConfirm(true)}>
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Retake Quiz
+                </Button>
+              </div>
           ) : isGenerating ? (
             <div className="text-center py-8">
               <Loader2 className="w-10 h-10 mx-auto mb-3 animate-spin text-primary" />
@@ -538,11 +538,23 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              <AlertTriangle className="w-5 h-5 text-destructive" />
               Regenerate Placement Quiz?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will create a new placement quiz for <span className="font-medium text-foreground">{className}</span> and regenerate your study plan based on the new results. Your previous quiz results will be replaced.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  This will regenerate the placement quiz for <span className="font-medium text-foreground">{className}</span> and <strong className="text-destructive">reset the following</strong>:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <li>Course progress &amp; focus areas</li>
+                  <li>Adaptive learning modules</li>
+                  <li>Knowledge gap alerts</li>
+                  <li>Topic checklist status</li>
+                  <li>Study resources &amp; study plan</li>
+                </ul>
+                <p className="text-sm font-medium text-destructive">This action cannot be undone.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -552,9 +564,9 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
                 setAutoGenTriggered(false);
                 generateQuiz(className!);
               }}
-              className="bg-[image:var(--gradient-primary)] hover:opacity-90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Regenerate Quiz
+              Reset &amp; Regenerate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

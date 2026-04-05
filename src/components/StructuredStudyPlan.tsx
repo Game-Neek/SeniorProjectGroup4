@@ -21,6 +21,7 @@ import { useStructuredStudyPlan, FocusArea, StudyModule, getScoreTier } from "@/
 import { MiniQuiz } from "@/components/MiniQuiz";
 import { MathText } from "@/components/MathText";
 import { LessonRenderer } from "@/components/LessonRenderer";
+import { PracticeRenderer } from "@/components/PracticeRenderer";
 import { cn } from "@/lib/utils";
 
 interface StructuredStudyPlanProps {
@@ -486,7 +487,14 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
                 </div>
               </div>
             ) : openModule?.content ? (
-              <LessonRenderer content={openModule.content} moduleType={openModule.module_type} />
+              openModule.module_type === "practice" ? (
+                <PracticeRenderer
+                  content={openModule.content}
+                  onComplete={() => { handleCompleteModule(openModule.id); setOpenModuleId(null); }}
+                />
+              ) : (
+                <LessonRenderer content={openModule.content} moduleType={openModule.module_type} />
+              )
             ) : (
               <div className="flex flex-col items-center justify-center py-12 gap-2">
                 <BookOpen className="w-8 h-8 text-muted-foreground opacity-50" />
