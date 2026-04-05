@@ -9,6 +9,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, CheckCircle2, ListChecks } from "lucide-react";
 
+interface TopicMapping {
+  topic: string;
+  textbookChapter?: string;
+  textbookTitle?: string;
+}
+
 interface ChapterSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,10 +27,18 @@ export const ChapterSelectionDialog = ({
   open, onOpenChange, className, topics, onConfirm,
 }: ChapterSelectionDialogProps) => {
   const [selected, setSelected] = useState<Set<string>>(new Set(topics));
+  const [mappings, setMappings] = useState<TopicMapping[]>([]);
 
   useEffect(() => {
     setSelected(new Set(topics));
-  }, [topics]);
+    // Load textbook mapping from localStorage
+    try {
+      const raw = localStorage.getItem(`textbook-mapping-${className}`);
+      if (raw) setMappings(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [topics, className]);
+
+  const getMapping = (topic: string) => mappings.find(m => m.topic === topic);
 
   const toggleTopic = (topic: string) => {
     setSelected(prev => {
@@ -69,6 +83,7 @@ export const ChapterSelectionDialog = ({
           <div className="space-y-1">
             {topics.map((topic, idx) => {
               const isChecked = selected.has(topic);
+              const mapping = getMapping(topic);
               return (
                 <div
                   key={idx}
@@ -80,13 +95,22 @@ export const ChapterSelectionDialog = ({
                     checked={isChecked}
                     onCheckedChange={() => toggleTopic(topic)}
                   />
-                  <Label
-                    htmlFor={`chapter-${idx}`}
-                    className="flex-1 cursor-pointer text-sm font-medium text-foreground"
-                  >
-                    {topic}
-                  </Label>
-                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <Label
+                      htmlFor={`chapter-${idx}`}
+                      className="cursor-pointer text-sm font-medium text-foreground block"
+                    >
+                      {topic}
+                    </Label>
+                    {mapping?.textbookChapter && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <BookOpen className="w-3 h-3 shrink-0" />
+                        {mapping.textbookChapter}
+                        {mapping.textbookTitle ? ` — ${mapping.textbookTitle}` : ""}
+                      </span>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
                     Ch. {idx + 1}
                   </Badge>
                 </div>
