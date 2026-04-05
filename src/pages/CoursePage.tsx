@@ -29,6 +29,8 @@ import { ChapterBreakdowns } from "@/components/ChapterBreakdowns";
 import { CourseTextbooks } from "@/components/CourseTextbooks";
 import { BloomTaxonomy } from "@/components/BloomTaxonomy";
 import { GeneratedCourse } from "@/components/GeneratedCourse";
+import { KnowledgeGapAlerts } from "@/components/KnowledgeGapAlerts";
+import { useCourseMastery } from "@/hooks/useCourseMastery";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -210,12 +212,16 @@ const CoursePage = () => {
   const hasQuiz = !!thisClassPlan;
   const classQuizResult = thisClassPlan?.quizResult || null;
 
-  const placementProgress = classQuizResult
-    ? Math.round((classQuizResult.score / classQuizResult.totalQuestions) * 100)
-    : 0;
-  const practiceProgress = (thisClassPlan?.resources?.length || 0) > 0
-    ? Math.min(60, (thisClassPlan?.resources?.length || 0) * 10)
-    : 0;
+  const mastery = useCourseMastery(decodedClassName);
+
+  // Ref for scrolling to adaptive learning section
+  const studyPlanRef = useState<HTMLDivElement | null>(null);
+
+  const handleNavigateToTopic = (focusAreaId: string) => {
+    // Scroll to the structured study plan
+    const el = document.getElementById("adaptive-learning-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -245,26 +251,35 @@ const CoursePage = () => {
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Placement Quiz</span>
+              <span className="text-sm font-medium text-foreground">Topic Mastery</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{placementProgress}%</p>
-            <Progress value={placementProgress} className="h-1.5 mt-2" />
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.topicMastery}%`}
+            </p>
+            <Progress value={mastery.topicMastery} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">focus areas passed</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-secondary" />
-              <span className="text-sm font-medium text-foreground">Practice</span>
+              <span className="text-sm font-medium text-foreground">Practice Avg</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{practiceProgress}%</p>
-            <Progress value={practiceProgress} className="h-1.5 mt-2" />
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.practiceScore}%`}
+            </p>
+            <Progress value={mastery.practiceScore} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">quiz & exercise avg</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-foreground">Progress</span>
+              <span className="text-sm font-medium text-foreground">Modules</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{completionPercentage}%</p>
-            <Progress value={completionPercentage} className="h-1.5 mt-2" />
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.moduleProgress}%`}
+            </p>
+            <Progress value={mastery.moduleProgress} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">lessons & practice done</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -420,11 +435,19 @@ const CoursePage = () => {
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
 
-        {/* Structured Study Plan */}
-        <StructuredStudyPlan
+        {/* Knowledge Gap Alerts */}
+        <KnowledgeGapAlerts
           className={decodedClassName}
-          learningStyles={learningStyles}
+          onNavigateToTopic={handleNavigateToTopic}
         />
+
+        {/* Structured Study Plan */}
+        <div id="adaptive-learning-section">
+          <StructuredStudyPlan
+            className={decodedClassName}
+            learningStyles={learningStyles}
+          />
+        </div>
 
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
