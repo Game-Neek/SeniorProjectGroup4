@@ -578,6 +578,107 @@ export type Database = {
         }
         Relationships: []
       }
+      study_focus_areas: {
+        Row: {
+          class_name: string
+          created_at: string
+          estimated_time_minutes: number | null
+          id: string
+          is_unlocked: boolean
+          quiz_passed: boolean
+          quiz_score: number | null
+          quiz_threshold: number
+          topic: string
+          topic_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          estimated_time_minutes?: number | null
+          id?: string
+          is_unlocked?: boolean
+          quiz_passed?: boolean
+          quiz_score?: number | null
+          quiz_threshold?: number
+          topic: string
+          topic_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          estimated_time_minutes?: number | null
+          id?: string
+          is_unlocked?: boolean
+          quiz_passed?: boolean
+          quiz_score?: number | null
+          quiz_threshold?: number
+          topic?: string
+          topic_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_modules: {
+        Row: {
+          completed_at: string | null
+          content: string | null
+          created_at: string
+          description: string | null
+          estimated_time_minutes: number | null
+          focus_area_id: string
+          id: string
+          is_completed: boolean
+          module_order: number
+          module_type: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_time_minutes?: number | null
+          focus_area_id: string
+          id?: string
+          is_completed?: boolean
+          module_order?: number
+          module_type?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_time_minutes?: number | null
+          focus_area_id?: string
+          id?: string
+          is_completed?: boolean
+          module_order?: number
+          module_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_modules_focus_area_id_fkey"
+            columns: ["focus_area_id"]
+            isOneToOne: false
+            referencedRelation: "study_focus_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       syllabi: {
         Row: {
           bloom_classifications: Json | null
