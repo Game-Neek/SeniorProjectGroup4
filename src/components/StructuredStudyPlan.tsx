@@ -33,7 +33,7 @@ const moduleTypeConfig: Record<string, { icon: typeof BookOpen; label: string; c
   quiz: { icon: FileQuestion, label: "Benchmark Quiz", color: "text-purple-500" },
 };
 
-export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQuiz }: StructuredStudyPlanProps) => {
+export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStudyPlanProps) => {
   const plan = useStructuredStudyPlan(className, learningStyles);
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
   const [quizGateOpen, setQuizGateOpen] = useState(false);
