@@ -474,15 +474,23 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
           </DialogHeader>
           <ScrollArea className="max-h-[55vh] pr-4">
             {plan.loadingModuleContent === openModule?.id ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <span className="ml-2 text-muted-foreground">Generating content...</span>
-              </div>
-            ) : (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap text-foreground">
-                  {openModule?.content ? <MathText text={openModule.content} /> : "Content not available."}
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Generating {openModule?.module_type === "lesson" ? "lesson" : "practice problems"}...
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Adapting to your learning style
+                  </p>
                 </div>
+              </div>
+            ) : openModule?.content ? (
+              <LessonRenderer content={openModule.content} moduleType={openModule.module_type} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 gap-2">
+                <BookOpen className="w-8 h-8 text-muted-foreground opacity-50" />
+                <p className="text-sm text-muted-foreground">Content not available. Try reopening this module.</p>
               </div>
             )}
           </ScrollArea>
