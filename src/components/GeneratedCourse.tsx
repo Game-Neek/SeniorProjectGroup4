@@ -270,8 +270,8 @@ export const GeneratedCourse = ({ className }: GeneratedCourseProps) => {
           <BookOpen className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-foreground">Interactive Course Draft</h3>
-          <p className="text-xs text-muted-foreground">AI-generated lessons, quizzes & exercises</p>
+          <h3 className="text-lg font-semibold text-foreground">Interactive Chapter Breakdown</h3>
+          <p className="text-xs text-muted-foreground">Extra practice, chapter overviews, midterm & final prep — explore any chapter freely</p>
         </div>
         <div className="flex items-center gap-2">
           {chapters.length > 0 && (

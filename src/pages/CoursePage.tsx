@@ -443,15 +443,16 @@ const CoursePage = () => {
           onNavigateToTopic={handleNavigateToTopic}
         />
 
-        {/* Adaptive Learning (Structured Study Plan + Course Drafts) */}
+        {/* Personalized Adaptive Learning */}
         <div id="adaptive-learning-section" className="space-y-6">
           <StructuredStudyPlan
             className={decodedClassName}
             learningStyles={learningStyles}
           />
+        </div>
 
-          {/* Interactive Course Draft — integrated into adaptive learning flow */}
-          <GeneratedCourse className={decodedClassName} />
+        {/* Interactive Chapter Breakdown */}
+        <GeneratedCourse className={decodedClassName} />
         </div>
 
         {/* Personalized Practice */}

@@ -131,8 +131,8 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
             <GraduationCap className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
-            <p className="text-sm text-muted-foreground">Module-based learning path from your syllabus</p>
+            <h3 className="text-lg font-semibold text-foreground">Personalized Adaptive Learning</h3>
+            <p className="text-sm text-muted-foreground">Targets your weak areas with focused modules instead of covering everything</p>
           </div>
         </div>
         <div className="text-center py-8">
@@ -171,9 +171,9 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
               <GraduationCap className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
+              <h3 className="text-lg font-semibold text-foreground">Personalized Adaptive Learning</h3>
               <p className="text-sm text-muted-foreground">
-                {plan.focusAreas.length} Focus Areas • ~{plan.estimatedWeeks} weeks
+                Targets weak areas • {plan.focusAreas.length} Focus Areas • ~{plan.estimatedWeeks} weeks
               </p>
             </div>
           </div>
