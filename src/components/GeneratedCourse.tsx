@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MathText } from "@/components/MathText";
+import { LessonRenderer } from "@/components/LessonRenderer";
 import { ContentReview } from "@/components/ContentReview";
 import { BiasAudit } from "@/components/BiasAudit";
 
@@ -435,18 +436,43 @@ function ChapterContent({
         </TabsTrigger>
       </TabsList>
 
-      {/* Lesson Content */}
+      {/* Lesson Content — Clean structured rendering */}
       <TabsContent value="lesson" className="mt-0">
-        <div className="prose prose-sm max-w-none text-foreground">
-          {chapter.lesson_content?.split("\n").map((line, i) => {
-            if (!line.trim()) return <br key={i} />;
-            if (line.startsWith("### ")) return <h4 key={i} className="text-sm font-bold mt-4 mb-2 text-foreground"><MathText text={line.slice(4)} /></h4>;
-            if (line.startsWith("## ")) return <h3 key={i} className="text-base font-bold mt-4 mb-2 text-foreground"><MathText text={line.slice(3)} /></h3>;
-            if (line.startsWith("# ")) return <h2 key={i} className="text-lg font-bold mt-4 mb-2 text-foreground"><MathText text={line.slice(2)} /></h2>;
-            if (line.startsWith("- ") || line.startsWith("* ")) return <li key={i} className="text-sm text-muted-foreground ml-4"><MathText text={line.slice(2)} /></li>;
-            return <p key={i} className="text-sm text-muted-foreground mb-2"><MathText text={line} /></p>;
-          })}
-        </div>
+        {chapter.lesson_content ? (
+          <LessonRenderer content={chapter.lesson_content} moduleType="lesson" />
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">No lesson content available.</p>
+        )}
+
+        {/* Embedded resource videos for this chapter */}
+        {(chapter.study_resources || []).filter((r: any) =>
+          r.type === "video" && r.url && (r.url.includes("youtube.com") || r.url.includes("youtu.be"))
+        ).length > 0 && (
+          <div className="mt-4 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-primary" />
+              Related Videos
+            </h4>
+            {(chapter.study_resources || [])
+              .filter((r: any) => r.type === "video" && r.url && (r.url.includes("youtube.com") || r.url.includes("youtu.be")))
+              .map((res: any, i: number) => {
+                const ytMatch = res.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+                const embedUrl = ytMatch ? `https://www.youtube.com/embed/${ytMatch[1]}` : res.url;
+                return (
+                  <div key={i} className="rounded-lg overflow-hidden border border-border">
+                    <div className="aspect-video">
+                      <iframe src={embedUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={res.title} />
+                    </div>
+                    <div className="p-2 bg-muted/30">
+                      <p className="text-xs font-medium text-foreground">{res.title}</p>
+                      {res.description && <p className="text-xs text-muted-foreground">{res.description}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onRegenerate} disabled={isRegenerating || isRefining}>
             {isRegenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
