@@ -63,6 +63,7 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
   const [autoGenTriggered, setAutoGenTriggered] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   useEffect(() => {
     fetchSyllabi();
@@ -204,7 +205,14 @@ export const PlacementQuiz = ({ learningStyles, onQuizComplete, refreshTrigger, 
       
       onQuizComplete(result);
       setQuizCompleted(true);
-    }
+      track({
+        eventType: "placement_quiz_completed",
+        className: selectedClass,
+        score: finalScore,
+        total: questions.length,
+        outcome: finalScore >= questions.length * 0.7 ? "pass" : "needs_improvement",
+      });
+      snapshotWeek(selectedClass);
   };
 
   const calculateScore = () => {
