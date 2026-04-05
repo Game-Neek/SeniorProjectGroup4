@@ -33,6 +33,8 @@ import { KnowledgeGapAlerts } from "@/components/KnowledgeGapAlerts";
 import { PersonalizedPractice } from "@/components/PersonalizedPractice";
 import { TopicChecklist } from "@/components/TopicChecklist";
 import { useCourseMastery } from "@/hooks/useCourseMastery";
+import { WeeklyPerformanceReport } from "@/components/WeeklyPerformanceReport";
+import { ConfidenceRating } from "@/components/ConfidenceRating";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
