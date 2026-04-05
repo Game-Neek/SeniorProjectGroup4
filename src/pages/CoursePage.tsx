@@ -459,6 +459,12 @@ const CoursePage = () => {
         {/* Topic Checklist */}
         <TopicChecklist className={decodedClassName} />
 
+        {/* Confidence Self-Rating */}
+        <ConfidenceRating className={decodedClassName} />
+
+        {/* Weekly Performance Report */}
+        <WeeklyPerformanceReport className={decodedClassName} />
+
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
 
