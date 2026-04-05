@@ -14,10 +14,12 @@ import {
 import {
   Target, BookOpen, CheckCircle2, Loader2, Lock, Unlock,
   ChevronRight, Lightbulb, PenTool, GraduationCap, Zap,
-  Clock, Trophy, ArrowRight, FileText,
+  Clock, Trophy, ArrowRight, FileQuestion, AlertTriangle,
+  RotateCcw, XCircle,
 } from "lucide-react";
-import { useStructuredStudyPlan, FocusArea, StudyModule } from "@/hooks/useStructuredStudyPlan";
+import { useStructuredStudyPlan, FocusArea, StudyModule, getScoreTier } from "@/hooks/useStructuredStudyPlan";
 import { MiniQuiz } from "@/components/MiniQuiz";
+import { MathText } from "@/components/MathText";
 import { cn } from "@/lib/utils";
 
 interface StructuredStudyPlanProps {
@@ -27,10 +29,9 @@ interface StructuredStudyPlanProps {
 }
 
 const moduleTypeConfig: Record<string, { icon: typeof BookOpen; label: string; color: string }> = {
-  concept: { icon: Lightbulb, label: "Concept Explanation", color: "text-amber-500" },
-  "worked-example": { icon: FileText, label: "Worked Example", color: "text-blue-500" },
-  "guided-practice": { icon: PenTool, label: "Guided Practice", color: "text-green-500" },
-  exercise: { icon: Zap, label: "Interactive Exercise", color: "text-purple-500" },
+  lesson: { icon: Lightbulb, label: "Lesson", color: "text-amber-500" },
+  practice: { icon: PenTool, label: "Practice", color: "text-blue-500" },
+  quiz: { icon: FileQuestion, label: "Benchmark Quiz", color: "text-purple-500" },
 };
 
 export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQuiz }: StructuredStudyPlanProps) => {
@@ -38,11 +39,22 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
   const [quizGateOpen, setQuizGateOpen] = useState(false);
   const [quizGateAreaId, setQuizGateAreaId] = useState<string | null>(null);
+  const [reviewContent, setReviewContent] = useState<string | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
 
   const activeArea = plan.focusAreas.find(a => a.id === plan.activeFocusAreaId);
   const openModule = activeArea?.modules.find(m => m.id === openModuleId) || null;
 
   const handleOpenModule = async (mod: StudyModule, topic: string) => {
+    if (mod.module_type === "quiz") {
+      // Open quiz gate instead of content dialog
+      const area = plan.focusAreas.find(a => a.modules.some(m => m.id === mod.id));
+      if (area) {
+        setQuizGateAreaId(area.id);
+        setQuizGateOpen(true);
+      }
+      return;
+    }
     setOpenModuleId(mod.id);
     if (!mod.content) {
       await plan.loadModuleContent(mod, topic);
@@ -53,16 +65,42 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
     await plan.completeModule(moduleId);
   };
 
-  const handleOpenQuizGate = (areaId: string) => {
+  const handleQuizComplete = async (areaId: string, score: number, total: number, missedConcepts?: string[]) => {
+    setQuizGateOpen(false);
+    await plan.passQuizGate(areaId, score, total, missedConcepts);
+    setQuizGateAreaId(null);
+  };
+
+  const handleShowReview = async (areaId: string, missedConcepts: string[]) => {
+    setShowReviewDialog(true);
+    const content = await plan.generateReviewLesson(areaId, missedConcepts);
+    if (content) setReviewContent(content);
+  };
+
+  const handleRetryQuiz = async (areaId: string) => {
+    await plan.resetQuizForRetry(areaId);
+    setShowReviewDialog(false);
+    setReviewContent(null);
+    // Re-open the quiz
     setQuizGateAreaId(areaId);
     setQuizGateOpen(true);
   };
 
-  if (!hasPlacementQuiz) {
-    return null;
-  }
+  const isModuleUnlocked = (mod: StudyModule, area: FocusArea): boolean => {
+    if (mod.module_type === "lesson") return true;
+    if (mod.module_type === "practice") {
+      const lesson = area.modules.find(m => m.module_type === "lesson");
+      return !!lesson?.is_completed;
+    }
+    if (mod.module_type === "quiz") {
+      return plan.allModulesComplete(area);
+    }
+    return false;
+  };
 
-  // Empty state — no plan generated yet
+  if (!hasPlacementQuiz) return null;
+
+  // Empty state
   if (!plan.isLoading && plan.focusAreas.length === 0) {
     return (
       <Card className="p-6 border-border shadow-[var(--shadow-soft)]">
@@ -71,7 +109,7 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
             <GraduationCap className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Structured Study Plan</h3>
+            <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
             <p className="text-sm text-muted-foreground">Module-based learning path from your syllabus</p>
           </div>
         </div>
@@ -80,15 +118,9 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
           <p className="text-muted-foreground mb-4">Generate a structured learning path based on your syllabus topics</p>
           <Button onClick={plan.generatePlan} disabled={plan.isGenerating}>
             {plan.isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating Plan...
-              </>
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating Plan...</>
             ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                Generate Study Plan
-              </>
+              <><Zap className="w-4 h-4 mr-2" />Generate Study Plan</>
             )}
           </Button>
         </div>
@@ -117,7 +149,7 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
               <GraduationCap className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Structured Study Plan</h3>
+              <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
               <p className="text-sm text-muted-foreground">
                 {plan.focusAreas.length} Focus Areas • ~{plan.estimatedWeeks} weeks
               </p>
@@ -126,7 +158,7 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-medium text-foreground">{plan.overallProgress}% Complete</p>
-              <p className="text-xs text-muted-foreground">{plan.completedModules}/{plan.totalModules} modules</p>
+              <p className="text-xs text-muted-foreground">{plan.completedModules}/{plan.totalModules} steps</p>
             </div>
             <Button variant="outline" size="sm" onClick={plan.generatePlan} disabled={plan.isGenerating}>
               {plan.isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Regenerate"}
@@ -158,6 +190,8 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                   const isActive = area.id === plan.activeFocusAreaId;
                   const isLocked = !area.is_unlocked;
                   const isComplete = area.quiz_passed;
+                  const step = plan.getModuleStep(area);
+                  const failed = area.quiz_score !== null && area.quiz_score < 70 && !area.quiz_passed;
 
                   return (
                     <div
@@ -167,7 +201,8 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                         isLocked && "opacity-50 cursor-not-allowed bg-muted/30 border-border",
                         isActive && !isLocked && "border-primary bg-primary/5 shadow-sm",
                         isComplete && "border-green-500/30 bg-green-500/5",
-                        !isActive && !isLocked && !isComplete && "border-border hover:border-primary/50 bg-card"
+                        failed && !isActive && "border-destructive/30 bg-destructive/5",
+                        !isActive && !isLocked && !isComplete && !failed && "border-border hover:border-primary/50 bg-card"
                       )}
                       onClick={() => !isLocked && plan.setActiveFocusAreaId(area.id)}
                     >
@@ -175,29 +210,36 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                         <div className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
                           isComplete ? "bg-green-500 text-white" :
+                          failed ? "bg-destructive/10 text-destructive" :
                           isLocked ? "bg-muted text-muted-foreground" :
                           isActive ? "bg-primary text-primary-foreground" :
                           "bg-muted text-foreground"
                         )}>
                           {isComplete ? <CheckCircle2 className="w-4 h-4" /> :
+                           failed ? <XCircle className="w-4 h-4" /> :
                            isLocked ? <Lock className="w-3 h-3" /> :
                            idx + 1}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className={cn("text-sm font-medium truncate",
-                              isComplete ? "text-green-600" : isLocked ? "text-muted-foreground" : "text-foreground"
+                              isComplete ? "text-green-600" :
+                              failed ? "text-destructive" :
+                              isLocked ? "text-muted-foreground" : "text-foreground"
                             )}>
                               {area.topic}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             <Progress value={progress} className="h-1.5 flex-1" />
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">{progress}%</span>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {isComplete ? "✓" : step === "lesson" ? "Lesson" : step === "practice" ? "Practice" : step === "quiz" ? "Quiz" : `${progress}%`}
+                            </span>
                           </div>
                         </div>
                         {isComplete && <Trophy className="w-4 h-4 text-green-500 flex-shrink-0" />}
-                        {!isLocked && !isComplete && <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                        {failed && <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />}
+                        {!isLocked && !isComplete && !failed && <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
                       </div>
                     </div>
                   );
@@ -223,13 +265,13 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                   )}
                 </div>
 
-                {/* Modules */}
+                {/* Module Steps: Lesson → Practice → Quiz */}
                 <ScrollArea className="h-[320px] pr-2">
                   <div className="space-y-2">
-                    {activeArea.modules.map((mod, idx) => {
-                      const config = moduleTypeConfig[mod.module_type] || moduleTypeConfig.concept;
+                    {activeArea.modules.map((mod) => {
+                      const config = moduleTypeConfig[mod.module_type] || moduleTypeConfig.lesson;
                       const Icon = config.icon;
-                      const prevComplete = idx === 0 || activeArea.modules[idx - 1].is_completed;
+                      const unlocked = isModuleUnlocked(mod, activeArea);
 
                       return (
                         <div
@@ -237,25 +279,29 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                           className={cn(
                             "p-3 rounded-lg border transition-all",
                             mod.is_completed ? "bg-green-500/5 border-green-500/20" :
-                            prevComplete ? "bg-card border-border hover:border-primary/50 cursor-pointer" :
+                            unlocked ? "bg-card border-border hover:border-primary/50 cursor-pointer" :
                             "opacity-50 bg-muted/30 border-border cursor-not-allowed"
                           )}
-                          onClick={() => prevComplete && !mod.is_completed && handleOpenModule(mod, activeArea.topic)}
+                          onClick={() => unlocked && !mod.is_completed && handleOpenModule(mod, activeArea.topic)}
                         >
                           <div className="flex items-center gap-3">
                             <div className={cn(
-                              "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0",
-                              mod.is_completed ? "bg-green-500/10" : "bg-muted"
+                              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                              mod.is_completed ? "bg-green-500/10" :
+                              unlocked ? "bg-primary/10" :
+                              "bg-muted"
                             )}>
                               {mod.is_completed ? (
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
+                              ) : !unlocked ? (
+                                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                               ) : (
-                                <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                                <Icon className={cn("w-4 h-4", config.color)} />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className={cn("text-sm font-medium",
-                                mod.is_completed ? "text-green-600 line-through" : "text-foreground"
+                                mod.is_completed ? "text-green-600" : "text-foreground"
                               )}>
                                 {mod.title}
                               </p>
@@ -268,13 +314,13 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                                 )}
                               </div>
                             </div>
-                            {mod.is_completed && (
+                            {mod.is_completed && mod.module_type !== "quiz" && (
                               <Button variant="ghost" size="sm" className="h-6 text-xs px-2"
                                 onClick={(e) => { e.stopPropagation(); plan.uncompleteModule(mod.id); }}>
                                 Undo
                               </Button>
                             )}
-                            {prevComplete && !mod.is_completed && (
+                            {unlocked && !mod.is_completed && (
                               <ArrowRight className="w-4 h-4 text-primary flex-shrink-0" />
                             )}
                           </div>
@@ -282,42 +328,68 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
                       );
                     })}
 
-                    {/* Quiz Gate */}
-                    {activeArea.modules.length > 0 && (
-                      <div className={cn(
-                        "p-4 rounded-lg border-2 border-dashed mt-3 text-center",
-                        plan.allModulesComplete(activeArea) ? "border-primary bg-primary/5" : "border-muted bg-muted/20"
-                      )}>
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          {activeArea.quiz_passed ? (
-                            <Trophy className="w-5 h-5 text-green-500" />
-                          ) : plan.allModulesComplete(activeArea) ? (
-                            <Unlock className="w-5 h-5 text-primary" />
-                          ) : (
-                            <Lock className="w-5 h-5 text-muted-foreground" />
-                          )}
-                          <span className={cn("font-semibold text-sm",
-                            activeArea.quiz_passed ? "text-green-600" : "text-foreground"
-                          )}>
-                            {activeArea.quiz_passed ? "Quiz Passed!" : "Focus Area Quiz Gate"}
+                    {/* Failed Quiz Review Banner */}
+                    {activeArea.quiz_score !== null && activeArea.quiz_score < 70 && !activeArea.quiz_passed && (
+                      <div className="p-4 rounded-lg border-2 border-dashed border-destructive/50 bg-destructive/5 mt-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-5 h-5 text-destructive" />
+                          <span className="font-semibold text-sm text-destructive">
+                            Quiz Failed — {activeArea.quiz_score}% (Need 70%)
                           </span>
                         </div>
-                        {activeArea.quiz_passed ? (
-                          <p className="text-xs text-green-600">Scored {activeArea.quiz_score}% — Next area unlocked</p>
-                        ) : plan.allModulesComplete(activeArea) ? (
-                          <>
-                            <p className="text-xs text-muted-foreground mb-3">
-                              Complete all modules ✓ — Pass with {activeArea.quiz_threshold}% to unlock next area
-                            </p>
-                            <Button size="sm" onClick={() => handleOpenQuizGate(activeArea.id)}>
-                              Take Quiz
-                            </Button>
-                          </>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">
-                            Complete all modules above to unlock this quiz ({activeArea.quiz_threshold}% required)
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Review the missed concepts before retrying the quiz.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleShowReview(activeArea.id, plan.reviewMissedConcepts.length > 0 ? plan.reviewMissedConcepts : [activeArea.topic])}
+                          >
+                            <BookOpen className="w-4 h-4 mr-1" />
+                            Review Lesson
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleRetryQuiz(activeArea.id)}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            Retry Quiz
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Passed with Review Banner */}
+                    {activeArea.quiz_passed && activeArea.quiz_score !== null && activeArea.quiz_score < 100 && (
+                      <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 mt-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                          <span className="font-semibold text-sm text-amber-600">
+                            Passed — {activeArea.quiz_score}%
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          You passed but missed some concepts. Review them to strengthen understanding.
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleShowReview(activeArea.id, plan.reviewMissedConcepts.length > 0 ? plan.reviewMissedConcepts : [activeArea.topic])}
+                        >
+                          <BookOpen className="w-4 h-4 mr-1" />
+                          Review Missed Concepts
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Perfect Score Banner */}
+                    {activeArea.quiz_passed && activeArea.quiz_score === 100 && (
+                      <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/5 mt-3 text-center">
+                        <Trophy className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                        <span className="font-semibold text-sm text-green-600">
+                          Perfect Score! 🎉
+                        </span>
                       </div>
                     )}
                   </div>
@@ -332,13 +404,13 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
         </div>
       </Card>
 
-      {/* Module Content Dialog */}
+      {/* Module Content Dialog (Lesson / Practice) */}
       <Dialog open={!!openModuleId} onOpenChange={() => setOpenModuleId(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {openModule && (() => {
-                const config = moduleTypeConfig[openModule.module_type] || moduleTypeConfig.concept;
+                const config = moduleTypeConfig[openModule.module_type] || moduleTypeConfig.lesson;
                 const Icon = config.icon;
                 return <Icon className={cn("w-5 h-5", config.color)} />;
               })()}
@@ -358,7 +430,7 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
             ) : (
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <div className="whitespace-pre-wrap text-foreground">
-                  {openModule?.content || "Content not available."}
+                  {openModule?.content ? <MathText text={openModule.content} /> : "Content not available."}
                 </div>
               </div>
             )}
@@ -374,6 +446,48 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
         </DialogContent>
       </Dialog>
 
+      {/* Targeted Review Dialog */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Targeted Review
+            </DialogTitle>
+            <DialogDescription>
+              Focused review on concepts you missed
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[55vh] pr-4">
+            {plan.isGeneratingReview ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Generating targeted review...</span>
+              </div>
+            ) : reviewContent ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <div className="whitespace-pre-wrap text-foreground">
+                  <MathText text={reviewContent} />
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No review content available.</p>
+            )}
+          </ScrollArea>
+          {reviewContent && plan.reviewAreaId && (
+            <div className="flex justify-end gap-2 pt-4 border-t border-border">
+              <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
+                Close
+              </Button>
+              <Button onClick={() => handleRetryQuiz(plan.reviewAreaId!)}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Retry Quiz
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Quiz Gate Modal */}
       {quizGateAreaId && (() => {
         const gateArea = plan.focusAreas.find(a => a.id === quizGateAreaId);
@@ -382,15 +496,20 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
           <MiniQuiz
             isOpen={quizGateOpen}
             onClose={(score?: number, total?: number) => {
-              setQuizGateOpen(false);
               if (score !== undefined && total !== undefined) {
-                plan.passQuizGate(quizGateAreaId, score, total);
+                // Collect missed concepts from the quiz
+                handleQuizComplete(quizGateAreaId, score, total, [gateArea.topic]);
+              } else {
+                setQuizGateOpen(false);
+                setQuizGateAreaId(null);
               }
-              setQuizGateAreaId(null);
             }}
             className={className}
             weakAreas={[gateArea.topic]}
             learningStyles={learningStyles}
+            onQuizComplete={(score, total) => {
+              handleQuizComplete(quizGateAreaId, score, total, [gateArea.topic]);
+            }}
           />
         );
       })()}
