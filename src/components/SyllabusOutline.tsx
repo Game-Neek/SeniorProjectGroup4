@@ -88,6 +88,20 @@ export const SyllabusOutline = ({
         description: `Extracted course outline for ${className}`,
       });
 
+      // Extract topics for chapter selection
+      const topics: string[] = [];
+      if (data.weeklySchedule) {
+        data.weeklySchedule.forEach((w: any) => { if (w.topic) topics.push(w.topic); });
+      }
+      if (topics.length === 0 && data.learningObjectives) {
+        topics.push(...data.learningObjectives.slice(0, 15));
+      }
+
+      if (topics.length > 0) {
+        setExtractedTopics(topics);
+        setShowChapterSelection(true);
+      }
+
       // Dispatch event so course page components (ChapterBreakdowns, CourseTextbooks) can refresh
       window.dispatchEvent(new CustomEvent("syllabus-reparsed", { detail: { className } }));
 
