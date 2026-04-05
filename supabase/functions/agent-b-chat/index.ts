@@ -374,6 +374,7 @@ Class: ${className || "the course"}
 Focus Areas: ${focusAreas.join(", ") || "general review"}
 ${learningStyleContext}
 ${syllabusTopics}
+${textbookContext}
 
 QUESTION QUALITY RULES — MANDATORY:
 - 80% of questions (4 out of 5) MUST be application/problem-solving questions
