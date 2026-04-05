@@ -420,112 +420,12 @@ const CoursePage = () => {
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
 
-        {/* Adaptive Learning Section */}
-        <Card className="p-6 border-border shadow-[var(--shadow-soft)]">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <GraduationCap className="w-5 h-5 text-primary" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
-            {!hasQuiz && (
-              <Badge variant="outline" className="ml-auto text-muted-foreground">
-                Complete placement quiz to unlock
-              </Badge>
-            )}
-          </div>
-
-          {/* Practice Tools */}
-          {hasQuiz && classQuizResult && (
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-secondary/5 border border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileQuestion className="w-5 h-5 text-primary" />
-                  <h4 className="font-medium text-foreground text-sm">Mini-Quizzes</h4>
-                </div>
-                <p className="text-2xl font-bold text-foreground mb-1">3</p>
-                <p className="text-xs text-muted-foreground">Available today</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" onClick={() => setShowMiniQuiz(true)}>
-                  Start Quiz
-                </Button>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-accent/5 border border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-5 h-5 text-secondary" />
-                  <h4 className="font-medium text-foreground text-sm">Interactive Exercises</h4>
-                </div>
-                <p className="text-2xl font-bold text-foreground mb-1">{thisClassPlan?.resources?.length || 0}</p>
-                <p className="text-xs text-muted-foreground">New exercises</p>
-                <Button variant="outline" size="sm" className="w-full mt-3" onClick={() => setShowExercises(true)}>
-                  Practice Now
-                </Button>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-primary/5 border border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <BookMarked className="w-5 h-5 text-accent" />
-                  <h4 className="font-medium text-foreground text-sm">Chapter Breakdowns</h4>
-                </div>
-                <p className="text-xs text-muted-foreground mb-2">Topics from syllabus with progress</p>
-                <div className="space-y-1 mt-2">
-                  {classQuizResult.strongAreas.slice(0, 2).map((area, i) => (
-                    <div key={i} className="flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-primary" />
-                      <span className="text-xs text-foreground truncate">{area}</span>
-                    </div>
-                  ))}
-                  {classQuizResult.weakAreas.slice(0, 2).map((area, i) => (
-                    <div key={i} className="flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3 text-destructive" />
-                      <span className="text-xs text-foreground truncate">{area}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Learning Objectives */}
-          {hasQuiz && (thisClassPlan?.objectives?.length || 0) > 0 && (
-            <div className="pt-4 border-t border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <Target className="w-5 h-5 text-primary" />
-                <h4 className="font-semibold text-foreground">Learning Objectives</h4>
-                <Badge variant="secondary" className="ml-auto">{completionPercentage}% complete</Badge>
-              </div>
-              <div className="space-y-2">
-                {(thisClassPlan?.objectives || []).slice(0, 5).map((obj) => (
-                  <div
-                    key={obj.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                      completedObjectives.has(obj.id)
-                        ? "bg-muted/50 border border-muted"
-                        : "bg-card border border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => toggleObjective(obj.id)}
-                  >
-                    <CheckCircle2
-                      className={`w-5 h-5 flex-shrink-0 ${
-                        completedObjectives.has(obj.id) ? "text-primary" : "text-muted-foreground"
-                      }`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${completedObjectives.has(obj.id) ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                        {obj.topic}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{obj.description}</p>
-                    </div>
-                    <Badge className={`text-xs ${
-                      obj.priority === "high" ? "bg-destructive/10 text-destructive border-destructive/20"
-                        : obj.priority === "medium" ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                        : "bg-green-500/10 text-green-600 border-green-500/20"
-                    }`}>
-                      {obj.priority}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </Card>
+        {/* Structured Study Plan */}
+        <StructuredStudyPlan
+          className={decodedClassName}
+          learningStyles={learningStyles}
+          hasPlacementQuiz={hasQuiz}
+        />
 
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
