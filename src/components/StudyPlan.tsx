@@ -140,7 +140,7 @@ export const StudyPlan = ({
             <Target className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Your Study Plan</h3>
+            <h3 className="text-lg font-semibold text-foreground">Study Resources</h3>
             {quizResult && (
               <p className="text-sm text-muted-foreground">
                 Based on your {quizResult.className} quiz ({quizResult.score}/{quizResult.totalQuestions})
