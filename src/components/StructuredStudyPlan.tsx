@@ -20,6 +20,7 @@ import {
 import { useStructuredStudyPlan, FocusArea, StudyModule, getScoreTier } from "@/hooks/useStructuredStudyPlan";
 import { MiniQuiz } from "@/components/MiniQuiz";
 import { MathText } from "@/components/MathText";
+import { LessonRenderer } from "@/components/LessonRenderer";
 import { cn } from "@/lib/utils";
 
 interface StructuredStudyPlanProps {
