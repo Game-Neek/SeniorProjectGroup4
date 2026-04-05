@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, XCircle, FileQuestion, ArrowRight, RotateCcw } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, FileQuestion, ArrowRight, RotateCcw, Brain, Wrench, Search, Scale, Sparkles, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -24,12 +24,22 @@ interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  bloom_level?: string;
   misconception?: string;
   trap_explanation?: string;
   visual_required?: boolean;
   visual_type?: string;
   visual_data?: any;
 }
+
+const BLOOM_BADGE_CONFIG: Record<string, { label: string; emoji: string; color: string; Icon: any }> = {
+  remember: { label: "Recall", emoji: "📝", color: "bg-red-500/10 text-red-700 border-red-500/20", Icon: Brain },
+  understand: { label: "Understand", emoji: "💡", color: "bg-orange-500/10 text-orange-700 border-orange-500/20", Icon: Lightbulb },
+  apply: { label: "Application", emoji: "🔧", color: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20", Icon: Wrench },
+  analyze: { label: "Analysis", emoji: "🔬", color: "bg-green-500/10 text-green-700 border-green-500/20", Icon: Search },
+  evaluate: { label: "Evaluation", emoji: "⚖️", color: "bg-blue-500/10 text-blue-700 border-blue-500/20", Icon: Scale },
+  create: { label: "Create", emoji: "✨", color: "bg-purple-500/10 text-purple-700 border-purple-500/20", Icon: Sparkles },
+};
 
 interface MiniQuizProps {
   isOpen: boolean;
@@ -292,6 +302,18 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
             </div>
 
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                {currentQuestion?.bloom_level && BLOOM_BADGE_CONFIG[currentQuestion.bloom_level] && (() => {
+                  const cfg = BLOOM_BADGE_CONFIG[currentQuestion.bloom_level!];
+                  const BloomIcon = cfg.Icon;
+                  return (
+                    <Badge variant="outline" className={`text-xs ${cfg.color}`}>
+                      <BloomIcon className="w-3 h-3 mr-1" />
+                      {cfg.emoji} {cfg.label}
+                    </Badge>
+                  );
+                })()}
+              </div>
               <p className="font-medium text-foreground"><MathText text={currentQuestion?.question || ""} /></p>
               {/* Visual rendering */}
               {currentQuestion?.visual_required && currentQuestion?.visual_type && currentQuestion?.visual_data && (

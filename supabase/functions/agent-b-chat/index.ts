@@ -446,19 +446,62 @@ Include mix of: 2-3 videos, 2-3 reading materials, 1-2 practice resources.`;
       // Generate a quick 5-question mini quiz for weak areas
       useToolCalling = true;
       const focusAreas = requestWeakAreas || [];
+
+      // Fetch student mastery to determine bloom escalation
+      let studentMastery = 0;
+      let currentBloomForQuiz = "apply";
+      if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: focusData } = await adminClient
+          .from("study_focus_areas")
+          .select("quiz_score, quiz_passed")
+          .eq("user_id", userId)
+          .eq("class_name", className || "")
+          .in("topic", focusAreas);
+        if (focusData && focusData.length > 0) {
+          const scores = focusData.filter(f => f.quiz_score != null).map(f => f.quiz_score!);
+          studentMastery = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+        }
+        // Bloom escalation based on mastery
+        const bloomLadder = ["remember", "understand", "apply", "analyze", "evaluate", "create"];
+        if (studentMastery >= 90) currentBloomForQuiz = "evaluate";
+        else if (studentMastery >= 80) currentBloomForQuiz = "analyze";
+        else if (studentMastery >= 60) currentBloomForQuiz = "apply";
+        else if (studentMastery >= 40) currentBloomForQuiz = "understand";
+        else currentBloomForQuiz = "apply"; // default to application even at low mastery
+      }
+
       systemPrompt = `You are AgentB creating a mini-quiz to test APPLIED understanding.
 
 Class: ${className || "the course"}
 Focus Areas: ${focusAreas.join(", ") || "general review"}
+Student Mastery: ${studentMastery}%
+Target Bloom's Level: ${currentBloomForQuiz}
 ${learningStyleContext}
 ${syllabusTopics}
 ${textbookContext}
+
+BLOOM'S TAXONOMY–BASED QUESTION LEVELING (CRITICAL):
+- Assess EACH question at a specific Bloom's level based on the student's mastery
+- Student mastery is ${studentMastery}% — target "${currentBloomForQuiz}" level questions
+- ESCALATE question type when mastery is high on lower levels:
+  * <40% mastery → focus on "apply" (basic application)
+  * 40-59% → mix of "apply" and "understand" 
+  * 60-79% → "apply" with some "analyze"
+  * 80-89% → primarily "analyze" with "evaluate"
+  * 90%+ → "evaluate" and "create" level questions
+- Each question MUST include a bloom_level field: "remember", "understand", "apply", "analyze", "evaluate", or "create"
 
 QUESTION QUALITY RULES — MANDATORY:
 - 80% of questions (4 out of 5) MUST be application/problem-solving questions
 - Maximum 1 out of 5 may be conceptual (and even then, test understanding, not recall)
 - NEVER generate basic definition questions like "What is X?" or "Define Y"
 - Every question must require the student to: compute, solve, apply a formula, analyze a scenario, debug code, or work through steps
+
+TEXTBOOK ALIGNMENT:
+${textbookContext ? `- Frame questions using the EXACT terminology and notation from the assigned textbook
+- Reference specific textbook chapters when applicable (e.g., "As discussed in Ch. 5...")
+- Use problem formats consistent with the textbook's exercise sections` : "- Use standard academic terminology for the subject"}
 
 SUBJECT-AWARE FORMATTING:
 - Math: Include actual equations, expressions, derivatives, integrals, word problems
@@ -519,6 +562,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                         options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
                         explanation: { type: "string", description: "Brief explanation of why the answer is correct" },
+                        bloom_level: { type: "string", enum: ["remember", "understand", "apply", "analyze", "evaluate", "create"], description: "Bloom's taxonomy cognitive level of this question" },
                         misconception: { type: "string", description: "The specific concept the student is weak on if they get this wrong" },
                         trap_explanation: { type: "string", description: "Why common wrong answers are wrong, what thinking led to them, and how to rethink" },
                         visual_required: { type: "boolean", description: "Whether this question benefits from a visual representation" },
@@ -538,7 +582,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                           }
                         }
                       },
-                      required: ["id", "question", "options", "correctIndex", "explanation", "misconception", "trap_explanation"]
+                      required: ["id", "question", "options", "correctIndex", "explanation", "bloom_level", "misconception", "trap_explanation"]
                     }
                   }
                 },
@@ -1095,6 +1139,27 @@ Format your response as:
 
 After the quiz, provide a brief study guide based on the topics covered.`;
     } else {
+      // Fetch student mastery and bloom data for chat context
+      let masteryContext = "";
+      if (userId && className && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: focusData } = await adminClient
+          .from("study_focus_areas")
+          .select("topic, quiz_score, quiz_passed")
+          .eq("user_id", userId)
+          .eq("class_name", className);
+        if (focusData && focusData.length > 0) {
+          const weakTopics = focusData.filter(f => !f.quiz_passed || (f.quiz_score != null && f.quiz_score < 70));
+          const strongTopics = focusData.filter(f => f.quiz_passed && f.quiz_score != null && f.quiz_score >= 70);
+          if (weakTopics.length > 0) {
+            masteryContext += `\n\nSTUDENT MASTERY DATA:\nWeak topics (needs work): ${weakTopics.map(t => `${t.topic} (${t.quiz_score || 0}%)`).join(", ")}`;
+          }
+          if (strongTopics.length > 0) {
+            masteryContext += `\nStrong topics: ${strongTopics.map(t => `${t.topic} (${t.quiz_score}%)`).join(", ")}`;
+          }
+        }
+      }
+
       systemPrompt = `You are AgentB, an intelligent AI campus assistant and tutor. You help students with:
 
 1. **Chat Tutoring**: Provide clear, patient explanations of academic concepts
@@ -1108,6 +1173,15 @@ After the quiz, provide a brief study guide based on the topics covered.`;
 
 ${learningStyleContext}
 ${syllabiContext}
+${textbookContext}
+${masteryContext}
+
+BLOOM'S TAXONOMY AWARENESS (CRITICAL):
+- When the student asks about a topic they're weak on, start with "understand" level explanations, then push toward "apply"
+- When the student has high mastery on a topic, push toward "analyze" and "evaluate" level thinking
+- Reference the assigned textbook when possible: e.g., "In [Textbook] Ch. 5, try applying this concept to..."
+- Actively push students toward APPLICATION-level thinking: "Now that you understand the concept, try solving this..."
+- When a student asks a recall-level question, answer it but immediately escalate: "Good question! Now, can you apply that to..."
 
 Guidelines:
 - Be encouraging and supportive
