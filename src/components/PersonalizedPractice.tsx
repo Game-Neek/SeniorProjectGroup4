@@ -63,6 +63,7 @@ export const PersonalizedPractice = ({ className, learningStyles }: Personalized
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [masteryScore, setMasteryScore] = useState(0);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   // Load weak areas from study_focus_areas and practice_history
   const loadWeakAreas = useCallback(async () => {
