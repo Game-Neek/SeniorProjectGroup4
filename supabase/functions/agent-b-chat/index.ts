@@ -382,6 +382,18 @@ EXAMPLE TRANSFORMATIONS:
 ❌ "Define polymorphism" → ✅ "Given class Animal with method speak(), what output does this code produce: ..."
 
 Generate exactly 5 multiple-choice questions with 4 options each and clear explanations.
+
+TRAP ANSWER FEEDBACK (CRITICAL):
+- Each WRONG answer option must map to a specific misconception
+- For each question, include a "misconception" field describing what concept the student is weak on if they get it wrong
+- Include a "trap_explanation" field that explains: why common wrong answers are wrong, what thinking led to them, and how to rethink the problem
+- Example: If the trap answer uses the wrong formula, explain which formula should be used and why
+
+DIFFICULTY PROGRESSION within the quiz:
+- Questions 1-2: Basic application
+- Questions 3-4: Multi-step problems
+- Question 5: Analysis / real-world scenario
+
 IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathematical expressions (e.g. $f(x) = 3x^2$, $\\theta = 30^\\circ$). This applies to questions, options, AND explanations.`;
 
       toolConfig = {
@@ -390,7 +402,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate a mini quiz with exactly 5 questions - no more, no less. Include visual data when applicable.",
+              description: "Generate a mini quiz with exactly 5 questions including misconception tracking and trap answer feedback.",
               parameters: {
                 type: "object",
                 properties: {
@@ -406,11 +418,13 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                         options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
                         correctIndex: { type: "number", description: "Index of the correct option (0-3)" },
                         explanation: { type: "string", description: "Brief explanation of why the answer is correct" },
+                        misconception: { type: "string", description: "The specific concept the student is weak on if they get this wrong" },
+                        trap_explanation: { type: "string", description: "Why common wrong answers are wrong, what thinking led to them, and how to rethink" },
                         visual_required: { type: "boolean", description: "Whether this question benefits from a visual representation" },
                         visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"], description: "Type of visual to render" },
                         visual_data: {
                           type: "object",
-                          description: "Structured data for rendering the visual. For graphs: { function, range }. For physics: { dataPoints, xLabel, yLabel }. For forces: { forces: [{ label, direction }] }. For molecules: { formula }.",
+                          description: "Structured data for rendering the visual.",
                           properties: {
                             function: { type: "string" },
                             range: { type: "array", items: { type: "number" } },
@@ -423,7 +437,7 @@ IMPORTANT: Use LaTeX math notation with dollar sign delimiters for ALL mathemati
                           }
                         }
                       },
-                      required: ["id", "question", "options", "correctIndex", "explanation"]
+                      required: ["id", "question", "options", "correctIndex", "explanation", "misconception", "trap_explanation"]
                     }
                   }
                 },
