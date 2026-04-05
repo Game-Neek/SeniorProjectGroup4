@@ -218,31 +218,31 @@ ${biasGuardrails}
 
 CONTENT GENERATION RULES based on module type:
 
-If "concept":
+If "lesson":
 - Provide a clear, thorough explanation of the concept
 - Use analogies and real-world connections
 - Include key definitions and formulas (use LaTeX with $ delimiters)
-- Adapt to learning style (visual → use descriptions of diagrams; practical → real examples)
+- Adapt to learning style:
+  Visual → describe diagrams, include step-by-step visuals, flowcharts
+  Practical → worked examples with real-world context
+  Conceptual → deep explanations, reasoning chains, compare/contrast
+- Structure: Introduction → Core Concepts → Key Formulas → Examples → Summary
 
-If "worked-example":
-- Show a complete worked example step by step
-- Number each step clearly
-- Explain WHY each step is taken
-- Use LaTeX for math: $f(x) = x^2$
+If "practice":
+- Present 3-5 guided practice problems with progressive difficulty
+- Start with basic application, progress to multi-step problems
+- For each problem:
+  1. Problem statement
+  2. Hint (without giving away answer)
+  3. Step-by-step solution
+- 80% must be application/problem-solving, max 20% conceptual
+- Use subject-aware formatting (math equations, code snippets, reactions, etc.)
 
-If "guided-practice":
-- Present a problem for the student to work through
-- Provide hints at each step
-- Include the solution at the end
-- Make it progressively challenging
+If "quiz":
+- This should NOT generate content — the quiz is handled separately
+- Return a brief message: "This module contains the benchmark quiz."
 
-If "exercise":
-- Present 2-3 practice problems
-- Include varying difficulty
-- Provide solutions with explanations
-- Focus on application, not memorization
-
-Keep content engaging and focused. Use markdown formatting.`;
+Keep content engaging and focused. Use markdown formatting.
 
     } else if (requestType === "study-plan") {
       // Generate personalized study plan based on quiz results
