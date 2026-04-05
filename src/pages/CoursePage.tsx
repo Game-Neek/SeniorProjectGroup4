@@ -111,6 +111,13 @@ const CoursePage = () => {
   // Load calendar events for this course
   useEffect(() => {
     fetchEvents();
+    // Listen for calendar updates from syllabus parsing
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.className === decodedClassName) fetchEvents();
+    };
+    window.addEventListener("calendar-updated", handler);
+    return () => window.removeEventListener("calendar-updated", handler);
   }, [decodedClassName]);
 
   const fetchEvents = async () => {
@@ -118,24 +125,15 @@ const CoursePage = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
+    // Fetch all events related to this course (by description or title)
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
       .eq("user_id", session.user.id)
-      .ilike("description", `%${decodedClassName}%`)
+      .or(`description.ilike.%${decodedClassName}%,title.ilike.%${decodedClassName}%`)
       .order("event_date", { ascending: true });
 
-    // Also fetch events with the class name in the title
-    const { data: data2 } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .ilike("title", `%${decodedClassName}%`)
-      .order("event_date", { ascending: true });
-
-    const combined = new Map<string, CalendarEvent>();
-    [...(data || []), ...(data2 || [])].forEach((e) => combined.set(e.id, e));
-    setEvents(Array.from(combined.values()));
+    setEvents(data || []);
     setLoadingEvents(false);
   };
 
@@ -445,12 +443,15 @@ const CoursePage = () => {
           onNavigateToTopic={handleNavigateToTopic}
         />
 
-        {/* Structured Study Plan */}
-        <div id="adaptive-learning-section">
+        {/* Adaptive Learning (Structured Study Plan + Course Drafts) */}
+        <div id="adaptive-learning-section" className="space-y-6">
           <StructuredStudyPlan
             className={decodedClassName}
             learningStyles={learningStyles}
           />
+
+          {/* Interactive Course Draft — integrated into adaptive learning flow */}
+          <GeneratedCourse className={decodedClassName} />
         </div>
 
         {/* Personalized Practice */}
@@ -467,9 +468,6 @@ const CoursePage = () => {
 
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
-
-        {/* Interactive Course Draft */}
-        <GeneratedCourse className={decodedClassName} />
 
         {/* Chapter Breakdowns - Real data from syllabus */}
         <ChapterBreakdowns className={decodedClassName} />

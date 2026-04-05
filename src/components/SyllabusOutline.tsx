@@ -102,6 +102,9 @@ export const SyllabusOutline = ({
         setShowChapterSelection(true);
       }
 
+      // Auto-populate calendar from syllabus dates
+      await autoPopulateCalendar(data.weeklySchedule, data.gradingPolicy);
+
       // Dispatch event so course page components (ChapterBreakdowns, CourseTextbooks) can refresh
       window.dispatchEvent(new CustomEvent("syllabus-reparsed", { detail: { className } }));
 
@@ -115,6 +118,77 @@ export const SyllabusOutline = ({
       });
     } finally {
       setIsParsing(false);
+    }
+  };
+
+  const autoPopulateCalendar = async (weeklySchedule: any[], gradingPolicy: any[]) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const events: { title: string; date: string; type: string }[] = [];
+    const now = new Date();
+    // Estimate semester start as current or next Monday
+    const semesterStart = new Date(now);
+    semesterStart.setDate(semesterStart.getDate() - semesterStart.getDay() + 1);
+    if (semesterStart < now) semesterStart.setDate(semesterStart.getDate() - 7); // go back to start of current week
+
+    if (Array.isArray(weeklySchedule)) {
+      weeklySchedule.forEach((week: any) => {
+        const weekNum = parseInt(week.week) || 0;
+        if (weekNum <= 0) return;
+        const weekDate = new Date(semesterStart);
+        weekDate.setDate(weekDate.getDate() + (weekNum - 1) * 7);
+        const dateStr = weekDate.toISOString().split("T")[0];
+
+        // Detect event types from topic/details
+        const combined = `${week.topic || ""} ${week.details || ""}`.toLowerCase();
+        if (combined.includes("midterm")) {
+          events.push({ title: `${className}: Midterm`, date: dateStr, type: "midterm" });
+        } else if (combined.includes("final")) {
+          events.push({ title: `${className}: Final Exam`, date: dateStr, type: "final" });
+        } else if (combined.includes("quiz")) {
+          events.push({ title: `${className}: Quiz - ${week.topic}`, date: dateStr, type: "quiz" });
+        } else if (combined.includes("exam") || combined.includes("test")) {
+          events.push({ title: `${className}: ${week.topic}`, date: dateStr, type: "test" });
+        } else if (combined.includes("lab") || combined.includes("due") || combined.includes("assignment") || combined.includes("homework")) {
+          events.push({ title: `${className}: ${week.topic}`, date: dateStr, type: "homework" });
+        }
+        // Always add a study topic marker
+        if (!events.find(e => e.date === dateStr)) {
+          events.push({ title: `${className}: ${week.topic}`, date: dateStr, type: "other" });
+        }
+      });
+    }
+
+    if (events.length === 0) return;
+
+    // Remove existing auto-generated events for this class to avoid duplicates
+    await supabase
+      .from("calendar_events")
+      .delete()
+      .eq("user_id", session.user.id)
+      .ilike("description", `syllabus-auto:${className}`);
+
+    // Insert new events
+    let addedCount = 0;
+    for (const evt of events) {
+      const { error } = await supabase.from("calendar_events").insert({
+        user_id: session.user.id,
+        title: evt.title,
+        event_date: evt.date,
+        event_type: evt.type,
+        description: `syllabus-auto:${className}`,
+      });
+      if (!error) addedCount++;
+    }
+
+    if (addedCount > 0) {
+      toast({
+        title: "Calendar updated",
+        description: `${addedCount} dates added from syllabus to course calendar`,
+      });
+      // Notify course page to refresh calendar
+      window.dispatchEvent(new CustomEvent("calendar-updated", { detail: { className } }));
     }
   };
 
