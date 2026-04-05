@@ -285,6 +285,36 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
                   )}
                 </div>
 
+                {/* Topic Placement Quiz — skip if already mastered */}
+                {!activeArea.quiz_passed && activeArea.quiz_score === null && (
+                  <div className="p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileQuestion className="w-4 h-4 text-primary" />
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Already know this topic?</p>
+                          <p className="text-xs text-muted-foreground">Take a quick placement quiz to skip ahead</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={plan.topicPlacementLoading === activeArea.id}
+                        onClick={() => handleStartTopicPlacement(activeArea.id)}
+                      >
+                        {plan.topicPlacementLoading === activeArea.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <>
+                            <Zap className="w-3 h-3 mr-1" />
+                            Test
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Module Steps: Lesson → Practice → Quiz */}
                 <ScrollArea className="h-[320px] pr-2">
                   <div className="space-y-2">
