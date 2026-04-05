@@ -33,6 +33,7 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<UserClass | null>(null);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
