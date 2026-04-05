@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 interface StructuredStudyPlanProps {
   className: string;
   learningStyles: string[];
-  hasPlacementQuiz: boolean;
 }
 
 const moduleTypeConfig: Record<string, { icon: typeof BookOpen; label: string; color: string }> = {
@@ -34,7 +33,7 @@ const moduleTypeConfig: Record<string, { icon: typeof BookOpen; label: string; c
   quiz: { icon: FileQuestion, label: "Benchmark Quiz", color: "text-purple-500" },
 };
 
-export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQuiz }: StructuredStudyPlanProps) => {
+export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStudyPlanProps) => {
   const plan = useStructuredStudyPlan(className, learningStyles);
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
   const [quizGateOpen, setQuizGateOpen] = useState(false);
@@ -98,7 +97,7 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
     return false;
   };
 
-  if (!hasPlacementQuiz) return null;
+  // No gate — adaptive learning works from syllabus topics directly
 
   // Empty state
   if (!plan.isLoading && plan.focusAreas.length === 0) {
@@ -495,10 +494,9 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
         return (
           <MiniQuiz
             isOpen={quizGateOpen}
-            onClose={(score?: number, total?: number) => {
+            onClose={(score?: number, total?: number, missed?: string[]) => {
               if (score !== undefined && total !== undefined) {
-                // Collect missed concepts from the quiz
-                handleQuizComplete(quizGateAreaId, score, total, [gateArea.topic]);
+                handleQuizComplete(quizGateAreaId, score, total, missed && missed.length > 0 ? missed : [gateArea.topic]);
               } else {
                 setQuizGateOpen(false);
                 setQuizGateAreaId(null);
@@ -507,8 +505,8 @@ export const StructuredStudyPlan = ({ className, learningStyles, hasPlacementQui
             className={className}
             weakAreas={[gateArea.topic]}
             learningStyles={learningStyles}
-            onQuizComplete={(score, total) => {
-              handleQuizComplete(quizGateAreaId, score, total, [gateArea.topic]);
+            onQuizComplete={(score, total, missed) => {
+              handleQuizComplete(quizGateAreaId, score, total, missed && missed.length > 0 ? missed : [gateArea.topic]);
             }}
           />
         );
