@@ -17,6 +17,7 @@ import { Loader2, CheckCircle2, XCircle, FileQuestion, ArrowRight, RotateCcw, Br
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 interface Question {
   id: number;
@@ -69,6 +70,7 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   const generateSingleQuiz = async (session: any, topic: string, index: number): Promise<QuizSet | null> => {
     try {
@@ -215,6 +217,15 @@ export const MiniQuiz = ({ isOpen, onClose, className, weakAreas, learningStyles
       setIsComplete(true);
       await saveScore();
       const finalScore = score + (selectedAnswer === questions[currentIndex].correctIndex ? 1 : 0);
+      track({
+        eventType: "quiz_completed",
+        className,
+        score: finalScore,
+        total: questions.length,
+        outcome: finalScore >= questions.length * 0.7 ? "pass" : "needs_improvement",
+        metadata: { weakAreas },
+      });
+      snapshotWeek(className);
       onQuizComplete?.(finalScore, questions.length, missedConcepts);
     }
   };

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Zap, CheckCircle2, Lightbulb, ArrowRight, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 import { useToast } from "@/hooks/use-toast";
 
 interface Exercise {
@@ -55,6 +56,7 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   const generateSingleSet = async (session: any, topic: string, index: number): Promise<ExerciseSet | null> => {
     try {
@@ -176,6 +178,14 @@ export const InteractiveExercise = ({ isOpen, onClose, className, weakAreas, lea
     } else {
       setIsComplete(true);
       await saveProgress();
+      track({
+        eventType: "exercise_completed",
+        className,
+        score: completed.size,
+        total: exercises.length,
+        outcome: "completed",
+      });
+      snapshotWeek(className);
     }
   };
 

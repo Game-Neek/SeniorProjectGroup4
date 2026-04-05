@@ -99,6 +99,8 @@ export const PrivacySettings = () => {
         supabase.from("quiz_results").delete().eq("user_id", userId),
         supabase.from("calendar_events").delete().eq("user_id", userId),
         supabase.from("course_textbooks").delete().eq("user_id", userId),
+        (supabase.from("learning_events") as any).delete().eq("user_id", userId),
+        (supabase.from("weekly_performance_snapshots") as any).delete().eq("user_id", userId),
       ]);
 
       // Delete files from storage

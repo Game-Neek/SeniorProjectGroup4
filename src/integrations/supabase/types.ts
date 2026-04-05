@@ -414,6 +414,51 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_events: {
+        Row: {
+          bloom_level: string | null
+          class_name: string
+          created_at: string
+          event_type: string
+          id: string
+          latency_ms: number | null
+          metadata: Json | null
+          outcome: string | null
+          score: number | null
+          topic: string | null
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          bloom_level?: string | null
+          class_name: string
+          created_at?: string
+          event_type: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          outcome?: string | null
+          score?: number | null
+          topic?: string | null
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          bloom_level?: string | null
+          class_name?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          outcome?: string | null
+          score?: number | null
+          topic?: string | null
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_resources: {
         Row: {
           content: string
@@ -929,6 +974,51 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_performance_snapshots: {
+        Row: {
+          avg_score: number | null
+          bloom_levels_reached: Json | null
+          class_name: string
+          created_at: string
+          exercises_completed: number | null
+          id: string
+          mastery_pct: number | null
+          modules_completed: number | null
+          quizzes_taken: number | null
+          topics_studied: string[] | null
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          avg_score?: number | null
+          bloom_levels_reached?: Json | null
+          class_name: string
+          created_at?: string
+          exercises_completed?: number | null
+          id?: string
+          mastery_pct?: number | null
+          modules_completed?: number | null
+          quizzes_taken?: number | null
+          topics_studied?: string[] | null
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          avg_score?: number | null
+          bloom_levels_reached?: Json | null
+          class_name?: string
+          created_at?: string
+          exercises_completed?: number | null
+          id?: string
+          mastery_pct?: number | null
+          modules_completed?: number | null
+          quizzes_taken?: number | null
+          topics_studied?: string[] | null
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_safe: {
@@ -977,7 +1067,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      anonymize_old_learning_events: {
+        Args: { cutoff_date: string }
+        Returns: number
+      }
     }
     Enums: {
       assessment_type:

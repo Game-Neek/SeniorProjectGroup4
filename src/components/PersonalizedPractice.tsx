@@ -12,6 +12,7 @@ import {
   EyeOff, BookOpen, ArrowRight, Target, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 import { useToast } from "@/hooks/use-toast";
 import { MathText } from "@/components/MathText";
 import { QuestionVisual } from "@/components/QuestionVisual";
@@ -62,6 +63,7 @@ export const PersonalizedPractice = ({ className, learningStyles }: Personalized
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [masteryScore, setMasteryScore] = useState(0);
   const { toast } = useToast();
+  const { track, snapshotWeek } = useTrackEvent();
 
   // Load weak areas from study_focus_areas and practice_history
   const loadWeakAreas = useCallback(async () => {
@@ -156,6 +158,16 @@ export const PersonalizedPractice = ({ className, learningStyles }: Personalized
         topics_practiced: problem ? [problem.topic] : weakAreas,
         metadata: { bloom_level: problem?.bloom_level, difficulty: problem?.difficulty },
       });
+      track({
+        eventType: "exercise_completed",
+        className,
+        topic: problem?.topic,
+        bloomLevel: problem?.bloom_level,
+        score: 1,
+        total: 1,
+        outcome: "completed",
+      });
+      snapshotWeek(className);
     }
 
     // Check if all complete
