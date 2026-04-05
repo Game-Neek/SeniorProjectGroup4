@@ -96,7 +96,7 @@ const CoursePage = () => {
         .from("profiles_safe" as any)
         .select("learning_styles")
         .eq("id", session.user.id)
-        .single();
+        .single() as { data: { learning_styles: string[] | null } | null };
       if (data?.learning_styles) setLearningStyles(data.learning_styles);
     };
     loadProfile();

@@ -39,7 +39,7 @@ const Index = () => {
         .from('profiles_safe' as any)
         .select('learning_styles')
         .eq('id', session.user.id)
-        .single();
+        .single() as { data: { learning_styles: string[] | null } | null };
       
       if (profile?.learning_styles && profile.learning_styles.length > 0) {
         setLearningStyles(profile.learning_styles);
