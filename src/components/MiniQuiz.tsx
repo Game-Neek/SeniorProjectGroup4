@@ -30,10 +30,11 @@ interface Question {
 
 interface MiniQuizProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (score?: number, total?: number) => void;
   className: string;
   weakAreas: string[];
   learningStyles: string[];
+  onQuizComplete?: (score: number, total: number) => void;
 }
 
 interface QuizSet {
