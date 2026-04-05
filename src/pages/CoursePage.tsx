@@ -30,6 +30,8 @@ import { CourseTextbooks } from "@/components/CourseTextbooks";
 import { BloomTaxonomy } from "@/components/BloomTaxonomy";
 import { GeneratedCourse } from "@/components/GeneratedCourse";
 import { KnowledgeGapAlerts } from "@/components/KnowledgeGapAlerts";
+import { PersonalizedPractice } from "@/components/PersonalizedPractice";
+import { TopicChecklist } from "@/components/TopicChecklist";
 import { useCourseMastery } from "@/hooks/useCourseMastery";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -448,6 +450,12 @@ const CoursePage = () => {
             learningStyles={learningStyles}
           />
         </div>
+
+        {/* Personalized Practice */}
+        <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />
+
+        {/* Topic Checklist */}
+        <TopicChecklist className={decodedClassName} />
 
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />

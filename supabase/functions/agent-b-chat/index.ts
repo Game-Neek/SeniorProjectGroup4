@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic, weakAreas: requestWeakAreas, assignmentId, assignmentTitle, fileUrl, moduleType, moduleTitle } = await req.json();
+    const { messages, learningStyles, requestType, className, quizResult, resourceType, resourceTitle, topic, weakAreas: requestWeakAreas, assignmentId, assignmentTitle, fileUrl, moduleType, moduleTitle, bloomLevel, masteryScore } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -707,6 +707,111 @@ ${biasGuardrails}`;
           }
         }],
         tool_choice: { type: "function", function: { name: "generate_quiz" } }
+      };
+    } else if (requestType === "personalized-practice") {
+      // Generate personalized practice problems targeting weak areas with Bloom's escalation
+      useToolCalling = true;
+      const weakTopics = requestWeakAreas || [];
+      const currentBloom = bloomLevel || "apply";
+      const currentMastery = masteryScore || 0;
+
+      // Bloom escalation: as mastery grows, increase cognitive level
+      const bloomLevels = ["remember", "understand", "apply", "analyze", "evaluate", "create"];
+      const bloomIdx = bloomLevels.indexOf(currentBloom);
+      const targetBloom = currentMastery >= 80 && bloomIdx < bloomLevels.length - 1
+        ? bloomLevels[bloomIdx + 1]
+        : currentBloom;
+
+      systemPrompt = `You are AgentB generating PERSONALIZED PRACTICE PROBLEMS.
+
+Class: ${className || "the course"}
+Weak Topics: ${weakTopics.join(", ") || "general review"}
+Target Bloom's Level: ${targetBloom} (escalate from recall → application → analysis as mastery grows)
+Current Mastery Score: ${currentMastery}%
+${learningStyleContext}
+${syllabusTopics}
+${textbookContext}
+
+${biasGuardrails}
+
+PERSONALIZATION RULES:
+- Target the SPECIFIC weak areas listed above — do NOT generate generic problems
+- Align with assigned textbook chapters and terminology
+- Use the textbook's notation and problem-solving conventions
+- All problems must be at the "${targetBloom}" Bloom's level or higher
+
+BLOOM'S LEVEL GUIDANCE for "${targetBloom}":
+${targetBloom === "remember" ? "- Recall facts, terms, basic concepts\n- Identify, list, name, define" : ""}
+${targetBloom === "understand" ? "- Explain ideas or concepts\n- Classify, describe, discuss, explain, identify" : ""}
+${targetBloom === "apply" ? "- Use information in new situations\n- Execute, implement, solve, demonstrate, use formulas" : ""}
+${targetBloom === "analyze" ? "- Draw connections among ideas\n- Differentiate, organize, compare, deconstruct, examine" : ""}
+${targetBloom === "evaluate" ? "- Justify a stand or decision\n- Appraise, argue, defend, judge, critique" : ""}
+${targetBloom === "create" ? "- Produce new or original work\n- Design, assemble, construct, develop, formulate" : ""}
+
+DIFFICULTY PROGRESSION (based on mastery):
+${currentMastery < 40 ? "- Start with foundational problems, build gradually" : ""}
+${currentMastery >= 40 && currentMastery < 70 ? "- Mix of intermediate and challenging problems" : ""}
+${currentMastery >= 70 ? "- Focus on advanced, multi-step, and analysis problems" : ""}
+
+SUBJECT-AWARE FORMATTING:
+- Math: equations, derivatives, integrals, word problems with LaTeX
+- CS: code snippets, debugging, algorithm tracing
+- Chemistry: reactions, stoichiometry, calculations
+- Physics: formulas with values, unit conversions, applied problems
+
+Generate exactly 5 practice problems with progressive difficulty.
+Each must include a hint and detailed step-by-step solution.
+Use LaTeX with $ delimiters for all math.`;
+
+      toolConfig = {
+        tools: [{
+          type: "function",
+          function: {
+            name: "generate_personalized_practice",
+            description: "Generate 5 personalized practice problems targeting weak areas with Bloom's level escalation",
+            parameters: {
+              type: "object",
+              properties: {
+                bloom_level: { type: "string", description: "The Bloom's taxonomy level these problems target" },
+                problems: {
+                  type: "array",
+                  minItems: 5,
+                  maxItems: 5,
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "number" },
+                      problem: { type: "string" },
+                      hint: { type: "string" },
+                      solution: { type: "string" },
+                      topic: { type: "string" },
+                      bloom_level: { type: "string", enum: ["remember", "understand", "apply", "analyze", "evaluate", "create"] },
+                      difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+                      textbook_reference: { type: "string", description: "Relevant textbook chapter/section if applicable" },
+                      visual_required: { type: "boolean" },
+                      visual_type: { type: "string", enum: ["graph", "free_body_diagram", "molecule", "velocity_time_graph", "position_time_graph", "none"] },
+                      visual_data: {
+                        type: "object",
+                        properties: {
+                          function: { type: "string" },
+                          range: { type: "array", items: { type: "number" } },
+                          dataPoints: { type: "array", items: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } } } },
+                          xLabel: { type: "string" },
+                          yLabel: { type: "string" },
+                          forces: { type: "array", items: { type: "object", properties: { label: { type: "string" }, direction: { type: "string" } } } },
+                          formula: { type: "string" }
+                        }
+                      }
+                    },
+                    required: ["id", "problem", "hint", "solution", "topic", "bloom_level", "difficulty"]
+                  }
+                }
+              },
+              required: ["bloom_level", "problems"]
+            }
+          }
+        }],
+        tool_choice: { type: "function", function: { name: "generate_personalized_practice" } }
       };
     } else if (requestType === "placement-quiz-interactive") {
       // Return structured JSON for interactive quiz
