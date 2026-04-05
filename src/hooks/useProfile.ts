@@ -26,7 +26,7 @@ export const useProfile = () => {
         .from("profiles_safe" as any)
         .select("full_name, email, university_id")
         .eq("id", session.user.id)
-        .single();
+        .single() as { data: { full_name: string | null; email: string | null; university_id: string | null } | null; error: any };
 
       if (profileData && !error) {
         const normalized = {
