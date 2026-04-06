@@ -34,6 +34,7 @@ import { PersonalizedPractice } from "@/components/PersonalizedPractice";
 import { TopicChecklist } from "@/components/TopicChecklist";
 import { useCourseMastery } from "@/hooks/useCourseMastery";
 import { WeeklyPerformanceReport } from "@/components/WeeklyPerformanceReport";
+import { PerformanceAnalytics } from "@/components/PerformanceAnalytics";
 import { ConfidenceRating } from "@/components/ConfidenceRating";
 import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
@@ -474,6 +475,9 @@ const CoursePage = () => {
 
         {/* Confidence Self-Rating */}
         <ConfidenceRating className={decodedClassName} />
+
+        {/* Performance Analytics */}
+        <PerformanceAnalytics className={decodedClassName} />
 
         {/* Weekly Performance Report */}
         <WeeklyPerformanceReport className={decodedClassName} />
