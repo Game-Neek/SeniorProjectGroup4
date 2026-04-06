@@ -572,6 +572,105 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          assignment_due: boolean
+          channel_email: boolean
+          channel_in_app: boolean
+          channel_push: boolean
+          course_updates: boolean
+          created_at: string
+          disabled_classes: string[]
+          exam_reminder: boolean
+          frequency: string
+          id: string
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          quiz_results: boolean
+          study_plan: boolean
+          system_alerts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_due?: boolean
+          channel_email?: boolean
+          channel_in_app?: boolean
+          channel_push?: boolean
+          course_updates?: boolean
+          created_at?: string
+          disabled_classes?: string[]
+          exam_reminder?: boolean
+          frequency?: string
+          id?: string
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          quiz_results?: boolean
+          study_plan?: boolean
+          system_alerts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_due?: boolean
+          channel_email?: boolean
+          channel_in_app?: boolean
+          channel_push?: boolean
+          course_updates?: boolean
+          created_at?: string
+          disabled_classes?: string[]
+          exam_reminder?: boolean
+          frequency?: string
+          id?: string
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          quiz_results?: boolean
+          study_plan?: boolean
+          system_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          id: string
+          is_read: boolean
+          source_id: string | null
+          source_type: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          source_id?: string | null
+          source_type?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          source_id?: string | null
+          source_type?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       practice_history: {
         Row: {
           class_name: string

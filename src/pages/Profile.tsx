@@ -15,6 +15,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2, Mail, Lock, UserX, Sun, Moon, Monitor } from "lucide-react";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { LearningStyleEditor } from "@/components/LearningStyleEditor";
+import { NotificationPreferences } from "@/components/NotificationPreferences";
 import { useTheme } from "next-themes";
 
 interface UserClass {
@@ -834,6 +835,9 @@ export default function Profile() {
             </div>
           )}
         </Card>
+
+        {/* Notification Preferences */}
+        <NotificationPreferences />
       </main>
     </div>
   );

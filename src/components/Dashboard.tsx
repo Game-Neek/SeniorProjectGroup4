@@ -8,6 +8,7 @@ import {
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
 import { UpcomingAssignments } from "./UpcomingAssignments";
+import { NotificationBell } from "./NotificationBell";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
@@ -82,6 +83,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
               <h1 className="text-2xl font-bold text-foreground">AgentB</h1>
             </button>
             <div className="flex items-center gap-3">
+              <NotificationBell />
               <DashboardReadAloud
                 isActive={isReadAloudActive}
                 onToggle={() => setIsReadAloudActive((v) => !v)}
