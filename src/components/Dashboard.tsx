@@ -48,6 +48,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const mainContentRef = useRef<HTMLElement>(null);
 
   const { saveProfile } = useProfile();
+  useStreakTracker();
 
   const handleSignOut = async () => {
     await saveProfile();
