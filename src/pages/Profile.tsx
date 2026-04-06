@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
-import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2, Mail, Lock, UserX } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2, Mail, Lock, UserX, Sun, Moon, Monitor } from "lucide-react";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { LearningStyleEditor } from "@/components/LearningStyleEditor";
+import { useTheme } from "next-themes";
 
 interface UserClass {
   id: string;
