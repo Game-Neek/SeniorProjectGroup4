@@ -315,34 +315,49 @@ CONSTRAINTS:
 IF MODULE TYPE IS "practice":
 ═══════════════════════════════════════
 
-Present 4-5 guided practice problems with PROGRESSIVE DIFFICULTY:
+You MUST return ONLY a valid JSON array of 5-6 multiple-choice practice questions.
+Do NOT include any text before or after the JSON. No markdown, no explanation — ONLY the JSON array.
 
-Start → basic application
-Middle → multi-step problems
-End → analysis / real-world scenarios
+Each object in the array must have these fields:
+- "id": number (1, 2, 3...)
+- "question": string (the problem statement, use LaTeX $ delimiters for math)
+- "options": array of exactly 4 strings (answer choices, labeled clearly)
+- "correctIndex": number (0-3, index of the correct answer)
+- "explanation": string (step-by-step solution explaining WHY the correct answer is right and why wrong answers are wrong)
+- "hint": string (guide thinking without giving away the answer)
+- "bloom_level": string ("recall", "application", "analysis", or "evaluation")
 
-For EACH problem provide:
-1. **Problem Statement** (clear, specific)
-2. **Hint** (guide thinking without giving away the answer)
-3. **Step-by-Step Solution** (show all work)
-
-RULES:
-- 80% must be application/problem-solving questions
-- Maximum 20% conceptual (and even then, test understanding not recall)
-- NEVER generate "What is X?" or "Define Y" problems
-- Every problem must require: computing, applying formulas, multi-step reasoning, or analysis
+QUESTION DESIGN RULES:
+- 80% must be application/problem-solving (not recall/definitions)
+- NEVER "What is X?" or "Define Y" — always require computation, reasoning, or analysis
+- Progressive difficulty: start basic, escalate to multi-step and analysis
+- Distractors (wrong answers) must be plausible — common mistakes, off-by-one errors, sign errors
 - Use subject-aware formatting:
-  Math → equations, derivatives, integrals
-  CS → code snippets, debugging, algorithm tracing
+  Math → equations, derivatives, integrals in LaTeX
+  CS → code snippets, algorithm tracing
   Chemistry → reactions, stoichiometry, calculations
   Physics → formulas with values, unit conversions
+- Each explanation must show full worked solution
+
+Example format:
+[
+  {
+    "id": 1,
+    "question": "If $f(x) = 3x^2 + 2x$, what is $f'(2)$?",
+    "options": ["10", "14", "16", "8"],
+    "correctIndex": 1,
+    "explanation": "Using the power rule: $f'(x) = 6x + 2$. Substituting $x = 2$: $f'(2) = 6(2) + 2 = 14$. Option A (10) is a common error from forgetting to add the constant term.",
+    "hint": "Apply the power rule to each term, then substitute x = 2.",
+    "bloom_level": "application"
+  }
+]
 
 ═══════════════════════════════════════
 IF MODULE TYPE IS "quiz":
 ═══════════════════════════════════════
 - Return: "This module contains the benchmark quiz. Click the quiz button to begin."
 
-Use markdown formatting throughout. Be engaging and focused.`;
+Use markdown formatting for lesson modules. For practice modules, return ONLY raw JSON.`;
 
     } else if (requestType === "study-plan") {
       // Generate personalized study plan based on quiz results
