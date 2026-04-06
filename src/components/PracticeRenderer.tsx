@@ -83,7 +83,7 @@ const parseQuestions = (content: string): PracticeQuestion[] => {
   return questions;
 };
 
-export const PracticeRenderer = ({ content, onComplete }: PracticeRendererProps) => {
+export const PracticeRenderer = ({ content, onComplete, onRegenerate }: PracticeRendererProps) => {
   const questions = parseQuestions(content);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
