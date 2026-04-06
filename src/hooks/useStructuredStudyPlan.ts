@@ -48,6 +48,7 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
   const [reviewMissedConcepts, setReviewMissedConcepts] = useState<string[]>([]);
   const [isGeneratingReview, setIsGeneratingReview] = useState(false);
   const { toast } = useToast();
+  const { notifyChapterComplete } = useMilestoneNotifications();
 
   // Load focus areas and modules from DB
   const loadFocusAreas = useCallback(async () => {
