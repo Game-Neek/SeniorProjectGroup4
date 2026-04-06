@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Eye, EyeOff, Trophy, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Eye, EyeOff, Trophy, RotateCcw, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PracticeQuestion {
