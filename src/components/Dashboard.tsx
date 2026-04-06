@@ -120,6 +120,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           <p className="text-muted-foreground">Your personalized learning dashboard is ready.</p>
         </div>
 
+        {/* Upcoming Assignments */}
+        <UpcomingAssignments />
+
         {/* Learning Styles */}
         <Card className="p-6 shadow-[var(--shadow-medium)] border-border">
           <div className="flex items-center justify-between mb-4">
