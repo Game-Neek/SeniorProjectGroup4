@@ -166,7 +166,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
               <h3 className="text-lg font-semibold text-foreground">Chat with AgentB</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              AI-powered instant tutoring help, explanations, and study guidance tailored to your courses
+              AI-powered tutoring, explanations, and study guidance tailored to your courses
             </p>
             <Button variant="outline" className="w-full" onClick={onOpenChat}>
               Start Chatting
