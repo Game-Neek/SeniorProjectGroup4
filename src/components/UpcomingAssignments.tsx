@@ -25,7 +25,7 @@ export const UpcomingAssignments = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setLoading(false); return; }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = format(new Date(), "yyyy-MM-dd");
 
     const { data } = await supabase
       .from("calendar_events")
