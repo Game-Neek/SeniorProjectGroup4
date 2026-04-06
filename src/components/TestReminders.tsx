@@ -52,28 +52,19 @@ export const TestReminders = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setIsLoading(false); return; }
 
-    // Fetch all calendar events — tests, quizzes, exams, and syllabus-generated events
+    // Fetch only exam-type calendar events
+    const examTypes = ["exam", "test", "quiz", "midterm", "final"];
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
       .eq("user_id", session.user.id)
+      .in("event_type", examTypes)
       .order("event_date", { ascending: true });
 
     if (error) {
       console.error("Error fetching tests:", error);
     } else {
-      // Prioritize test-related events but include all for reminders
-      const testTypes = ["test", "exam", "quiz", "midterm", "final"];
-      const all = data || [];
-      // Sort: test types first, then by date
-      const sorted = all.sort((a, b) => {
-        const aIsTest = testTypes.includes(a.event_type || "");
-        const bIsTest = testTypes.includes(b.event_type || "");
-        if (aIsTest && !bIsTest) return -1;
-        if (!aIsTest && bIsTest) return 1;
-        return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
-      });
-      setTests(sorted);
+      setTests(data || []);
     }
     setIsLoading(false);
   };
