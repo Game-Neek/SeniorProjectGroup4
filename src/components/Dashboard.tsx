@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut
+  BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, MessageCircle
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
@@ -161,12 +161,12 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           <Card className="p-6 shadow-[var(--shadow-soft)] border-border hover:shadow-[var(--shadow-medium)] transition-[var(--transition-smooth)]">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-primary/10">
-                <BookOpen className="w-6 h-6 text-primary" />
+                <MessageCircle className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground">Chat with AgentB</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Get instant tutoring help, explanations, and study guidance tailored to your courses
+              AI-powered instant tutoring help, explanations, and study guidance tailored to your courses
             </p>
             <Button variant="outline" className="w-full" onClick={onOpenChat}>
               Start Chatting
