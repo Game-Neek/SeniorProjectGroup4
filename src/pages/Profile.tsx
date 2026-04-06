@@ -569,6 +569,13 @@ export default function Profile() {
           </form>
         </Card>
 
+        {/* Learning Style */}
+        <LearningStyleEditor
+          currentStyles={profile.learning_styles}
+          onUpdate={(styles) => updateProfile({ learning_styles: styles })}
+          onSave={saveProfile}
+        />
+
         {/* Account Settings */}
         <AccountSettings />
 
