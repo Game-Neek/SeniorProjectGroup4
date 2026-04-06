@@ -29,9 +29,13 @@ interface PracticeRendererProps {
 
 /** Try to parse practice questions from structured content */
 const parseQuestions = (content: string): PracticeQuestion[] => {
-  // Try JSON parse first (if content is JSON array)
+  // Try JSON parse first — strip markdown code fences if present
   try {
-    const parsed = JSON.parse(content);
+    let jsonStr = content.trim();
+    // Remove ```json ... ``` wrapping
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (fenceMatch) jsonStr = fenceMatch[1].trim();
+    const parsed = JSON.parse(jsonStr);
     if (Array.isArray(parsed)) return parsed;
   } catch {}
 
