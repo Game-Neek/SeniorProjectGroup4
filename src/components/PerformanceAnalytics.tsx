@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart3, TrendingUp, TrendingDown, Minus, Target, Zap, Clock,
-  Brain, BookOpen, RefreshCw, Activity
+  Brain, BookOpen, RefreshCw, Activity, Download
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { usePerformanceMetrics, ReportGranularity } from "@/hooks/usePerformanceMetrics";
 
 interface PerformanceAnalyticsProps {
@@ -25,6 +27,7 @@ const TrendIcon = ({ value }: { value: number }) => {
 
 export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) => {
   const { metrics, previousMetrics, loading, granularity, setGranularity, loadMetrics } = usePerformanceMetrics(className);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadMetrics();
@@ -34,6 +37,40 @@ export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) =
     const g = value as ReportGranularity;
     setGranularity(g);
     loadMetrics(g);
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const typeMap = { weekly: "weekly", monthly: "daily", semester: "daily" };
+      const params = new URLSearchParams({
+        type: typeMap[granularity] || "daily",
+        class: className,
+        export: "csv",
+      });
+
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/reports?${params}`,
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${className}-${granularity}-report.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Report exported", description: "CSV downloaded successfully." });
+    } catch {
+      toast({ title: "Export failed", description: "Unable to export report.", variant: "destructive" });
+    }
   };
 
   if (loading) {
@@ -113,8 +150,11 @@ export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) =
               <SelectItem value="semester">Semester</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadMetrics()}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadMetrics()} title="Refresh">
             <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleExportCSV} title="Export CSV">
+            <Download className="w-4 h-4" />
           </Button>
         </div>
       </div>
