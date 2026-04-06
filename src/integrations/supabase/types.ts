@@ -378,6 +378,60 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_metrics: {
+        Row: {
+          avg_latency_ms: number | null
+          avg_score: number | null
+          bloom_distribution: Json
+          class_name: string
+          completion_rate: number | null
+          created_at: string
+          events_count: number
+          exercises_completed: number
+          id: string
+          metric_date: string
+          modules_completed: number
+          quizzes_taken: number
+          topics: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_latency_ms?: number | null
+          avg_score?: number | null
+          bloom_distribution?: Json
+          class_name: string
+          completion_rate?: number | null
+          created_at?: string
+          events_count?: number
+          exercises_completed?: number
+          id?: string
+          metric_date: string
+          modules_completed?: number
+          quizzes_taken?: number
+          topics?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_latency_ms?: number | null
+          avg_score?: number | null
+          bloom_distribution?: Json
+          class_name?: string
+          completion_rate?: number | null
+          created_at?: string
+          events_count?: number
+          exercises_completed?: number
+          id?: string
+          metric_date?: string
+          modules_completed?: number
+          quizzes_taken?: number
+          topics?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       generated_resources: {
         Row: {
           content: string
@@ -1284,6 +1338,10 @@ export type Database = {
     Functions: {
       anonymize_old_learning_events: {
         Args: { cutoff_date: string }
+        Returns: number
+      }
+      backfill_daily_metrics: {
+        Args: { p_class_name?: string; p_user_id: string }
         Returns: number
       }
     }
