@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { updateKnowledgeMastery } from "@/hooks/useKnowledgeMastery";
+import { useMilestoneNotifications } from "@/hooks/useMilestoneNotifications";
 
 export interface FocusArea {
   id: string;
