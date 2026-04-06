@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart3, TrendingUp, TrendingDown, Minus, Target, Zap, Clock,
-  Brain, BookOpen, RefreshCw, Activity
+  Brain, BookOpen, RefreshCw, Activity, Download
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { usePerformanceMetrics, ReportGranularity } from "@/hooks/usePerformanceMetrics";
 
 interface PerformanceAnalyticsProps {
