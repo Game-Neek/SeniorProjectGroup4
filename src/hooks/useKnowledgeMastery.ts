@@ -242,6 +242,7 @@ export const updateKnowledgeMastery = async (
     ? Math.round(alpha * score + (1 - alpha) * Number(prev.mastery_score))
     : score;
   const level = getMasteryLevel(newScore);
+  const prevLevel = prev ? prev.mastery_level : "not_started";
 
   if (prev) {
     await supabase
@@ -264,6 +265,35 @@ export const updateKnowledgeMastery = async (
         mastery_level: level,
         last_practiced_at: new Date().toISOString(),
       });
+  }
+
+  // Fire mastery milestone notification when level increases to a significant tier
+  const significantLevels = ["proficient", "mastered"];
+  if (significantLevels.includes(level) && level !== prevLevel) {
+    // Get the component's topic info for the notification
+    const { data: comp } = await supabase
+      .from("knowledge_components" as any)
+      .select("objective, class_name, parent_topic")
+      .eq("id", componentId)
+      .maybeSingle();
+
+    if (comp) {
+      try {
+        await supabase.functions.invoke("milestone-notifications", {
+          body: {
+            type: "mastery_milestone",
+            userId,
+            className: (comp as any).class_name,
+            data: {
+              topic: (comp as any).parent_topic || (comp as any).objective,
+              level,
+            },
+          },
+        });
+      } catch (e) {
+        console.error("Failed to send mastery milestone notification:", e);
+      }
+    }
   }
 
   window.dispatchEvent(new CustomEvent("knowledge-mastery-updated"));
