@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import ReadAloudDemo from "./pages/ReadAloudDemo";
 import CoursePage from "./pages/CoursePage";
 import TransitPage from "./pages/TransitPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/read-aloud" element={<ReadAloudDemo />} />
             <Route path="/course/:className" element={<CoursePage />} />
             <Route path="/transit" element={<TransitPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
