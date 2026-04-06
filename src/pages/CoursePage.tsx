@@ -107,6 +107,14 @@ const CoursePage = () => {
       if (data?.learning_styles) setLearningStyles(data.learning_styles);
     };
     loadProfile();
+
+    // Listen for learning style changes from profile page
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.styles) setLearningStyles(detail.styles);
+    };
+    window.addEventListener("learning-styles-updated", handler);
+    return () => window.removeEventListener("learning-styles-updated", handler);
   }, [navigate]);
 
   // Load calendar events for this course

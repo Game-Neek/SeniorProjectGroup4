@@ -26,7 +26,17 @@ const Index = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for learning style updates from profile
+    const handleStyleUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.styles) setLearningStyles(detail.styles);
+    };
+    window.addEventListener("learning-styles-updated", handleStyleUpdate);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("learning-styles-updated", handleStyleUpdate);
+    };
   }, []);
 
   const checkAuth = async () => {

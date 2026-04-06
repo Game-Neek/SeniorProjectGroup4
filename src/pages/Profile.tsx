@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2, Mail, Lock, UserX } from "lucide-react";
 import { PrivacySettings } from "@/components/PrivacySettings";
+import { LearningStyleEditor } from "@/components/LearningStyleEditor";
 
 interface UserClass {
   id: string;
@@ -567,6 +568,13 @@ export default function Profile() {
             </Button>
           </form>
         </Card>
+
+        {/* Learning Style */}
+        <LearningStyleEditor
+          currentStyles={profile.learning_styles}
+          onUpdate={(styles) => updateProfile({ learning_styles: styles })}
+          onSave={saveProfile}
+        />
 
         {/* Account Settings */}
         <AccountSettings />
