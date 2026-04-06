@@ -25,6 +25,7 @@ interface PracticeQuestion {
 interface PracticeRendererProps {
   content: string;
   onComplete?: () => void;
+  onRegenerate?: () => void;
 }
 
 /** Try to parse practice questions from structured content */
