@@ -150,8 +150,11 @@ export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) =
               <SelectItem value="semester">Semester</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadMetrics()}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadMetrics()} title="Refresh">
             <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleExportCSV} title="Export CSV">
+            <Download className="w-4 h-4" />
           </Button>
         </div>
       </div>
