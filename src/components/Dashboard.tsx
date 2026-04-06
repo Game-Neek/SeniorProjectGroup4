@@ -9,6 +9,7 @@ import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
 import { UpcomingAssignments } from "./UpcomingAssignments";
 import { NotificationBell } from "./NotificationBell";
+import { useStreakTracker } from "@/hooks/useStreakTracker";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
@@ -47,6 +48,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const mainContentRef = useRef<HTMLElement>(null);
 
   const { saveProfile } = useProfile();
+  useStreakTracker();
 
   const handleSignOut = async () => {
     await saveProfile();
