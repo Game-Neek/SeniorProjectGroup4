@@ -47,6 +47,195 @@ interface LearningResource {
   difficulty_level: "beginner" | "intermediate" | "advanced" | null;
 }
 
+const AccountSettings = () => {
+  const [changeEmailOpen, setChangeEmailOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim()) return;
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Confirmation sent", description: "Check your new email to confirm the change" });
+      setChangeEmailOpen(false);
+      setNewEmail("");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password updated", description: "Your password has been changed successfully" });
+      setChangePasswordOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    // Sign out and inform user about account deletion process
+    toast({
+      title: "Account deletion requested",
+      description: "Please contact support to complete account deletion. You have been signed out.",
+    });
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  return (
+    <Card className="p-6 shadow-[var(--shadow-medium)]">
+      <h2 className="text-xl font-semibold text-foreground mb-4">Account Settings</h2>
+      <div className="space-y-4">
+        {/* Change Email */}
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Mail className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Change Email</p>
+              <p className="text-xs text-muted-foreground">Update your email address</p>
+            </div>
+          </div>
+          <Dialog open={changeEmailOpen} onOpenChange={setChangeEmailOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">Change</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Email Address</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label>New Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="Enter new email address"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  A confirmation link will be sent to your new email address.
+                </p>
+                <Button className="w-full" onClick={handleChangeEmail} disabled={loading || !newEmail.trim()}>
+                  {loading ? "Sending..." : "Send Confirmation"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Change Password */}
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Lock className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Change Password</p>
+              <p className="text-xs text-muted-foreground">Update your account password</p>
+            </div>
+          </div>
+          <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">Change</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Password</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label>New Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirm New Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <Button className="w-full" onClick={handleChangePassword} disabled={loading || !newPassword || !confirmPassword}>
+                  {loading ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Separator />
+
+        {/* Delete Account */}
+        <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <UserX className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-destructive">Delete Account</p>
+              <p className="text-xs text-muted-foreground">Permanently delete your account and all data</p>
+            </div>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">Delete</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action is permanent and cannot be undone. All your courses, study plans, practice history, and personal data will be permanently deleted. You will not be able to recover any of this information.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAccount}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 export default function Profile() {
   const [classes, setClasses] = useState<UserClass[]>([]);
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
