@@ -302,6 +302,7 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
       // Update knowledge mastery for matching objectives
       await updateMasteryForTopic(session.user.id, area.topic, percentage);
       toast({ title: "Perfect Score! 🎉", description: `${percentage}% — Next area unlocked!` });
+      notifyChapterComplete(className, area.topic, percentage, focusAreaId);
 
     } else if (tier === "passed") {
       // 70-99% — advance, show targeted review
@@ -333,6 +334,7 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
         title: "Focus Area Passed! ✅",
         description: `${percentage}% — Next area unlocked. Review missed concepts below.`,
       });
+      notifyChapterComplete(className, area.topic, percentage, focusAreaId);
 
     } else {
       // <70% — do NOT advance, require targeted review
@@ -517,6 +519,7 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
         title: percentage === 100 ? "Perfect! Topic Mastered 🎉" : "Topic Mastered ✅",
         description: `${percentage}% — You already know "${area.topic}". Skipping to next topic.`,
       });
+      notifyChapterComplete(className, area.topic, percentage, focusAreaId);
     } else {
       // Student doesn't know this yet — set initial score but don't pass
       await supabase
