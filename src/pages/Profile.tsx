@@ -49,6 +49,50 @@ interface LearningResource {
   difficulty_level: "beginner" | "intermediate" | "advanced" | null;
 }
 
+const ThemeToggle = () => {
+  const { theme, setTheme } = useTheme();
+
+  const options = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Monitor },
+  ];
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Sun className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground">Appearance</p>
+          <p className="text-xs text-muted-foreground">Choose light or dark mode</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
+        {options.map(opt => {
+          const Icon = opt.icon;
+          const isActive = theme === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setTheme(opt.value)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const AccountSettings = () => {
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
