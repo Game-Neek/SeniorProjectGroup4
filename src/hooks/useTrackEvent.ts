@@ -10,7 +10,15 @@ export type LearningEventType =
   | "lesson_step_viewed"
   | "practice_submitted"
   | "placement_quiz_completed"
-  | "confidence_rated";
+  | "confidence_rated"
+  | "task_started"
+  | "task_completed"
+  | "agent_response"
+  | "error_occurred"
+  | "study_session_started"
+  | "study_session_ended"
+  | "resource_accessed"
+  | "assignment_submitted";
 
 interface TrackEventParams {
   eventType: LearningEventType;

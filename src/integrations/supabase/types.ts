@@ -671,6 +671,42 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_reports: {
+        Row: {
+          class_name: string
+          created_at: string
+          id: string
+          metrics: Json
+          period_end: string
+          period_start: string
+          report_type: string
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          id?: string
+          metrics?: Json
+          period_end: string
+          period_start: string
+          report_type?: string
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          id?: string
+          metrics?: Json
+          period_end?: string
+          period_start?: string
+          report_type?: string
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       practice_history: {
         Row: {
           class_name: string
