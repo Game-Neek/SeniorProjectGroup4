@@ -476,11 +476,11 @@ const CoursePage = () => {
           />
         )}
 
-        {/* Interactive Chapter Breakdown */}
-        <GeneratedCourse className={decodedClassName} />
+        {/* Interactive Chapter Breakdown - only after placement quiz */}
+        {hasQuiz && <GeneratedCourse className={decodedClassName} />}
 
-        {/* Personalized Practice */}
-        <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />
+        {/* Personalized Practice - only after placement quiz */}
+        {hasQuiz && <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />}
 
         {/* Topic Checklist */}
         <TopicChecklist className={decodedClassName} />

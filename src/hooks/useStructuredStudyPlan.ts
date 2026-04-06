@@ -93,13 +93,54 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
 
   useEffect(() => { loadFocusAreas(); }, [className]);
 
-  // Generate plan from syllabus
+  // Generate plan from syllabus, placement quiz, textbooks, and knowledge gaps
   const generatePlan = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
     setIsGenerating(true);
     try {
+      // Gather all contextual data in parallel
+      const [quizRes, syllabusRes, textbooksRes, focusAreasRes] = await Promise.all([
+        // Placement quiz results (weak/strong areas)
+        supabase
+          .from("quiz_results")
+          .select("score, total_questions, weak_areas, strong_areas, objectives, completed_objectives")
+          .eq("user_id", session.user.id)
+          .eq("class_name", className)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        // Syllabus data (objectives, schedule, description)
+        supabase
+          .from("syllabi")
+          .select("learning_objectives, weekly_schedule, course_description, bloom_classifications")
+          .eq("user_id", session.user.id)
+          .eq("class_name", className)
+          .order("uploaded_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        // Course textbooks
+        supabase
+          .from("course_textbooks")
+          .select("title, author, requirement_type")
+          .eq("user_id", session.user.id)
+          .eq("class_name", className),
+        // Existing knowledge gaps (focus areas not yet passed)
+        supabase
+          .from("study_focus_areas")
+          .select("topic, quiz_passed, quiz_score, is_unlocked")
+          .eq("user_id", session.user.id)
+          .eq("class_name", className),
+      ]);
+
+      const placementQuiz = quizRes.data;
+      const syllabus = syllabusRes.data;
+      const textbooks = textbooksRes.data || [];
+      const existingGaps = (focusAreasRes.data || [])
+        .filter((a: any) => !a.quiz_passed)
+        .map((a: any) => ({ topic: a.topic, score: a.quiz_score }));
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agent-b-chat`,
         {
@@ -113,6 +154,30 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
             learningStyles,
             requestType: "structured-study-plan",
             className,
+            // Placement quiz context
+            placementQuiz: placementQuiz ? {
+              score: placementQuiz.score,
+              totalQuestions: placementQuiz.total_questions,
+              weakAreas: placementQuiz.weak_areas || [],
+              strongAreas: placementQuiz.strong_areas || [],
+              objectives: placementQuiz.objectives,
+              completedObjectives: placementQuiz.completed_objectives || [],
+            } : null,
+            // Syllabus context
+            syllabus: syllabus ? {
+              learningObjectives: syllabus.learning_objectives || [],
+              weeklySchedule: syllabus.weekly_schedule,
+              courseDescription: syllabus.course_description,
+              bloomClassifications: syllabus.bloom_classifications,
+            } : null,
+            // Textbook context
+            textbooks: textbooks.map((t: any) => ({
+              title: t.title,
+              author: t.author,
+              type: t.requirement_type,
+            })),
+            // Knowledge gaps
+            knowledgeGaps: existingGaps,
           }),
         }
       );
@@ -130,6 +195,8 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
 
       for (let i = 0; i < generatedAreas.length; i++) {
         const area = generatedAreas[i];
+        // If the student already demonstrated mastery on this topic via placement quiz, skip-unlock it
+        const isStrong = placementQuiz?.strong_areas?.includes(area.topic);
         const { data: inserted, error: areaError } = await supabase
           .from("study_focus_areas")
           .insert({
@@ -137,7 +204,9 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
             class_name: className,
             topic: area.topic,
             topic_order: i,
-            is_unlocked: i === 0,
+            is_unlocked: i === 0 || isStrong,
+            quiz_passed: isStrong || false,
+            quiz_score: isStrong ? 100 : null,
             estimated_time_minutes: area.estimated_time_minutes || 60,
           })
           .select()
@@ -156,6 +225,8 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
             description: mod.description || null,
             content: mod.content || null,
             module_order: j,
+            is_completed: isStrong || false,
+            completed_at: isStrong ? new Date().toISOString() : null,
             estimated_time_minutes: mod.estimated_time_minutes || 15,
           });
         }
