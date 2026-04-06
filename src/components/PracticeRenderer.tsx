@@ -103,6 +103,12 @@ export const PracticeRenderer = ({ content, onComplete, onRegenerate }: Practice
             Try closing and reopening this module to generate questions.
           </p>
         </div>
+        {onRegenerate && (
+          <Button size="sm" onClick={onRegenerate}>
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Generate Practice Questions
+          </Button>
+        )}
         {onComplete && (
           <Button size="sm" variant="outline" onClick={onComplete}>
             <CheckCircle2 className="w-4 h-4 mr-1" />
