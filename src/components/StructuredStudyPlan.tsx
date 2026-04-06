@@ -491,6 +491,12 @@ export const StructuredStudyPlan = ({ className, learningStyles }: StructuredStu
                 <PracticeRenderer
                   content={openModule.content}
                   onComplete={() => { handleCompleteModule(openModule.id); setOpenModuleId(null); }}
+                  onRegenerate={async () => {
+                    const area = plan.focusAreas.find(a => a.modules.some(m => m.id === openModule.id));
+                    if (area) {
+                      await plan.loadModuleContent(openModule, area.topic, true);
+                    }
+                  }}
                 />
               ) : (
                 <LessonRenderer content={openModule.content} moduleType={openModule.module_type} />
