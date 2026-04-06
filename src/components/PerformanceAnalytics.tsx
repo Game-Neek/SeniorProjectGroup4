@@ -27,6 +27,7 @@ const TrendIcon = ({ value }: { value: number }) => {
 
 export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) => {
   const { metrics, previousMetrics, loading, granularity, setGranularity, loadMetrics } = usePerformanceMetrics(className);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadMetrics();
@@ -36,6 +37,40 @@ export const PerformanceAnalytics = ({ className }: PerformanceAnalyticsProps) =
     const g = value as ReportGranularity;
     setGranularity(g);
     loadMetrics(g);
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const typeMap = { weekly: "weekly", monthly: "daily", semester: "daily" };
+      const params = new URLSearchParams({
+        type: typeMap[granularity] || "daily",
+        class: className,
+        export: "csv",
+      });
+
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/reports?${params}`,
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${className}-${granularity}-report.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Report exported", description: "CSV downloaded successfully." });
+    } catch {
+      toast({ title: "Export failed", description: "Unable to export report.", variant: "destructive" });
+    }
   };
 
   if (loading) {
