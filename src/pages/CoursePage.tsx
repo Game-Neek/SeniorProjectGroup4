@@ -25,7 +25,7 @@ import { MiniQuiz } from "@/components/MiniQuiz";
 import { InteractiveExercise } from "@/components/InteractiveExercise";
 import { PracticeHistory } from "@/components/PracticeHistory";
 import { AssignmentUpload } from "@/components/AssignmentUpload";
-import { ChapterBreakdowns } from "@/components/ChapterBreakdowns";
+
 import { CourseTextbooks } from "@/components/CourseTextbooks";
 import { BloomTaxonomy } from "@/components/BloomTaxonomy";
 import { GeneratedCourse } from "@/components/GeneratedCourse";
@@ -308,6 +308,14 @@ const CoursePage = () => {
           </Card>
         </div>
 
+        {/* Placement Quiz - Take this first! */}
+        <PlacementQuiz
+          learningStyles={learningStyles}
+          onQuizComplete={setQuizResultAndGenerate}
+          completedClasses={completedClasses}
+          className={decodedClassName}
+        />
+
         {/* Course Calendar */}
         <Card className="p-6 border-border shadow-[var(--shadow-soft)]">
           <div className="flex items-center justify-between mb-4">
@@ -450,19 +458,23 @@ const CoursePage = () => {
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
 
-        {/* Knowledge Gap Alerts */}
-        <KnowledgeGapAlerts
-          className={decodedClassName}
-          onNavigateToTopic={handleNavigateToTopic}
-        />
+        {/* Personalized Adaptive Learning - only after placement quiz */}
+        {hasQuiz && (
+          <div id="adaptive-learning-section" className="space-y-6">
+            <StructuredStudyPlan
+              className={decodedClassName}
+              learningStyles={learningStyles}
+            />
+          </div>
+        )}
 
-        {/* Personalized Adaptive Learning */}
-        <div id="adaptive-learning-section" className="space-y-6">
-          <StructuredStudyPlan
+        {/* Knowledge Gap Alerts - only after placement quiz */}
+        {hasQuiz && (
+          <KnowledgeGapAlerts
             className={decodedClassName}
-            learningStyles={learningStyles}
+            onNavigateToTopic={handleNavigateToTopic}
           />
-        </div>
+        )}
 
         {/* Interactive Chapter Breakdown */}
         <GeneratedCourse className={decodedClassName} />
@@ -485,19 +497,8 @@ const CoursePage = () => {
         {/* Bloom's Taxonomy Analysis */}
         <BloomTaxonomy className={decodedClassName} />
 
-        {/* Chapter Breakdowns - Real data from syllabus */}
-        <ChapterBreakdowns className={decodedClassName} />
-
         {/* Course Textbooks */}
         <CourseTextbooks className={decodedClassName} />
-
-        {/* Placement Quiz */}
-        <PlacementQuiz
-          learningStyles={learningStyles}
-          onQuizComplete={setQuizResultAndGenerate}
-          completedClasses={completedClasses}
-          className={decodedClassName}
-        />
 
         {/* Study Resources */}
         <StudyPlan
