@@ -138,6 +138,7 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
       supabase.from("weekly_performance_snapshots").delete().eq("class_name", className),
       supabase.from("knowledge_components").delete().eq("class_name", className),
       (supabase.from("performance_reports") as any).delete().eq("class_name", className),
+      (supabase.from("daily_metrics") as any).delete().eq("class_name", className),
       supabase.from("calendar_events").delete().like("title", `${className}:%`),
       supabase.from("notifications").delete().like("title", `%${className}%`),
     ];
