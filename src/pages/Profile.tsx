@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { ArrowLeft, Plus, FileText, Lightbulb, Image as ImageIcon, ClipboardCheck, Upload, Trash2, Mail, Lock, UserX } from "lucide-react";
 import { PrivacySettings } from "@/components/PrivacySettings";
+import { LearningStyleEditor } from "@/components/LearningStyleEditor";
 
 interface UserClass {
   id: string;
