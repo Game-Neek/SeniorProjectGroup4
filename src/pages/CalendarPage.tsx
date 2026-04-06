@@ -176,6 +176,15 @@ export default function CalendarPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Campus Calendar</h1>
+            <div className="ml-auto flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium tabular-nums text-foreground">
+                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+              </span>
+            </div>
           </div>
         </div>
       </header>
