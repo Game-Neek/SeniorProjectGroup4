@@ -9,6 +9,7 @@ import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
 import { UpcomingAssignments } from "./UpcomingAssignments";
 import { NotificationBell } from "./NotificationBell";
+import { useStreakTracker } from "@/hooks/useStreakTracker";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
