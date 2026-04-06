@@ -92,12 +92,22 @@ export const PracticeRenderer = ({ content, onComplete }: PracticeRendererProps)
   const [isComplete, setIsComplete] = useState(false);
 
   if (questions.length === 0) {
-    // Fallback: render as rich text
+    // Fallback: show a prompt to regenerate or complete
     return (
-      <div className="space-y-2">
-        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-          <MathText text={content} />
-        </p>
+      <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
+        <PenTool className="w-10 h-10 text-muted-foreground/50" />
+        <div>
+          <p className="text-sm font-medium text-foreground">No practice questions loaded</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Try closing and reopening this module to generate questions.
+          </p>
+        </div>
+        {onComplete && (
+          <Button size="sm" variant="outline" onClick={onComplete}>
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            Mark Complete Anyway
+          </Button>
+        )}
       </div>
     );
   }
