@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
+import { UpcomingAssignments } from "./UpcomingAssignments";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
@@ -118,6 +119,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           <h2 className="text-3xl font-bold text-foreground">Welcome back!</h2>
           <p className="text-muted-foreground">Your personalized learning dashboard is ready.</p>
         </div>
+
+        {/* Upcoming Assignments */}
+        <UpcomingAssignments />
 
         {/* Learning Styles */}
         <Card className="p-6 shadow-[var(--shadow-medium)] border-border">
