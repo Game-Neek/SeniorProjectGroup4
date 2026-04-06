@@ -271,18 +271,18 @@ const CoursePage = () => {
               {mastery.loading ? "—" : `${mastery.topicMastery}%`}
             </p>
             <Progress value={mastery.topicMastery} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">focus areas passed</p>
+            <p className="text-xs text-muted-foreground mt-1">Focus Areas Passed</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-secondary" />
-              <span className="text-sm font-medium text-foreground">Practice Avg</span>
+              <span className="text-sm font-medium text-foreground">Practice Average</span>
             </div>
             <p className="text-2xl font-bold text-foreground">
               {mastery.loading ? "—" : `${mastery.practiceScore}%`}
             </p>
             <Progress value={mastery.practiceScore} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">quiz & exercise avg</p>
+            <p className="text-xs text-muted-foreground mt-1">Quiz & Exercise Avg</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -293,7 +293,7 @@ const CoursePage = () => {
               {mastery.loading ? "—" : `${mastery.moduleProgress}%`}
             </p>
             <Progress value={mastery.moduleProgress} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">lessons & practice done</p>
+            <p className="text-xs text-muted-foreground mt-1">Lessons & Practice Done</p>
           </Card>
           <Card className="p-4 border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -303,7 +303,7 @@ const CoursePage = () => {
             <p className="text-2xl font-bold text-foreground">
               {events.filter((e) => !isPast(new Date(e.event_date + "T23:59:59"))).length}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">events remaining</p>
+            <p className="text-xs text-muted-foreground mt-1">Events Remaining</p>
           </Card>
         </div>
 
