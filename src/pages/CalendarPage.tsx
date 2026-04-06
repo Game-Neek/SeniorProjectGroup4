@@ -56,6 +56,7 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDateEvents, setSelectedDateEvents] = useState<CalendarEvent[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -65,6 +66,11 @@ export default function CalendarPage() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     checkAuthAndFetchEvents();
