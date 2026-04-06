@@ -35,6 +35,7 @@ import { TopicChecklist } from "@/components/TopicChecklist";
 import { useCourseMastery } from "@/hooks/useCourseMastery";
 import { WeeklyPerformanceReport } from "@/components/WeeklyPerformanceReport";
 import { ConfidenceRating } from "@/components/ConfidenceRating";
+import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -248,6 +249,9 @@ const CoursePage = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Learning Objective Mastery */}
+        <KnowledgeMasteryProgress className={decodedClassName} />
+
         {/* Progress Overview */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="p-4 border-border">
