@@ -414,6 +414,86 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_components: {
+        Row: {
+          bloom_level: string | null
+          class_name: string
+          component_order: number
+          created_at: string
+          id: string
+          objective: string
+          parent_topic: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          bloom_level?: string | null
+          class_name: string
+          component_order?: number
+          created_at?: string
+          id?: string
+          objective: string
+          parent_topic?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          bloom_level?: string | null
+          class_name?: string
+          component_order?: number
+          created_at?: string
+          id?: string
+          objective?: string
+          parent_topic?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      knowledge_mastery: {
+        Row: {
+          attempts: number
+          component_id: string
+          created_at: string
+          id: string
+          last_practiced_at: string | null
+          mastery_level: string
+          mastery_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          component_id: string
+          created_at?: string
+          id?: string
+          last_practiced_at?: string | null
+          mastery_level?: string
+          mastery_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          component_id?: string
+          created_at?: string
+          id?: string
+          last_practiced_at?: string | null
+          mastery_level?: string
+          mastery_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_mastery_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_events: {
         Row: {
           bloom_level: string | null
