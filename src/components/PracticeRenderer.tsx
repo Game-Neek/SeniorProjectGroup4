@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Eye, EyeOff, Trophy, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Eye, EyeOff, Trophy, RotateCcw, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PracticeQuestion {
@@ -25,6 +25,7 @@ interface PracticeQuestion {
 interface PracticeRendererProps {
   content: string;
   onComplete?: () => void;
+  onRegenerate?: () => void;
 }
 
 /** Try to parse practice questions from structured content */
@@ -82,7 +83,7 @@ const parseQuestions = (content: string): PracticeQuestion[] => {
   return questions;
 };
 
-export const PracticeRenderer = ({ content, onComplete }: PracticeRendererProps) => {
+export const PracticeRenderer = ({ content, onComplete, onRegenerate }: PracticeRendererProps) => {
   const questions = parseQuestions(content);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -92,12 +93,28 @@ export const PracticeRenderer = ({ content, onComplete }: PracticeRendererProps)
   const [isComplete, setIsComplete] = useState(false);
 
   if (questions.length === 0) {
-    // Fallback: render as rich text
+    // Fallback: show a prompt to regenerate or complete
     return (
-      <div className="space-y-2">
-        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-          <MathText text={content} />
-        </p>
+      <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
+        <PenTool className="w-10 h-10 text-muted-foreground/50" />
+        <div>
+          <p className="text-sm font-medium text-foreground">No practice questions loaded</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Try closing and reopening this module to generate questions.
+          </p>
+        </div>
+        {onRegenerate && (
+          <Button size="sm" onClick={onRegenerate}>
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Generate Practice Questions
+          </Button>
+        )}
+        {onComplete && (
+          <Button size="sm" variant="outline" onClick={onComplete}>
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            Mark Complete Anyway
+          </Button>
+        )}
       </div>
     );
   }
