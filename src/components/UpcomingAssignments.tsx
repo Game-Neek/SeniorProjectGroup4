@@ -27,16 +27,28 @@ export const UpcomingAssignments = () => {
 
     const today = format(new Date(), "yyyy-MM-dd");
 
-    const { data } = await supabase
-      .from("calendar_events")
-      .select("id, title, description, event_date, start_time")
-      .eq("user_id", session.user.id)
-      .eq("event_type", "assignment")
-      .gte("event_date", today)
-      .order("event_date", { ascending: true })
-      .limit(10);
+    const [classesRes, eventsRes] = await Promise.all([
+      supabase.from("user_classes").select("class_name").eq("user_id", session.user.id),
+      supabase.from("calendar_events")
+        .select("id, title, description, event_date, start_time")
+        .eq("user_id", session.user.id)
+        .eq("event_type", "assignment")
+        .gte("event_date", today)
+        .order("event_date", { ascending: true })
+        .limit(10),
+    ]);
 
-    setAssignments(data || []);
+    const activeClasses = new Set((classesRes.data || []).map(c => c.class_name));
+    const filtered = (eventsRes.data || []).filter((evt: any) => {
+      const colonIdx = evt.title?.indexOf(":");
+      if (colonIdx > 0) {
+        const prefix = evt.title.substring(0, colonIdx).trim();
+        return activeClasses.has(prefix);
+      }
+      return true;
+    });
+
+    setAssignments(filtered);
     setLoading(false);
   };
 

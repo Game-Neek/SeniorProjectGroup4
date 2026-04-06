@@ -52,19 +52,32 @@ export const TestReminders = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setIsLoading(false); return; }
 
-    // Fetch only exam-type calendar events
+    // Fetch active classes and exam-type calendar events in parallel
     const examTypes = ["exam", "test", "quiz", "midterm", "final"];
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .in("event_type", examTypes)
-      .order("event_date", { ascending: true });
+    const [classesRes, eventsRes] = await Promise.all([
+      supabase.from("user_classes").select("class_name").eq("user_id", session.user.id),
+      supabase.from("calendar_events")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .in("event_type", examTypes)
+        .order("event_date", { ascending: true }),
+    ]);
 
-    if (error) {
-      console.error("Error fetching tests:", error);
+    const activeClasses = new Set((classesRes.data || []).map(c => c.class_name));
+    // Keep events that belong to an active class (title starts with "ClassName:") or have no class prefix
+    const filtered = (eventsRes.data || []).filter((evt: any) => {
+      const colonIdx = evt.title?.indexOf(":");
+      if (colonIdx > 0) {
+        const prefix = evt.title.substring(0, colonIdx).trim();
+        return activeClasses.has(prefix);
+      }
+      return true; // keep events without a class prefix
+    });
+
+    if (eventsRes.error) {
+      console.error("Error fetching tests:", eventsRes.error);
     } else {
-      setTests(data || []);
+      setTests(filtered);
     }
     setIsLoading(false);
   };
