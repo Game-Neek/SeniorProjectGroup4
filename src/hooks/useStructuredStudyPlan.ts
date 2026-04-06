@@ -271,8 +271,8 @@ export const useStructuredStudyPlan = (className: string, learningStyles: string
   }, [loadFocusAreas]);
 
   // Load module content on demand
-  const loadModuleContent = useCallback(async (module: StudyModule, focusTopic: string) => {
-    if (module.content) return;
+  const loadModuleContent = useCallback(async (module: StudyModule, focusTopic: string, force = false) => {
+    if (module.content && !force) return;
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
