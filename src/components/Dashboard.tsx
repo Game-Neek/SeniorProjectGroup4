@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, MessageCircle
+  BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, MessageCircle, BarChart3
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
@@ -91,6 +91,13 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
                 onToggle={() => setIsReadAloudActive((v) => !v)}
                 contentRef={mainContentRef}
               />
+              <Button
+                variant="outline"
+                onClick={() => navigate("/analytics")}
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/profile")}
