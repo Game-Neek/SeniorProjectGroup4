@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
 import { SyllabusUpload } from "./SyllabusUpload";
+import { UpcomingAssignments } from "./UpcomingAssignments";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
