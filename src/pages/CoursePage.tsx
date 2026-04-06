@@ -259,66 +259,6 @@ const CoursePage = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Course Calendar */}
-
-        {/* Progress Overview */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-4 border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Topic Mastery</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {mastery.loading ? "—" : `${mastery.topicMastery}%`}
-            </p>
-            <Progress value={mastery.topicMastery} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">Focus Areas Passed</p>
-          </Card>
-          <Card className="p-4 border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-secondary" />
-              <span className="text-sm font-medium text-foreground">Practice Average</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {mastery.loading ? "—" : `${mastery.practiceScore}%`}
-            </p>
-            <Progress value={mastery.practiceScore} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">Quiz & Exercise Avg</p>
-          </Card>
-          <Card className="p-4 border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-foreground">Modules</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {mastery.loading ? "—" : `${mastery.moduleProgress}%`}
-            </p>
-            <Progress value={mastery.moduleProgress} className="h-1.5 mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">Lessons & Practice Done</p>
-          </Card>
-          <Card className="p-4 border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <CalendarIcon className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Upcoming</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {events.filter((e) => !isPast(new Date(e.event_date + "T23:59:59"))).length}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Events Remaining</p>
-          </Card>
-        </div>
-
-        {/* Placement Quiz - Take this first! */}
-        <PlacementQuiz
-          learningStyles={learningStyles}
-          onQuizComplete={setQuizResultAndGenerate}
-          completedClasses={completedClasses}
-          className={decodedClassName}
-        />
-
-        {/* Learning Objective Mastery */}
-        <KnowledgeMasteryProgress className={decodedClassName} />
-
-        {/* Course Calendar */}
         <Card className="p-6 border-border shadow-[var(--shadow-soft)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -459,6 +399,64 @@ const CoursePage = () => {
 
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
+
+        {/* Learning Objective Mastery */}
+        <KnowledgeMasteryProgress className={decodedClassName} />
+
+        {/* Progress Overview */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="p-4 border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Topic Mastery</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.topicMastery}%`}
+            </p>
+            <Progress value={mastery.topicMastery} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">Focus Areas Passed</p>
+          </Card>
+          <Card className="p-4 border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4 text-secondary" />
+              <span className="text-sm font-medium text-foreground">Practice Average</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.practiceScore}%`}
+            </p>
+            <Progress value={mastery.practiceScore} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">Quiz & Exercise Avg</p>
+          </Card>
+          <Card className="p-4 border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium text-foreground">Modules</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">
+              {mastery.loading ? "—" : `${mastery.moduleProgress}%`}
+            </p>
+            <Progress value={mastery.moduleProgress} className="h-1.5 mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">Lessons & Practice Done</p>
+          </Card>
+          <Card className="p-4 border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <CalendarIcon className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Upcoming</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">
+              {events.filter((e) => !isPast(new Date(e.event_date + "T23:59:59"))).length}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Events Remaining</p>
+          </Card>
+        </div>
+
+        {/* Placement Quiz - Take this first! */}
+        <PlacementQuiz
+          learningStyles={learningStyles}
+          onQuizComplete={setQuizResultAndGenerate}
+          completedClasses={completedClasses}
+          className={decodedClassName}
+        />
 
         {/* Personalized Adaptive Learning - only after placement quiz */}
         {hasQuiz && (
