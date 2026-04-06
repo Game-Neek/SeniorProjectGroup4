@@ -97,6 +97,34 @@ export const CourseHub = ({ refreshTrigger = 0 }: CourseHubProps) => {
     if (!deleteTarget) return;
     const className = deleteTarget.class_name;
 
+    // First: delete knowledge_mastery (depends on knowledge_components via FK)
+    const { data: components } = await supabase
+      .from("knowledge_components")
+      .select("id")
+      .eq("class_name", className);
+
+    if (components?.length) {
+      const componentIds = components.map(c => c.id);
+      // Delete in batches to avoid query limits
+      for (let i = 0; i < componentIds.length; i += 100) {
+        await supabase.from("knowledge_mastery").delete().in("component_id", componentIds.slice(i, i + 100));
+      }
+    }
+
+    // Second: delete study_modules (depends on study_focus_areas via FK)
+    const { data: focusAreas } = await supabase
+      .from("study_focus_areas")
+      .select("id")
+      .eq("class_name", className);
+
+    if (focusAreas?.length) {
+      const areaIds = focusAreas.map(a => a.id);
+      for (let i = 0; i < areaIds.length; i += 100) {
+        await supabase.from("study_modules").delete().in("focus_area_id", areaIds.slice(i, i + 100));
+      }
+    }
+
+    // Third: delete all remaining course data in parallel
     const deletes = [
       supabase.from("user_classes").delete().eq("id", deleteTarget.id),
       supabase.from("syllabi").delete().eq("class_name", className),
