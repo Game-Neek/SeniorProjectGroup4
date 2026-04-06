@@ -42,12 +42,14 @@ export const UpcomingAssignments = () => {
 
   const getHoursUntilDue = (eventDate: string): number => {
     const now = new Date();
+    // Use end of the event day (23:59:59) so same-day assignments aren't negative
     const due = parseISO(eventDate);
+    due.setHours(23, 59, 59, 999);
     return differenceInHours(due, now);
   };
 
   const urgentAssignments = assignments.filter(
-    (a) => getHoursUntilDue(a.event_date) <= 48 && getHoursUntilDue(a.event_date) >= 0
+    (a) => getHoursUntilDue(a.event_date) <= 48
   );
 
   const upcomingAssignments = assignments.filter(
