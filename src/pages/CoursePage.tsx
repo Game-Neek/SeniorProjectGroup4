@@ -258,8 +258,7 @@ const CoursePage = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Learning Objective Mastery */}
-        <KnowledgeMasteryProgress className={decodedClassName} />
+        {/* Course Calendar */}
 
         {/* Progress Overview */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -315,6 +314,9 @@ const CoursePage = () => {
           completedClasses={completedClasses}
           className={decodedClassName}
         />
+
+        {/* Learning Objective Mastery */}
+        <KnowledgeMasteryProgress className={decodedClassName} />
 
         {/* Course Calendar */}
         <Card className="p-6 border-border shadow-[var(--shadow-soft)]">
