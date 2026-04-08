@@ -304,12 +304,13 @@ function GapRow({
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {gap.score !== null && (
-                <div className="w-16">
+                <div className="w-16" role="progressbar" aria-valuenow={gap.score} aria-valuemin={0} aria-valuemax={100} aria-label={`Mastery: ${gap.score}%`}>
                   <Progress value={gap.score} className="h-1.5" />
                 </div>
               )}
               <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
-                <Sparkles className="w-3 h-3 mr-0.5" />
+                <Sparkles className="w-3 h-3 mr-0.5" aria-hidden="true" />
+                <span className="sr-only">{activities.length} activities</span>
                 {activities.length}
               </Badge>
             </div>
