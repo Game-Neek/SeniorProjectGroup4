@@ -481,6 +481,14 @@ const CoursePage = () => {
           />
         )}
 
+        {/* Prerequisite Diagnostic Engine */}
+        {hasQuiz && (
+          <PrerequisiteDiagnostic
+            className={decodedClassName}
+            onNavigateToTopic={handleNavigateToTopic}
+          />
+        )}
+
         {/* Knowledge Gap Alerts - only after placement quiz */}
         {hasQuiz && (
           <KnowledgeGapAlerts
