@@ -472,6 +472,14 @@ const CoursePage = () => {
           </div>
         )}
 
+        {/* Predictive Coaching - only after placement quiz */}
+        {hasQuiz && (
+          <PredictiveCoaching
+            className={decodedClassName}
+            onNavigateToTopic={handleNavigateToTopic}
+          />
+        )}
+
         {/* Knowledge Gap Alerts - only after placement quiz */}
         {hasQuiz && (
           <KnowledgeGapAlerts
