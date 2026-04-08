@@ -3,12 +3,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bus, TrainFront, Clock, MapPin, ArrowLeft, ChevronRight, Wifi, WifiOff } from "lucide-react";
-import { useTransitRoutes, useAllTransitStops, useTransitArrivals, type TransitRoute, type TransitArrival } from "@/hooks/useTransitData";
+import { Progress } from "@/components/ui/progress";
+import { Bus, TrainFront, Clock, MapPin, ArrowLeft, ChevronRight, Wifi, WifiOff, TrendingUp, AlertTriangle, BarChart3, ShieldCheck } from "lucide-react";
+import { useTransitRoutes, useAllTransitStops, useTransitArrivals, useDelayPatterns, type TransitRoute, type TransitArrival, type DelayPattern } from "@/hooks/useTransitData";
 import { TransitMap } from "@/components/TransitMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
+import { cn } from "@/lib/utils";
 
 const RouteCard = ({
   route,
