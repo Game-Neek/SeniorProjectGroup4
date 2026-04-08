@@ -40,6 +40,7 @@ import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress"
 import { KnowledgeStructureChecklist } from "@/components/KnowledgeStructureChecklist";
 import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
 import { PredictiveCoaching } from "@/components/PredictiveCoaching";
+import { PrerequisiteDiagnostic } from "@/components/PrerequisiteDiagnostic";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -475,6 +476,14 @@ const CoursePage = () => {
         {/* Predictive Coaching - only after placement quiz */}
         {hasQuiz && (
           <PredictiveCoaching
+            className={decodedClassName}
+            onNavigateToTopic={handleNavigateToTopic}
+          />
+        )}
+
+        {/* Prerequisite Diagnostic Engine */}
+        {hasQuiz && (
+          <PrerequisiteDiagnostic
             className={decodedClassName}
             onNavigateToTopic={handleNavigateToTopic}
           />
