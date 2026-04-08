@@ -501,6 +501,9 @@ const CoursePage = () => {
           <KnowledgeGapAlerts
             className={decodedClassName}
             onNavigateToTopic={handleNavigateToTopic}
+            onOpenChat={(prompt) => {
+              window.dispatchEvent(new CustomEvent("open-agent-chat", { detail: { prompt } }));
+            }}
           />
         )}
 
