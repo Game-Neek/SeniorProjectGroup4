@@ -19,6 +19,16 @@ export const UpcomingAssignments = () => {
 
   useEffect(() => {
     fetchUpcoming();
+
+    // Realtime: refresh when assignments change
+    const channel = supabase
+      .channel('assignments-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'calendar_events' }, () => {
+        fetchUpcoming();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchUpcoming = async () => {
