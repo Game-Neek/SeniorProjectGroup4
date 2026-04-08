@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChecklistRewards } from "@/components/ChecklistRewards";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -345,6 +346,14 @@ export const KnowledgeStructureChecklist = ({ className, onNavigateToTopic }: Pr
             </div>
             <Progress value={mastery.overallMastery} className="h-2.5" />
           </div>
+
+          {/* Rewards & Badges */}
+          <ChecklistRewards
+            completionPct={mastery.overallMastery}
+            checkedCount={masteredTotal}
+            totalCount={totalObjectives}
+            storageKey={`knowledge-${className}`}
+          />
 
           {/* "Up Next" callout */}
           {readyNodes.length > 0 && (
