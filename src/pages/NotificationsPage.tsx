@@ -30,15 +30,6 @@ const categoryIcons: Record<string, string> = {
   general: "🔔",
 };
 
-const categoryIcons: Record<string, string> = {
-  assignment_due: "📝",
-  exam_reminder: "📋",
-  quiz_results: "✅",
-  study_plan: "📚",
-  course_updates: "📖",
-  system_alerts: "⚙️",
-  general: "🔔",
-};
 
 const PAGE_SIZE = 15;
 
