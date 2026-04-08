@@ -30,9 +30,18 @@ export type TransitArrival = {
   stop_id: string;
   predicted_arrival_time: string;
   estimated_minutes: number;
-  data_source: "wmata" | "simulated";
+  data_source: "wmata" | "simulated" | "predicted";
   vehicle_id: string | null;
   status: string;
+};
+
+export type DelayPattern = {
+  route_id: string;
+  stop_id: string;
+  avg_delay: number;
+  sample_count: number;
+  delay_probability: number;
+  max_delay: number;
 };
 
 export const useTransitRoutes = (universityId?: string | null) => {
@@ -110,10 +119,9 @@ export const useTransitArrivals = (routeId?: string | null) => {
       if (error) throw error;
       return (data || []) as TransitArrival[];
     },
-    refetchInterval: 30000, // fallback polling every 30s
+    refetchInterval: 30000,
   });
 
-  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel("transit-arrivals-realtime")
@@ -132,4 +140,57 @@ export const useTransitArrivals = (routeId?: string | null) => {
   }, [queryClient]);
 
   return query;
+};
+
+/** Fetch historical delay patterns for a route to show predictive insights */
+export const useDelayPatterns = (routeId?: string | null) => {
+  return useQuery({
+    queryKey: ["delay-patterns", routeId],
+    enabled: !!routeId,
+    staleTime: 5 * 60 * 1000, // cache 5 min
+    queryFn: async () => {
+      const now = new Date();
+      const dow = now.getDay();
+      const hour = now.getHours();
+      const hourRange = [(hour - 1 + 24) % 24, hour, (hour + 1) % 24];
+
+      const { data, error } = await supabase
+        .from("transit_arrival_history")
+        .select("route_id, stop_id, delay_minutes")
+        .eq("route_id", routeId!)
+        .eq("day_of_week", dow)
+        .in("hour_of_day", hourRange)
+        .order("recorded_at", { ascending: false })
+        .limit(200);
+
+      if (error) throw error;
+
+      // Aggregate by stop
+      const groups = new Map<string, number[]>();
+      for (const row of (data || [])) {
+        const key = row.stop_id;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(row.delay_minutes);
+      }
+
+      const patterns: DelayPattern[] = [];
+      for (const [stopId, delays] of groups) {
+        const n = delays.length;
+        const avg = delays.reduce((s, d) => s + d, 0) / n;
+        const maxDelay = Math.max(...delays);
+        const delayedCount = delays.filter(d => d > 2).length;
+
+        patterns.push({
+          route_id: routeId!,
+          stop_id: stopId,
+          avg_delay: Math.round(avg * 10) / 10,
+          sample_count: n,
+          delay_probability: Math.round((delayedCount / n) * 100),
+          max_delay: maxDelay,
+        });
+      }
+
+      return patterns;
+    },
+  });
 };
