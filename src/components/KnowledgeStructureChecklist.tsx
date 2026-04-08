@@ -79,7 +79,9 @@ const stateConfig: Record<NodeState, {
   },
 };
 
-const getNodeState = (items: KnowledgeMasteryItem[], index: number, allNodes: { avgScore: number }[]): NodeState => {
+const BLOOM_ORDER = ["remember", "understand", "apply", "analyze", "evaluate", "create"];
+
+const getNodeState = (items: KnowledgeMasteryItem[], index: number, allNodes: { avgScore: number; items: KnowledgeMasteryItem[] }[]): NodeState => {
   const avgScore = items.length > 0
     ? items.reduce((s, i) => s + i.mastery_score, 0) / items.length
     : 0;
@@ -88,10 +90,28 @@ const getNodeState = (items: KnowledgeMasteryItem[], index: number, allNodes: { 
   if (avgScore >= 70) return "proficient";
   if (avgScore > 0) return "in_progress";
 
-  // Check if previous topic is at least proficient
+  // First topic is always ready
   if (index === 0) return "ready";
-  const prevScore = allNodes[index - 1]?.avgScore ?? 0;
-  if (prevScore >= 50) return "ready";
+
+  // Check if previous topic meets prerequisites
+  const prev = allNodes[index - 1];
+  const prevAvg = prev?.avgScore ?? 0;
+
+  // Bloom-aware unlock: if this topic requires higher Bloom levels,
+  // the prerequisite threshold is stricter
+  const thisMaxBloom = Math.max(
+    ...items.map(i => BLOOM_ORDER.indexOf(i.component.bloom_level || "remember")),
+    0
+  );
+  const prevMaxBloom = prev?.items
+    ? Math.max(...prev.items.map(i => BLOOM_ORDER.indexOf(i.component.bloom_level || "remember")), 0)
+    : 0;
+
+  // If this topic requires higher-order thinking than the prerequisite,
+  // need stronger mastery (60% instead of 50%)
+  const requiredScore = thisMaxBloom > prevMaxBloom ? 60 : 50;
+
+  if (prevAvg >= requiredScore) return "ready";
   return "locked";
 };
 
