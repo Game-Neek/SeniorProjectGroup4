@@ -129,7 +129,7 @@ function buildRemedialActivities(
   // ── Guided review (only if focus area exists) ──
   if (gap.focusAreaId && onNavigateToTopic) {
     const reviewLabel = gap.status === "struggling"
-      ? "Restart Study Path"
+      ? "Fresh Start Study Path"
       : gap.daysSinceLastPractice && gap.daysSinceLastPractice > 7
       ? "Spaced Repetition Review"
       : "Continue Study Path";
@@ -138,10 +138,10 @@ function buildRemedialActivities(
       icon: "review",
       label: reviewLabel,
       description: gap.status === "struggling"
-        ? `Your study path for "${gap.topic}" includes structured lessons — try starting from the beginning with a fresh perspective.`
+        ? `Your study path for "${gap.topic}" has structured lessons — approaching it fresh can reveal new understanding.`
         : `Open your structured study path for "${gap.topic}" with step-by-step lessons and checkpoint quizzes.`,
       rationale: gap.status === "struggling"
-        ? `After ${gap.attempts} attempts, restarting the study path provides a different angle than self-study.`
+        ? `After ${gap.attempts} attempts, a structured path provides scaffolded support that self-study alone may not.`
         : "Structured learning paths provide scaffolded progression that matches your current level.",
       action: () => onNavigateToTopic(gap.focusAreaId!),
     });
@@ -159,16 +159,16 @@ function buildRemedialActivities(
     label: gap.status === "untouched"
       ? "Introductory Practice"
       : gap.status === "struggling"
-      ? "Simplified Practice"
+      ? "Foundation-Building Practice"
       : "Targeted Practice",
     description: gap.status === "untouched"
       ? `Start with 5 ${practiceBloom} questions on "${gap.topic}" to build initial confidence.`
       : gap.status === "struggling"
-      ? `Generate easier ${practiceBloom} questions that break "${gap.topic}" into smaller, more manageable pieces.`
-      : `Focus on the specific weak areas within "${gap.topic}" with ${practiceBloom} problems.`,
+      ? `Try ${practiceBloom} questions that approach "${gap.topic}" from a different angle with smaller, more approachable steps.`
+      : `Focus on the specific areas within "${gap.topic}" with ${practiceBloom} problems.`,
     rationale: `Practice difficulty set to ${practiceBloom} based on your current ${gap.score ?? 0}% mastery — ${
       gap.status === "struggling"
-        ? "reducing difficulty to rebuild confidence before escalating"
+        ? "building from foundations creates confidence for tackling harder problems"
         : "matching difficulty to your zone of proximal development"
     }.`,
   });
