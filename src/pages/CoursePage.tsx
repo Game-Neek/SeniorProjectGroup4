@@ -39,6 +39,7 @@ import { ConfidenceRating } from "@/components/ConfidenceRating";
 import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress";
 import { KnowledgeStructureChecklist } from "@/components/KnowledgeStructureChecklist";
 import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
+import { PredictiveCoaching } from "@/components/PredictiveCoaching";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -469,6 +470,14 @@ const CoursePage = () => {
             />
             <MicrolearningScheduler className={decodedClassName} />
           </div>
+        )}
+
+        {/* Predictive Coaching - only after placement quiz */}
+        {hasQuiz && (
+          <PredictiveCoaching
+            className={decodedClassName}
+            onNavigateToTopic={handleNavigateToTopic}
+          />
         )}
 
         {/* Knowledge Gap Alerts - only after placement quiz */}
