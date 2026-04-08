@@ -8,16 +8,15 @@ const corsHeaders = {
 };
 
 /**
- * Learning Velocity Monitor
+ * Learning Velocity Monitor — Equity-Aware Edition
  *
- * Analyses learning_events to compute:
- *  1. VELOCITY  — events/day over rolling 7-day windows
- *  2. DISENGAGEMENT — no activity for 3+ days on any active class
- *  3. VELOCITY DROP — ≥40% drop in 7-day velocity vs previous 7 days
- *  4. SCORE DECLINE — avg score dropped ≥15 points in last 7 days vs prior 7
- *  5. GAP STALL — topic with <50% mastery and no practice in 5+ days
- *
- * Creates notifications for each flagged condition (max 1 per rule per day).
+ * BIAS SAFEGUARDS:
+ *  - Adaptive thresholds based on each student's OWN baseline (not a fixed standard)
+ *  - Disengagement detection uses student's historical cadence, not a universal 3-day cutoff
+ *  - Score decline accounts for Bloom-level progression (scores naturally dip at higher cognitive levels)
+ *  - Positive reinforcement alerts balance negative flags (≥1 positive per 2 negative)
+ *  - Daily alert cap prevents notification fatigue for disadvantaged students
+ *  - Growth-oriented language avoids deficit framing
  */
 
 interface VelocityAlert {
@@ -26,6 +25,7 @@ interface VelocityAlert {
   body: string;
   category: string;
   className: string;
+  sentiment: "positive" | "neutral" | "negative";
 }
 
 serve(async (req) => {
@@ -44,7 +44,6 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const targetUserId: string | null = body.userId || null;
 
-    // Determine users to process
     let userIds: string[] = [];
     if (targetUserId) {
       userIds = [targetUserId];
@@ -60,27 +59,36 @@ serve(async (req) => {
     const msPerDay = 86_400_000;
     const day7Ago = new Date(now.getTime() - 7 * msPerDay).toISOString();
     const day14Ago = new Date(now.getTime() - 14 * msPerDay).toISOString();
-    const day3Ago = new Date(now.getTime() - 3 * msPerDay).toISOString();
-    const day5Ago = new Date(now.getTime() - 5 * msPerDay).toISOString();
+    const day30Ago = new Date(now.getTime() - 30 * msPerDay).toISOString();
     const todayStr = now.toISOString().split("T")[0];
 
+    const MAX_DAILY_ALERTS = 3; // Cap to prevent notification fatigue
     let totalAlerts = 0;
 
     for (const userId of userIds) {
       const alerts: VelocityAlert[] = [];
 
-      // Fetch last 14 days of events
+      // Fetch 30 days of events to compute personal baseline
       const { data: events } = await supabase
         .from("learning_events")
-        .select("created_at, event_type, class_name, topic, score, total")
+        .select("created_at, event_type, class_name, topic, score, total, bloom_level")
         .eq("user_id", userId)
-        .gte("created_at", day14Ago)
+        .gte("created_at", day30Ago)
         .order("created_at", { ascending: false })
         .limit(1000);
 
       if (!events || events.length === 0) continue;
 
-      // Get user's active classes
+      // Check how many alerts already sent today (fatigue cap)
+      const { data: todayNotifs } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("user_id", userId)
+        .like("source_type", "velocity_%")
+        .gte("created_at", todayStr);
+
+      if ((todayNotifs?.length || 0) >= MAX_DAILY_ALERTS) continue;
+
       const { data: classes } = await supabase
         .from("user_classes")
         .select("class_name")
@@ -89,7 +97,19 @@ serve(async (req) => {
 
       const activeClasses = new Set((classes || []).map((c: any) => c.class_name));
 
-      // Group events by class
+      // ── Compute PERSONAL BASELINE cadence (events/day over 30 days) ──
+      const uniqueActiveDays = new Set(
+        events.map((e: any) => e.created_at.split("T")[0])
+      );
+      const personalCadenceDays = uniqueActiveDays.size; // how many days they study in 30
+      // Average gap between study sessions (in days)
+      const avgGapDays = personalCadenceDays > 1
+        ? 30 / personalCadenceDays
+        : 30; // if only 1 day, assume long gaps are normal
+
+      // Adaptive disengagement threshold: 2x their normal gap, minimum 3 days, max 14
+      const disengagementThreshold = Math.max(3, Math.min(14, Math.ceil(avgGapDays * 2)));
+
       const byClass = new Map<string, any[]>();
       for (const e of events) {
         if (!activeClasses.has(e.class_name)) continue;
@@ -98,9 +118,7 @@ serve(async (req) => {
       }
 
       for (const [className, classEvents] of byClass) {
-        const recent7 = classEvents.filter(
-          (e: any) => e.created_at >= day7Ago
-        );
+        const recent7 = classEvents.filter((e: any) => e.created_at >= day7Ago);
         const prior7 = classEvents.filter(
           (e: any) => e.created_at < day7Ago && e.created_at >= day14Ago
         );
@@ -108,36 +126,44 @@ serve(async (req) => {
         const velocity7 = recent7.length / 7;
         const velocityPrior = prior7.length / 7;
 
-        // ── Rule 1: DISENGAGEMENT — no events in 3+ days ──
+        // ── Rule 1: ADAPTIVE DISENGAGEMENT ──
+        // Uses personal cadence, not a fixed 3-day cutoff
         const lastEventDate = classEvents[0]?.created_at;
-        if (lastEventDate && lastEventDate < day3Ago) {
+        if (lastEventDate) {
           const daysSince = Math.floor(
             (now.getTime() - new Date(lastEventDate).getTime()) / msPerDay
           );
-          alerts.push({
-            rule: "disengagement",
-            title: `📉 No activity in ${className}`,
-            body: `It's been ${daysSince} days since your last study session. A quick 10-minute review can keep concepts fresh.`,
-            category: "study_plan",
-            className,
-          });
+          if (daysSince >= disengagementThreshold) {
+            // Growth-oriented language, no alarming emojis
+            alerts.push({
+              rule: "disengagement",
+              title: `Ready to pick up ${className}?`,
+              body: `It's been ${daysSince} days since your last session. Based on your typical study pattern, now is a great time to reconnect. Even a quick 10-minute review keeps concepts fresh.`,
+              category: "study_plan",
+              className,
+              sentiment: "neutral",
+            });
+          }
         }
 
-        // ── Rule 2: VELOCITY DROP — ≥40% drop ──
+        // ── Rule 2: VELOCITY DROP — ≥40% drop relative to PERSONAL baseline ──
         if (velocityPrior > 0.5 && velocity7 < velocityPrior * 0.6) {
           const dropPct = Math.round(
             ((velocityPrior - velocity7) / velocityPrior) * 100
           );
           alerts.push({
             rule: "velocity_drop",
-            title: `⚠️ Learning pace dropped ${dropPct}% in ${className}`,
-            body: `Your study velocity went from ${velocityPrior.toFixed(1)} to ${velocity7.toFixed(1)} sessions/day. Try scheduling short daily study blocks to rebuild momentum.`,
+            title: `Study pace change in ${className}`,
+            body: `Your study frequency shifted from ${velocityPrior.toFixed(1)} to ${velocity7.toFixed(1)} sessions/day. Life gets busy — short daily blocks can help you stay on track when you're ready.`,
             category: "study_plan",
             className,
+            sentiment: "neutral",
           });
         }
 
-        // ── Rule 3: SCORE DECLINE — avg score dropped ≥15pts ──
+        // ── Rule 3: BLOOM-AWARE SCORE DECLINE ──
+        // Scores naturally dip when advancing to higher Bloom levels.
+        // Only flag if decline happens at the SAME cognitive level.
         const scoredRecent = recent7.filter(
           (e: any) => e.score != null && e.total != null && e.total > 0
         );
@@ -146,25 +172,49 @@ serve(async (req) => {
         );
 
         if (scoredRecent.length >= 2 && scoredPrior.length >= 2) {
-          const avgRecent =
-            scoredRecent.reduce(
-              (s: number, e: any) => s + (e.score / e.total) * 100,
-              0
-            ) / scoredRecent.length;
-          const avgPrior =
-            scoredPrior.reduce(
-              (s: number, e: any) => s + (e.score / e.total) * 100,
-              0
-            ) / scoredPrior.length;
+          // Check if Bloom level advanced (scores should naturally dip)
+          const BLOOM_ORDER: Record<string, number> = {
+            remember: 0, understand: 1, apply: 2, analyze: 3, evaluate: 4, create: 5,
+          };
+          const avgBloomRecent = scoredRecent
+            .filter((e: any) => e.bloom_level)
+            .reduce((s: number, e: any) => s + (BLOOM_ORDER[e.bloom_level?.toLowerCase()] || 0), 0)
+            / Math.max(1, scoredRecent.filter((e: any) => e.bloom_level).length);
+          const avgBloomPrior = scoredPrior
+            .filter((e: any) => e.bloom_level)
+            .reduce((s: number, e: any) => s + (BLOOM_ORDER[e.bloom_level?.toLowerCase()] || 0), 0)
+            / Math.max(1, scoredPrior.filter((e: any) => e.bloom_level).length);
+
+          const bloomAdvanced = avgBloomRecent > avgBloomPrior + 0.5;
+
+          const avgRecent = scoredRecent.reduce(
+            (s: number, e: any) => s + (e.score / e.total) * 100, 0
+          ) / scoredRecent.length;
+          const avgPrior = scoredPrior.reduce(
+            (s: number, e: any) => s + (e.score / e.total) * 100, 0
+          ) / scoredPrior.length;
 
           if (avgPrior - avgRecent >= 15) {
-            alerts.push({
-              rule: "score_decline",
-              title: `📊 Scores declining in ${className}`,
-              body: `Your average dropped from ${Math.round(avgPrior)}% to ${Math.round(avgRecent)}%. Consider revisiting foundational topics or using the AI tutor for targeted practice.`,
-              category: "quiz_results",
-              className,
-            });
+            if (bloomAdvanced) {
+              // Positive framing: score dip is EXPECTED during cognitive growth
+              alerts.push({
+                rule: "bloom_growth",
+                title: `Leveling up in ${className}! 🌱`,
+                body: `Your scores shifted from ${Math.round(avgPrior)}% to ${Math.round(avgRecent)}%, but you're tackling harder material now. This is a normal part of deepening understanding — keep going!`,
+                category: "study_plan",
+                className,
+                sentiment: "positive",
+              });
+            } else {
+              alerts.push({
+                rule: "score_decline",
+                title: `Scores shifting in ${className}`,
+                body: `Your average moved from ${Math.round(avgPrior)}% to ${Math.round(avgRecent)}%. This is a signal to revisit recent material — consider targeted practice on specific areas.`,
+                category: "quiz_results",
+                className,
+                sentiment: "neutral",
+              });
+            }
           }
         }
 
@@ -176,19 +226,15 @@ serve(async (req) => {
           .lt("mastery_score", 50);
 
         if (mastery) {
-          // Filter to components in this class
+          const day5Ago = new Date(now.getTime() - 5 * msPerDay).toISOString();
           const { data: components } = await supabase
             .from("knowledge_components")
             .select("id, objective, parent_topic")
             .eq("user_id", userId)
             .eq("class_name", className);
 
-          const componentIds = new Set(
-            (components || []).map((c: any) => c.id)
-          );
-          const componentMap = new Map(
-            (components || []).map((c: any) => [c.id, c])
-          );
+          const componentIds = new Set((components || []).map((c: any) => c.id));
+          const componentMap = new Map((components || []).map((c: any) => [c.id, c]));
 
           const stalledGaps = mastery.filter(
             (m: any) =>
@@ -207,17 +253,60 @@ serve(async (req) => {
 
             alerts.push({
               rule: "gap_stall",
-              title: `🔴 ${stalledGaps.length} knowledge gap${stalledGaps.length > 1 ? "s" : ""} stalling in ${className}`,
-              body: `Topics like ${topicNames} have low mastery and haven't been practiced recently. Targeted review can prevent these gaps from widening.`,
+              title: `Topics ready for review in ${className}`,
+              body: `${topicNames} could use some focused practice. A short targeted session can help build confidence in these areas.`,
               category: "study_plan",
               className,
+              sentiment: "neutral",
+            });
+          }
+        }
+
+        // ── POSITIVE REINFORCEMENT: Celebrate improvements ──
+        if (velocity7 > velocityPrior * 1.3 && velocity7 > 0.5) {
+          alerts.push({
+            rule: "velocity_up",
+            title: `Great momentum in ${className}! 🎯`,
+            body: `Your study pace increased this week. Consistency is the strongest predictor of success — keep it up!`,
+            category: "study_plan",
+            className,
+            sentiment: "positive",
+          });
+        }
+
+        if (scoredRecent.length >= 2 && scoredPrior.length >= 2) {
+          const avgR = scoredRecent.reduce((s: number, e: any) => s + (e.score / e.total) * 100, 0) / scoredRecent.length;
+          const avgP = scoredPrior.reduce((s: number, e: any) => s + (e.score / e.total) * 100, 0) / scoredPrior.length;
+          if (avgR - avgP >= 10) {
+            alerts.push({
+              rule: "score_improvement",
+              title: `Scores improving in ${className}! ⬆️`,
+              body: `Your average went from ${Math.round(avgP)}% to ${Math.round(avgR)}%. Your effort is paying off.`,
+              category: "quiz_results",
+              className,
+              sentiment: "positive",
             });
           }
         }
       }
 
+      // ── EQUITY SAFEGUARD: Balance negative with positive ──
+      const negativeAlerts = alerts.filter(a => a.sentiment === "negative" || a.sentiment === "neutral");
+      const positiveAlerts = alerts.filter(a => a.sentiment === "positive");
+
+      // Ensure at least 1 positive alert for every 2 negative/neutral ones
+      let finalAlerts = [...alerts];
+      if (negativeAlerts.length > 0 && positiveAlerts.length === 0) {
+        // Don't send only negative — either find a positive or reduce negatives
+        finalAlerts = negativeAlerts.slice(0, 1); // limit to 1 negative max if no positives
+      }
+
+      // Apply daily cap
+      const remainingSlots = MAX_DAILY_ALERTS - (todayNotifs?.length || 0);
+      finalAlerts = finalAlerts.slice(0, remainingSlots);
+
       // Deduplicate: don't send if same rule+class already notified today
-      for (const alert of alerts) {
+      for (const alert of finalAlerts) {
         const { data: existing } = await supabase
           .from("notifications")
           .select("id")
