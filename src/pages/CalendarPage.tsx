@@ -74,6 +74,19 @@ export default function CalendarPage() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasBehavioralConsent, startSession, endSession, activeSession } = useBehavioralTracking();
+
+  // Track calendar page session when behavioral consent is active
+  useEffect(() => {
+    if (hasBehavioralConsent) {
+      startSession("calendar", "calendar_browsing", "study_session_started");
+    }
+    return () => {
+      if (hasBehavioralConsent) {
+        endSession();
+      }
+    };
+  }, [hasBehavioralConsent]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
