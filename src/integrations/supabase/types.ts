@@ -1047,6 +1047,60 @@ export type Database = {
         }
         Relationships: []
       }
+      transit_arrival_history: {
+        Row: {
+          actual_minutes: number
+          data_source: string
+          day_of_week: number
+          delay_minutes: number
+          hour_of_day: number
+          id: string
+          recorded_at: string
+          route_id: string
+          scheduled_minutes: number
+          stop_id: string
+        }
+        Insert: {
+          actual_minutes?: number
+          data_source?: string
+          day_of_week?: number
+          delay_minutes?: number
+          hour_of_day?: number
+          id?: string
+          recorded_at?: string
+          route_id: string
+          scheduled_minutes?: number
+          stop_id: string
+        }
+        Update: {
+          actual_minutes?: number
+          data_source?: string
+          day_of_week?: number
+          delay_minutes?: number
+          hour_of_day?: number
+          id?: string
+          recorded_at?: string
+          route_id?: string
+          scheduled_minutes?: number
+          stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transit_arrival_history_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "transit_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transit_arrival_history_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "transit_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transit_arrivals: {
         Row: {
           created_at: string
