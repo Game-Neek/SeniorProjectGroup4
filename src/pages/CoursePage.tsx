@@ -37,6 +37,7 @@ import { WeeklyPerformanceReport } from "@/components/WeeklyPerformanceReport";
 import { PerformanceAnalytics } from "@/components/PerformanceAnalytics";
 import { ConfidenceRating } from "@/components/ConfidenceRating";
 import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress";
+import { KnowledgeStructureChecklist } from "@/components/KnowledgeStructureChecklist";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -481,6 +482,12 @@ const CoursePage = () => {
 
         {/* Personalized Practice - only after placement quiz */}
         {hasQuiz && <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />}
+
+        {/* Knowledge Structure & Response State */}
+        <KnowledgeStructureChecklist
+          className={decodedClassName}
+          onNavigateToTopic={handleNavigateToTopic}
+        />
 
         {/* Topic Checklist */}
         <TopicChecklist className={decodedClassName} />
