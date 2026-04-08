@@ -217,8 +217,9 @@ export default function CalendarPage() {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/")}
+              aria-label="Go back to dashboard"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Campus Calendar</h1>
             
@@ -384,7 +385,7 @@ export default function CalendarPage() {
             {selectedDateEvents.length === 0 ? (
               <p className="text-muted-foreground">No events for this date</p>
             ) : (
-              <div className="space-y-4">
+              <ul className="space-y-4" role="list" aria-label={`Events for ${date ? format(date, "MMMM d, yyyy") : "selected date"}`}>
                 {selectedDateEvents.map((event) => {
                   const isTest = isTestEvent(event.event_type);
                   const urgency = isTest ? getUrgencyInfo(event.event_date) : null;
