@@ -301,7 +301,10 @@ export const KnowledgeStructureChecklist = ({ className, onNavigateToTopic }: Pr
     const masteredCount = items.filter(i =>
       i.mastery_level === "mastered" || i.mastery_level === "proficient"
     ).length;
-    const state = getNodeState(items, index, avgScores.map(s => ({ avgScore: s })));
+    const state = getNodeState(items, index, topicEntries.map(([, tItems], j) => ({
+      avgScore: Math.round(avgScores[j]),
+      items: tItems,
+    })));
     return { topic, items, state, avgScore, masteredCount };
   });
 
