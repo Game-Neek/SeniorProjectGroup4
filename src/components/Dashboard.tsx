@@ -6,6 +6,7 @@ import {
   BookOpen, MessageSquare, Calendar, MapPin, Utensils, Bus, Shield, User, LogOut, MessageCircle, BarChart3
 } from "lucide-react";
 import { DashboardReadAloud } from "./DashboardReadAloud";
+import { LearningVelocityDashboard } from "./LearningVelocityDashboard";
 import { SyllabusUpload } from "./SyllabusUpload";
 import { UpcomingAssignments } from "./UpcomingAssignments";
 import { NotificationBell } from "./NotificationBell";
@@ -130,6 +131,9 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
           <h2 className="text-3xl font-bold text-foreground">Welcome back!</h2>
           <p className="text-muted-foreground">Your personalized learning dashboard is ready.</p>
         </div>
+
+        {/* Learning Velocity Monitor */}
+        <LearningVelocityDashboard />
 
         {/* Upcoming Assignments */}
         <UpcomingAssignments />
