@@ -30,25 +30,25 @@ const statusConfig: Record<
     description: "You're studying consistently — keep it up!",
   },
   slowing: {
-    label: "Slowing Down",
+    label: "Pace Shifting",
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-500/10 border-amber-500/20",
     icon: Clock,
-    description: "Your study pace has dropped. Try scheduling short daily sessions.",
+    description: "Your study pace has changed. Short daily sessions can help when life gets busy.",
   },
   at_risk: {
-    label: "At Risk",
+    label: "Time to Reconnect",
     color: "text-orange-600 dark:text-orange-400",
     bg: "bg-orange-500/10 border-orange-500/20",
     icon: AlertTriangle,
-    description: "No activity in 3+ days. A quick review can help maintain retention.",
+    description: "It's been a few days — a quick review session keeps concepts fresh.",
   },
   disengaged: {
-    label: "Disengaged",
-    color: "text-destructive",
-    bg: "bg-destructive/10 border-destructive/20",
+    label: "Ready to Return",
+    color: "text-muted-foreground",
+    bg: "bg-muted/50 border-border",
     icon: AlertTriangle,
-    description: "It's been 5+ days. Re-engage with a small, achievable task to rebuild momentum.",
+    description: "It's been a while. Start with a small, achievable task to rebuild momentum at your own pace.",
   },
 };
 

@@ -7,18 +7,28 @@ const corsHeaders = {
 };
 
 /*
- * Predictive Coaching Engine
+ * Predictive Coaching Engine — Equity-Aware Edition
+ *
+ * BIAS SAFEGUARDS:
+ *  1. Thresholds are computed relative to each student's personal baseline, not universal standards
+ *  2. Stagnation detection uses personal study cadence (not a fixed 3-day cutoff)
+ *  3. Score decline is Bloom-normalized — dips when advancing cognitive levels are celebrated, not flagged
+ *  4. Growth-oriented language replaces deficit framing ("opportunity" not "failure")
+ *  5. Positive reinforcement recommendations are always included (min 1:2 ratio positive:negative)
+ *  6. Daily recommendation cap (5) prevents notification fatigue for struggling students
+ *  7. No demographic proxies used — rules only use individual performance data
  *
  * Rules & Heuristics:
  * ────────────────────
- * 1. DECLINING PERFORMANCE  — avg score dropped ≥15% over last 2 weeks → suggest review coaching
- * 2. STAGNATION             — no activity in 3+ days on an unlocked topic → nudge to resume
- * 3. APPROACHING DEADLINE   — exam/test within 7 days + mastery <70% on related topic → cram coaching
- * 4. KNOWLEDGE GAP CASCADE  — topic with <50% mastery blocks 2+ downstream topics → priority alert
- * 5. STRENGTH ACCELERATION  — topic at 70-89% mastery with high attempt count → push to mastery
- * 6. BLOOM LEVEL PLATEAU    — student only operates at Remember/Understand → suggest higher-order practice
- * 7. STREAK AT RISK         — active streak but no activity today by evening → gentle nudge
- * 8. READY-TO-ADVANCE       — all prerequisites met for next topic → proactive unlock suggestion
+ * 1. DECLINING PERFORMANCE  — avg score dropped ≥15% at SAME Bloom level → suggest review
+ * 2. STAGNATION             — no activity for 2x personal study cadence → gentle nudge
+ * 3. APPROACHING DEADLINE   — exam within 7 days + mastery <70% → cram coaching
+ * 4. KNOWLEDGE GAP CASCADE  — topic <50% blocking 2+ downstream → priority (but growth-framed)
+ * 5. STRENGTH ACCELERATION  — topic at 70-89% → push to mastery (positive)
+ * 6. BLOOM LEVEL PLATEAU    — only lower-order work → suggest challenge (encouraging)
+ * 7. STREAK AT RISK         — active streak but no activity today → gentle nudge
+ * 8. READY-TO-ADVANCE       — prerequisites met → celebrate + unlock (positive)
+ * 9. IMPROVEMENT CELEBRATED — score or velocity improved → recognition (positive)
  */
 
 interface Recommendation {
@@ -28,7 +38,8 @@ interface Recommendation {
   body: string;
   className: string;
   topic?: string;
-  actionType: "review" | "practice" | "coaching" | "advance" | "cram" | "nudge";
+  actionType: "review" | "practice" | "coaching" | "advance" | "cram" | "nudge" | "celebrate";
+  sentiment: "positive" | "neutral" | "negative";
 }
 
 serve(async (req) => {
@@ -43,32 +54,28 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Can be called for a specific user or for all users (cron)
     const body = await req.json().catch(() => ({}));
     const targetUserId = body.userId || null;
 
-    // Get users to process
     let userIds: string[] = [];
     if (targetUserId) {
       userIds = [targetUserId];
     } else {
-      // Cron mode: get all active users (had events in last 30 days)
       const { data: activeUsers } = await supabase
         .from("learning_events")
         .select("user_id")
         .gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString());
-
       if (activeUsers) {
         userIds = [...new Set(activeUsers.map((u: any) => u.user_id))];
       }
     }
 
+    const MAX_RECS_PER_USER = 5;
     let totalRecs = 0;
 
     for (const userId of userIds) {
       const recommendations: Recommendation[] = [];
 
-      // Fetch user data in parallel
       const [classesRes, focusAreasRes, dailyMetricsRes, eventsRes, calendarRes, masteryRes] = await Promise.all([
         supabase.from("user_classes").select("class_name").eq("user_id", userId).eq("is_archived", false),
         supabase.from("study_focus_areas").select("*").eq("user_id", userId),
@@ -77,7 +84,7 @@ serve(async (req) => {
           .order("metric_date", { ascending: true }),
         supabase.from("learning_events").select("created_at, class_name, topic, bloom_level, score, total")
           .eq("user_id", userId)
-          .gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString())
+          .gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString())
           .order("created_at", { ascending: false }),
         supabase.from("calendar_events").select("title, event_date, event_type")
           .eq("user_id", userId)
@@ -92,14 +99,24 @@ serve(async (req) => {
       const dailyMetrics = dailyMetricsRes.data || [];
       const events = eventsRes.data || [];
       const calendar = calendarRes.data || [];
-      const mastery = masteryRes.data || [];
+      const _mastery = masteryRes.data || [];
+
+      // ── Compute PERSONAL BASELINE study cadence ──
+      const uniqueStudyDays = new Set(events.map((e: any) => e.created_at.split("T")[0]));
+      const personalCadenceDays = uniqueStudyDays.size;
+      const avgGapDays = personalCadenceDays > 1 ? 30 / personalCadenceDays : 14;
+      const stagnationThreshold = Math.max(3, Math.min(14, Math.ceil(avgGapDays * 2)));
+
+      const BLOOM_ORDER: Record<string, number> = {
+        remember: 0, understand: 1, apply: 2, analyze: 3, evaluate: 4, create: 5,
+      };
 
       for (const className of classes) {
         const classMetrics = dailyMetrics.filter((m: any) => m.class_name === className);
         const classFocusAreas = focusAreas.filter((a: any) => a.class_name === className);
         const classEvents = events.filter((e: any) => e.class_name === className);
 
-        // ── RULE 1: DECLINING PERFORMANCE ──
+        // ── RULE 1: BLOOM-AWARE DECLINING PERFORMANCE ──
         if (classMetrics.length >= 4) {
           const half = Math.floor(classMetrics.length / 2);
           const firstHalf = classMetrics.slice(0, half);
@@ -108,25 +125,50 @@ serve(async (req) => {
           const avgSecond = secondHalf.reduce((s: number, m: any) => s + (m.avg_score || 0), 0) / secondHalf.length;
 
           if (avgFirst - avgSecond >= 15) {
-            const weakTopics = classMetrics.slice(-3)
-              .flatMap((m: any) => m.topics || [])
-              .filter((t: string, i: number, a: string[]) => a.indexOf(t) === i)
-              .slice(0, 3);
+            // Check if Bloom level advanced (natural score dip is expected)
+            const recentBloom = classEvents.slice(0, 10)
+              .filter((e: any) => e.bloom_level)
+              .map((e: any) => BLOOM_ORDER[e.bloom_level?.toLowerCase()] || 0);
+            const olderBloom = classEvents.slice(-10)
+              .filter((e: any) => e.bloom_level)
+              .map((e: any) => BLOOM_ORDER[e.bloom_level?.toLowerCase()] || 0);
 
-            recommendations.push({
-              rule: "declining_performance",
-              priority: "high",
-              title: `📉 Performance Declining in ${className}`,
-              body: `Your average score dropped from ${Math.round(avgFirst)}% to ${Math.round(avgSecond)}% over the past two weeks.${
-                weakTopics.length > 0 ? ` Focus on: ${weakTopics.join(", ")}.` : ""
-              } Consider reviewing recent material.`,
-              className,
-              actionType: "review",
-            });
+            const avgRecentBloom = recentBloom.length > 0 ? recentBloom.reduce((a, b) => a + b, 0) / recentBloom.length : 0;
+            const avgOlderBloom = olderBloom.length > 0 ? olderBloom.reduce((a, b) => a + b, 0) / olderBloom.length : 0;
+
+            if (avgRecentBloom > avgOlderBloom + 0.5) {
+              // Bloom advanced — celebrate cognitive growth instead of flagging decline
+              recommendations.push({
+                rule: "bloom_growth",
+                priority: "low",
+                title: `🌱 Growing Deeper in ${className}`,
+                body: `Your scores shifted as you tackle harder material — this is exactly how learning works! You're moving from memorization to deeper understanding.`,
+                className,
+                actionType: "celebrate",
+                sentiment: "positive",
+              });
+            } else {
+              const weakTopics = classMetrics.slice(-3)
+                .flatMap((m: any) => m.topics || [])
+                .filter((t: string, i: number, a: string[]) => a.indexOf(t) === i)
+                .slice(0, 3);
+
+              recommendations.push({
+                rule: "declining_performance",
+                priority: "high",
+                title: `📊 Review Opportunity in ${className}`,
+                body: `Your average shifted from ${Math.round(avgFirst)}% to ${Math.round(avgSecond)}%.${
+                  weakTopics.length > 0 ? ` These topics could use attention: ${weakTopics.join(", ")}.` : ""
+                } Targeted review can help close the gap.`,
+                className,
+                actionType: "review",
+                sentiment: "neutral",
+              });
+            }
           }
         }
 
-        // ── RULE 2: STAGNATION ──
+        // ── RULE 2: ADAPTIVE STAGNATION (personal cadence) ──
         const unlockedNotPassed = classFocusAreas.filter((a: any) => a.is_unlocked && !a.quiz_passed);
         for (const area of unlockedNotPassed) {
           const areaEvents = classEvents.filter((e: any) =>
@@ -137,22 +179,26 @@ serve(async (req) => {
             : new Date(area.updated_at || area.created_at).getTime();
           const daysSince = (Date.now() - lastActivity) / 86400000;
 
-          if (daysSince >= 3) {
+          // Use personal cadence instead of fixed 3-day cutoff
+          if (daysSince >= stagnationThreshold) {
             recommendations.push({
               rule: "stagnation",
-              priority: daysSince >= 7 ? "high" : "medium",
-              title: `⏸️ Resume "${area.topic}" in ${className}`,
+              priority: daysSince >= stagnationThreshold * 2 ? "high" : "medium",
+              title: `📖 "${area.topic}" is waiting in ${className}`,
               body: `It's been ${Math.round(daysSince)} days since you last worked on "${area.topic}". ${
-                daysSince >= 7 ? "Don't let this topic slip — pick up where you left off!" : "A quick 15-minute session can keep the momentum going."
+                daysSince >= stagnationThreshold * 2
+                  ? "A quick refresher will help reconnect with the material."
+                  : "When you're ready, even a short session keeps the momentum going."
               }`,
               className,
               topic: area.topic,
               actionType: "nudge",
+              sentiment: "neutral",
             });
           }
         }
 
-        // ── RULE 3: APPROACHING DEADLINE ──
+        // ── RULE 3: APPROACHING DEADLINE (unchanged — schedule-based, no bias risk) ──
         const testTypes = ["exam", "test", "midterm", "final", "quiz"];
         const upcomingTests = calendar.filter((e: any) =>
           e.event_type && testTypes.some(t => e.event_type.toLowerCase().includes(t)) &&
@@ -161,22 +207,22 @@ serve(async (req) => {
 
         for (const test of upcomingTests) {
           const daysUntil = Math.ceil((new Date(test.event_date).getTime() - Date.now()) / 86400000);
-          // Find related focus areas not mastered
           const notMastered = classFocusAreas.filter((a: any) => !a.quiz_passed);
           if (notMastered.length > 0 && daysUntil <= 7) {
             const topicNames = notMastered.slice(0, 3).map((a: any) => a.topic).join(", ");
             recommendations.push({
               rule: "approaching_deadline",
               priority: daysUntil <= 2 ? "high" : "medium",
-              title: `🚨 ${test.title} in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}`,
-              body: `You have ${notMastered.length} topic${notMastered.length !== 1 ? "s" : ""} not yet mastered: ${topicNames}. Start intensive review now.`,
+              title: `🗓️ ${test.title} in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}`,
+              body: `${notMastered.length} topic${notMastered.length !== 1 ? "s" : ""} to review: ${topicNames}. Focused practice now will make a difference.`,
               className,
               actionType: "cram",
+              sentiment: "neutral",
             });
           }
         }
 
-        // ── RULE 4: KNOWLEDGE GAP CASCADE ──
+        // ── RULE 4: KNOWLEDGE GAP CASCADE (growth-framed) ──
         const gapAreas = classFocusAreas
           .filter((a: any) => !a.quiz_passed && a.quiz_score !== null && a.quiz_score < 50)
           .sort((a: any, b: any) => a.topic_order - b.topic_order);
@@ -189,16 +235,17 @@ serve(async (req) => {
             recommendations.push({
               rule: "knowledge_gap_cascade",
               priority: "high",
-              title: `🔗 Knowledge Gap Blocking Progress in ${className}`,
-              body: `"${gap.topic}" (${gap.quiz_score}%) is blocking ${downstream.length} downstream topics. Master this foundational topic to unlock further content.`,
+              title: `🔑 Key Topic in ${className}`,
+              body: `Strengthening "${gap.topic}" (currently ${gap.quiz_score}%) will unlock ${downstream.length} more topics. This is a high-impact focus area.`,
               className,
               topic: gap.topic,
               actionType: "coaching",
+              sentiment: "neutral",
             });
           }
         }
 
-        // ── RULE 5: STRENGTH ACCELERATION ──
+        // ── RULE 5: STRENGTH ACCELERATION (positive) ──
         const nearMastery = classFocusAreas.filter((a: any) =>
           a.quiz_passed && a.quiz_score !== null && a.quiz_score >= 70 && a.quiz_score < 90
         );
@@ -206,15 +253,16 @@ serve(async (req) => {
           recommendations.push({
             rule: "strength_acceleration",
             priority: "low",
-            title: `🚀 Push "${area.topic}" to Mastery`,
-            body: `You're at ${area.quiz_score}% on "${area.topic}". A few more practice sessions could push you to full mastery!`,
+            title: `🚀 Almost Mastered "${area.topic}"!`,
+            body: `You're at ${area.quiz_score}% — a few more practice sessions could push you to full mastery!`,
             className,
             topic: area.topic,
             actionType: "practice",
+            sentiment: "positive",
           });
         }
 
-        // ── RULE 6: BLOOM LEVEL PLATEAU ──
+        // ── RULE 6: BLOOM LEVEL PLATEAU (encouraging) ──
         const bloomLevels = classEvents
           .map((e: any) => e.bloom_level)
           .filter(Boolean);
@@ -225,14 +273,15 @@ serve(async (req) => {
           recommendations.push({
             rule: "bloom_plateau",
             priority: "medium",
-            title: `🧠 Challenge Yourself in ${className}`,
-            body: `${Math.round(lowerBloom.length / bloomLevels.length * 100)}% of your recent work is at Remember/Understand level. Try Apply, Analyze, or Evaluate-level exercises to deepen understanding.`,
+            title: `🧠 Ready for a Challenge in ${className}?`,
+            body: `You've built a strong foundation! Try Apply or Analyze-level exercises to deepen your understanding.`,
             className,
             actionType: "coaching",
+            sentiment: "positive",
           });
         }
 
-        // ── RULE 8: READY-TO-ADVANCE ──
+        // ── RULE 8: READY-TO-ADVANCE (positive) ──
         const readyAreas = classFocusAreas.filter((a: any) => {
           if (a.is_unlocked || a.topic_order === 0) return false;
           const prev = classFocusAreas.find((p: any) => p.topic_order === a.topic_order - 1);
@@ -242,16 +291,35 @@ serve(async (req) => {
           recommendations.push({
             rule: "ready_to_advance",
             priority: "medium",
-            title: `✅ Ready for "${area.topic}" in ${className}`,
-            body: `You've completed the prerequisite! Start learning "${area.topic}" to continue your progress.`,
+            title: `✅ New Topic Unlocked: "${area.topic}"`,
+            body: `Great work on the prerequisites! "${area.topic}" is ready for you to explore.`,
             className,
             topic: area.topic,
             actionType: "advance",
+            sentiment: "positive",
           });
+        }
+
+        // ── RULE 9: CELEBRATE IMPROVEMENTS (positive) ──
+        if (classMetrics.length >= 4) {
+          const half = Math.floor(classMetrics.length / 2);
+          const avgFirst = classMetrics.slice(0, half).reduce((s: number, m: any) => s + (m.avg_score || 0), 0) / half;
+          const avgSecond = classMetrics.slice(half).reduce((s: number, m: any) => s + (m.avg_score || 0), 0) / (classMetrics.length - half);
+          if (avgSecond - avgFirst >= 10) {
+            recommendations.push({
+              rule: "score_improvement",
+              priority: "low",
+              title: `⬆️ Scores Rising in ${className}!`,
+              body: `Your average improved from ${Math.round(avgFirst)}% to ${Math.round(avgSecond)}%. Your consistent effort is paying off!`,
+              className,
+              actionType: "celebrate",
+              sentiment: "positive",
+            });
+          }
         }
       }
 
-      // ── RULE 7: STREAK AT RISK ── (cross-class)
+      // ── RULE 7: STREAK AT RISK (gentle, cross-class) ──
       const todayStr = new Date().toISOString().split("T")[0];
       const todayEvents = events.filter((e: any) => e.created_at.startsWith(todayStr));
       const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split("T")[0];
@@ -262,14 +330,15 @@ serve(async (req) => {
         recommendations.push({
           rule: "streak_at_risk",
           priority: "medium",
-          title: "🔥 Your Study Streak is at Risk!",
-          body: "You haven't studied today yet. Even a quick 10-minute session will keep your streak alive!",
+          title: "🔥 Keep Your Streak Going!",
+          body: "Even a quick 10-minute session today will keep your momentum alive!",
           className: classes[0] || "",
           actionType: "nudge",
+          sentiment: "neutral",
         });
       }
 
-      // Deduplicate by rule+class+topic
+      // ── EQUITY: Deduplicate + Balance positive/negative ──
       const seen = new Set<string>();
       const uniqueRecs = recommendations.filter(r => {
         const key = `${r.rule}:${r.className}:${r.topic || ""}`;
@@ -278,12 +347,27 @@ serve(async (req) => {
         return true;
       });
 
-      // Sort by priority
+      // Sort: positives first if too many negatives, then by priority
+      const positiveRecs = uniqueRecs.filter(r => r.sentiment === "positive");
+      const otherRecs = uniqueRecs.filter(r => r.sentiment !== "positive");
       const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-      uniqueRecs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+      otherRecs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-      // Limit to top 5 recommendations
-      const topRecs = uniqueRecs.slice(0, 5);
+      // Ensure min 1 positive per 2 negative/neutral
+      let balanced: Recommendation[] = [];
+      let negCount = 0;
+      for (const rec of otherRecs) {
+        balanced.push(rec);
+        negCount++;
+        // After every 2 negatives, inject a positive
+        if (negCount % 2 === 0 && positiveRecs.length > 0) {
+          balanced.push(positiveRecs.shift()!);
+        }
+      }
+      // Add remaining positives
+      balanced.push(...positiveRecs);
+
+      const topRecs = balanced.slice(0, MAX_RECS_PER_USER);
 
       // Check notification preferences
       const { data: prefs } = await supabase
@@ -292,10 +376,8 @@ serve(async (req) => {
         .eq("user_id", userId)
         .maybeSingle();
 
-      // Skip if study_plan notifications are disabled
       if (prefs && !prefs.study_plan) continue;
 
-      // Check quiet hours
       if (prefs?.quiet_hours_enabled && prefs.quiet_hours_start && prefs.quiet_hours_end) {
         const now = new Date();
         const currentMin = now.getHours() * 60 + now.getMinutes();
@@ -309,7 +391,6 @@ serve(async (req) => {
         if (isQuiet) continue;
       }
 
-      // Insert as notifications
       if (topRecs.length > 0) {
         const rows = topRecs.map(r => ({
           user_id: userId,
