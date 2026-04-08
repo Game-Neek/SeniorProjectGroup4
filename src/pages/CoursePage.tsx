@@ -38,6 +38,7 @@ import { PerformanceAnalytics } from "@/components/PerformanceAnalytics";
 import { ConfidenceRating } from "@/components/ConfidenceRating";
 import { KnowledgeMasteryProgress } from "@/components/KnowledgeMasteryProgress";
 import { KnowledgeStructureChecklist } from "@/components/KnowledgeStructureChecklist";
+import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
