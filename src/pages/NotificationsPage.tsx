@@ -30,6 +30,7 @@ const categoryIcons: Record<string, string> = {
   general: "🔔",
 };
 
+
 const PAGE_SIZE = 15;
 
 export default function NotificationsPage() {
