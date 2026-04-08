@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { ListChecks, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { ChecklistRewards } from "@/components/ChecklistRewards";
 
 interface TopicItem {
   id: string;
@@ -187,6 +188,15 @@ export const TopicChecklist = ({ className }: TopicChecklistProps) => {
       <div className="mb-4">
         <Progress value={completionPct} className="h-2" />
         <p className="text-xs text-muted-foreground mt-1 text-right">{completionPct}%</p>
+      </div>
+
+      <div className="mb-4">
+        <ChecklistRewards
+          completionPct={completionPct}
+          checkedCount={checkedCount}
+          totalCount={topics.length}
+          storageKey={`topic-${className}`}
+        />
       </div>
 
       <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
