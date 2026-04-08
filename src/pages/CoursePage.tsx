@@ -467,6 +467,7 @@ const CoursePage = () => {
               className={decodedClassName}
               learningStyles={learningStyles}
             />
+            <MicrolearningScheduler className={decodedClassName} />
           </div>
         )}
 
