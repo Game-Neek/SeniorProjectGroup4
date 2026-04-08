@@ -187,12 +187,12 @@ function buildRemedialActivities(
 
     activities.push({
       icon: "tutor",
-      label: gap.status === "struggling" ? "Diagnose My Gap" : "Ask AgentB",
+      label: gap.status === "struggling" ? "Find My Foundation Gap" : "Ask AgentB",
       description: gap.status === "struggling"
-        ? `Get AI analysis of WHY you're stuck on "${gap.topic}" — it'll identify the likely prerequisite gap.`
+        ? `Get AI help identifying which prerequisite concept in "${gap.topic}" needs strengthening — it'll create a targeted path forward.`
         : `Get a personalized explanation of "${gap.topic}" adapted to your learning style.`,
       rationale: gap.status === "struggling"
-        ? "AI tutoring can identify hidden prerequisite gaps that self-study misses."
+        ? "AI tutoring can identify foundational gaps that are hard to spot on your own."
         : "Conversational learning adapts in real-time to your questions and confusion points.",
       action: () => onOpenChat(tutorPrompt),
     });
