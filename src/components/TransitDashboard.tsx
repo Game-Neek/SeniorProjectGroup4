@@ -395,6 +395,7 @@ export const TransitDashboard = () => {
   const routeIds = useMemo(() => routes.map((r) => r.id), [routes]);
   const { data: allStops = [], isLoading: stopsLoading } = useAllTransitStops(routeIds);
   const { data: arrivals = [] } = useTransitArrivals(selectedRouteId);
+  const { data: delayPatterns = [] } = useDelayPatterns(selectedRouteId);
 
   const filteredRoutes = routes.filter((r) => r.route_type === activeTab);
   const selectedRoute = routes.find((r) => r.id === selectedRouteId);
@@ -477,7 +478,7 @@ export const TransitDashboard = () => {
               {/* Schedule panel */}
               <div>
                 {selectedRoute ? (
-                  <SchedulePanel route={selectedRoute} stops={selectedStops} arrivals={arrivals} />
+                  <SchedulePanel route={selectedRoute} stops={selectedStops} arrivals={arrivals} patterns={delayPatterns} />
                 ) : (
                   <Card className="p-8 text-center text-muted-foreground text-sm">
                     <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
