@@ -439,7 +439,7 @@ export default function CalendarPage() {
                     </Card>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </Card>
         </div>
