@@ -45,6 +45,16 @@ export const TestReminders = () => {
   useEffect(() => {
     fetchTests();
     fetchSyllabi();
+
+    // Realtime: refresh when test events change
+    const channel = supabase
+      .channel('tests-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'calendar_events' }, () => {
+        fetchTests();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchTests = async () => {

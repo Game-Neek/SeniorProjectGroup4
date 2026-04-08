@@ -97,6 +97,23 @@ export default function CalendarPage() {
     checkAuthAndFetchEvents();
   }, []);
 
+  // Realtime subscription for live calendar updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('calendar-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'calendar_events' },
+        () => {
+          // Re-fetch on any change — keeps all connected clients in sync
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   useEffect(() => {
     if (date) {
       const dateStr = format(date, "yyyy-MM-dd");
@@ -115,9 +132,16 @@ export default function CalendarPage() {
   };
 
   const fetchEvents = async () => {
+    // Server-side date range filter: only load events within ±90 days
+    const now = new Date();
+    const rangeStart = format(new Date(now.getFullYear(), now.getMonth() - 3, 1), "yyyy-MM-dd");
+    const rangeEnd = format(new Date(now.getFullYear(), now.getMonth() + 3, 0), "yyyy-MM-dd");
+
     const { data, error } = await supabase
       .from("calendar_events")
-      .select("*")
+      .select("id, title, description, event_date, start_time, end_time, event_type")
+      .gte("event_date", rangeStart)
+      .lte("event_date", rangeEnd)
       .order("event_date", { ascending: true });
 
     if (error) {
