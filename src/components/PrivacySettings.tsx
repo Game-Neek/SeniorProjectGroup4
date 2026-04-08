@@ -15,15 +15,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Shield, Trash2, Download, ScrollText, Loader2 } from "lucide-react";
+import { Shield, Trash2, Download, ScrollText, Loader2, BarChart3, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsent } from "@/hooks/useConsent";
+import { useBehavioralTracking } from "@/hooks/useBehavioralTracking";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 export const PrivacySettings = () => {
   const { hasConsented, revokeConsent, grantConsent, consentVersion } = useConsent();
+  const { hasBehavioralConsent, grantBehavioralConsent, revokeBehavioralConsent } = useBehavioralTracking();
   const { log } = useAuditLog();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,8 +40,7 @@ export const PrivacySettings = () => {
 
       const userId = session.user.id;
 
-      // Fetch all user data in parallel
-      const [profiles, classes, syllabi, assignments, quizResults, practiceHistory, calendarEvents, consent, auditLogs] = await Promise.all([
+      const [profiles, classes, syllabi, assignments, quizResults, practiceHistory, calendarEvents, consent, auditLogs, learningEvents] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", userId),
         supabase.from("user_classes").select("*").eq("user_id", userId),
         supabase.from("syllabi").select("*").eq("user_id", userId),
@@ -49,6 +50,7 @@ export const PrivacySettings = () => {
         supabase.from("calendar_events").select("*").eq("user_id", userId),
         supabase.from("consent_records").select("*").eq("user_id", userId) as any,
         supabase.from("audit_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100) as any,
+        (supabase.from("learning_events") as any).select("event_type, class_name, topic, latency_ms, metadata, created_at").eq("user_id", userId).in("event_type", ["study_session_started", "study_session_ended"]).order("created_at", { ascending: false }).limit(200),
       ]);
 
       const exportData = {
@@ -61,6 +63,7 @@ export const PrivacySettings = () => {
         practiceHistory: practiceHistory.data,
         calendarEvents: calendarEvents.data,
         consentRecords: consent.data,
+        behavioralTrackingData: learningEvents.data,
         recentAuditLogs: auditLogs.data,
       };
 
@@ -72,7 +75,7 @@ export const PrivacySettings = () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      await log("data_export", "all_data", userId, { format: "json" });
+      await log("data_export", "all_data", userId, { format: "json", includes_behavioral: true });
 
       toast({ title: "Data exported", description: "Your data has been downloaded as a JSON file." });
     } catch (error) {
@@ -90,10 +93,8 @@ export const PrivacySettings = () => {
 
       const userId = session.user.id;
 
-      // Log the deletion event first
       await log("account_delete", "all_data", userId, { reason: "user_requested" });
 
-      // Delete all user data in order (respecting potential dependencies)
       await Promise.all([
         supabase.from("practice_history").delete().eq("user_id", userId),
         supabase.from("quiz_results").delete().eq("user_id", userId),
@@ -104,9 +105,9 @@ export const PrivacySettings = () => {
         (supabase.from("daily_metrics") as any).delete().eq("user_id", userId),
         (supabase.from("performance_reports") as any).delete().eq("user_id", userId),
         supabase.from("notifications").delete().eq("user_id", userId),
+        supabase.from("consent_records").update({ revoked_at: new Date().toISOString() } as any).eq("user_id", userId).is("revoked_at", null),
       ]);
 
-      // Delete files from storage
       const { data: syllabiData } = await supabase.from("syllabi").select("file_path").eq("user_id", userId);
       const { data: assignmentsData } = await supabase.from("assignments").select("file_path").eq("user_id", userId);
 
@@ -123,7 +124,6 @@ export const PrivacySettings = () => {
         supabase.from("user_classes").delete().eq("user_id", userId),
       ]);
 
-      // Sign out
       await supabase.auth.signOut();
 
       toast({ title: "Data deleted", description: "All your data has been permanently removed." });
@@ -154,7 +154,7 @@ export const PrivacySettings = () => {
             <ScrollText className="w-4 h-4 text-muted-foreground" />
             <div>
               <Label className="text-sm font-medium">Data Processing Consent</Label>
-              <p className="text-xs text-muted-foreground">Version {consentVersion}</p>
+              <p className="text-xs text-muted-foreground">Version {consentVersion} · AI analysis & personalization</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -171,13 +171,60 @@ export const PrivacySettings = () => {
           </div>
         </div>
 
+        {/* Behavioral tracking consent — independent toggle */}
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <Label className="text-sm font-medium">Behavioral Tracking</Label>
+              <p className="text-xs text-muted-foreground">
+                Time-on-task, study session duration, calendar interactions
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                GDPR Art. 6(1)(a) · FERPA §99.30 · Anonymized at semester end
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant={hasBehavioralConsent ? "default" : "secondary"}>
+              {hasBehavioralConsent ? "Active" : "Disabled"}
+            </Badge>
+            <Switch
+              checked={hasBehavioralConsent || false}
+              onCheckedChange={async (checked) => {
+                if (checked) {
+                  const ok = await grantBehavioralConsent();
+                  if (ok) toast({ title: "Behavioral tracking enabled", description: "Study session tracking is now active." });
+                } else {
+                  const ok = await revokeBehavioralConsent();
+                  if (ok) toast({ title: "Behavioral tracking disabled", description: "No further study sessions will be tracked." });
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Transparency notice */}
+        <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-muted/20">
+          <Eye className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div>
+            <Label className="text-sm font-medium">Tracking Transparency</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              When behavioral tracking is active, a <span className="font-medium text-foreground">visible indicator</span> appears
+              on the calendar and study pages. All tracked data points are logged in your audit trail,
+              included in data exports, and deleted on account erasure. Alerts and reminders are
+              generated locally from your data — no third-party services receive your behavioral data.
+            </p>
+          </div>
+        </div>
+
         {/* Export data */}
         <div className="flex items-center justify-between p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3">
             <Download className="w-4 h-4 text-muted-foreground" />
             <div>
               <Label className="text-sm font-medium">Export My Data</Label>
-              <p className="text-xs text-muted-foreground">Download all your data as JSON (GDPR Art. 20)</p>
+              <p className="text-xs text-muted-foreground">Download all data including behavioral tracking (GDPR Art. 20)</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleExportData} disabled={exporting}>
@@ -191,7 +238,7 @@ export const PrivacySettings = () => {
             <Trash2 className="w-4 h-4 text-destructive" />
             <div>
               <Label className="text-sm font-medium text-destructive">Delete All Data</Label>
-              <p className="text-xs text-muted-foreground">Permanently remove all data (GDPR Art. 17 / FERPA)</p>
+              <p className="text-xs text-muted-foreground">Permanently remove all data including behavioral tracking (GDPR Art. 17 / FERPA)</p>
             </div>
           </div>
           <AlertDialog>
@@ -206,7 +253,8 @@ export const PrivacySettings = () => {
                 <AlertDialogDescription>
                   This will permanently delete ALL your data including:
                   classes, syllabi, assignments, quiz results, practice history,
-                  calendar events, and uploaded files. This action cannot be undone.
+                  calendar events, behavioral tracking data, and uploaded files. 
+                  All consent records will be revoked. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

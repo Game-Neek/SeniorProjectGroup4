@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, FileCheck, Lock, Brain } from "lucide-react";
+import { Shield, FileCheck, Lock, Brain, BarChart3 } from "lucide-react";
 import { useConsent } from "@/hooks/useConsent";
+import { useBehavioralTracking } from "@/hooks/useBehavioralTracking";
 import { useToast } from "@/hooks/use-toast";
 
 export const ConsentBanner = () => {
   const { hasConsented, loading, grantConsent } = useConsent();
+  const { grantBehavioralConsent } = useBehavioralTracking();
   const { toast } = useToast();
 
   if (loading || hasConsented !== false) return null;
@@ -14,6 +16,8 @@ export const ConsentBanner = () => {
   const handleAccept = async () => {
     const success = await grantConsent();
     if (success) {
+      // Also grant behavioral tracking by default (user can revoke in Privacy Settings)
+      await grantBehavioralConsent();
       toast({ title: "Consent recorded", description: "Your preferences have been saved securely." });
     }
   };
@@ -51,6 +55,18 @@ export const ConsentBanner = () => {
           </div>
 
           <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+            <BarChart3 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Behavioral Tracking</p>
+              <p className="text-xs text-muted-foreground">
+                Time-on-task and study session duration are tracked to personalize reminders
+                and coaching. This data is stored securely, scoped to your account, and
+                anonymized at semester end. You can disable this anytime in Privacy Settings.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
             <Lock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-foreground">Data Security</p>
@@ -67,7 +83,8 @@ export const ConsentBanner = () => {
               <p className="text-sm font-medium text-foreground">Your Rights</p>
               <p className="text-xs text-muted-foreground">
                 You can request data deletion, export your data, or revoke consent at any time
-                from your Profile settings. All actions are logged in an audit trail.
+                from your Profile settings. All tracking actions are logged in an audit trail
+                for full transparency (GDPR Art. 13/14, FERPA §99.32).
               </p>
             </div>
           </div>
@@ -81,6 +98,7 @@ export const ConsentBanner = () => {
 
         <p className="text-[10px] text-muted-foreground text-center">
           This consent is recorded with a timestamp and can be revoked at any time.
+          Behavioral tracking can be independently disabled in Privacy Settings.
           For questions, contact your institution's data protection officer.
         </p>
       </Card>

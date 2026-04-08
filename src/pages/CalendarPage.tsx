@@ -3,14 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, AlertTriangle, Clock } from "lucide-react";
+import { useBehavioralTracking } from "@/hooks/useBehavioralTracking";
+import { ArrowLeft, Plus, AlertTriangle, Clock, Eye, EyeOff } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 
 interface CalendarEvent {
@@ -71,6 +74,19 @@ export default function CalendarPage() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasBehavioralConsent, startSession, endSession, activeSession } = useBehavioralTracking();
+
+  // Track calendar page session when behavioral consent is active
+  useEffect(() => {
+    if (hasBehavioralConsent) {
+      startSession("calendar", "calendar_browsing", "study_session_started");
+    }
+    return () => {
+      if (hasBehavioralConsent) {
+        endSession();
+      }
+    };
+  }, [hasBehavioralConsent]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -181,6 +197,41 @@ export default function CalendarPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Campus Calendar</h1>
+            
+            {/* Transparent tracking indicator */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${
+                    hasBehavioralConsent
+                      ? "border-primary/30 bg-primary/5 text-primary"
+                      : "border-border bg-muted/30 text-muted-foreground"
+                  }`}>
+                    {hasBehavioralConsent ? (
+                      <>
+                        <Eye className="h-3 w-3" />
+                        <span>Tracking Active</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="h-3 w-3" />
+                        <span>Tracking Off</span>
+                      </>
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-xs">
+                    {hasBehavioralConsent
+                      ? "Time-on-task is being tracked for this session. This data personalizes your reminders and coaching. Disable in Profile → Privacy Settings."
+                      : "Behavioral tracking is disabled. Enable in Profile → Privacy Settings to get personalized study reminders."
+                    }
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <div className="ml-auto flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2">
               <Clock className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium tabular-nums text-foreground">
