@@ -41,6 +41,7 @@ import { KnowledgeStructureChecklist } from "@/components/KnowledgeStructureChec
 import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
 import { PredictiveCoaching } from "@/components/PredictiveCoaching";
 import { PrerequisiteDiagnostic } from "@/components/PrerequisiteDiagnostic";
+import { OutlineBuilder } from "@/components/OutlineBuilder";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -403,6 +404,12 @@ const CoursePage = () => {
 
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
+
+        {/* Outline Builder — auto-generates chapter breakdowns & topic checklists */}
+        <OutlineBuilder
+          className={decodedClassName}
+          onNavigateToTopic={handleNavigateToTopic}
+        />
 
         {/* Learning Objective Mastery */}
         <KnowledgeMasteryProgress className={decodedClassName} />
