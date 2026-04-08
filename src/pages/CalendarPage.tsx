@@ -318,7 +318,9 @@ export default function CalendarPage() {
                     <Card 
                       key={event.id} 
                       className={`p-4 border transition-colors ${
-                        isTest && urgency ? urgency.bgColor : 'border-border'
+                        isMicrolearningEvent(event.event_type)
+                          ? 'bg-primary/5 border-primary/20'
+                          : isTest && urgency ? urgency.bgColor : 'border-border'
                       }`}
                     >
                       <div className="flex justify-between items-start">
