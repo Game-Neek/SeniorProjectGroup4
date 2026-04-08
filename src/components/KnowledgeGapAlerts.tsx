@@ -73,18 +73,18 @@ function buildRemedialActivities(
       rationale: "This topic hasn't been attempted yet — starting with your strongest learning modality maximizes initial retention.",
     });
   } else if (gap.status === "struggling") {
-    // High attempts, low score — need a fundamentally different approach
+    // High attempts, low score — need a different approach (growth-framed, not deficit-framed)
     activities.push({
       icon: "hint",
-      label: "Change Your Approach",
-      description: `You've attempted "${gap.topic}" ${gap.attempts} times but scored ${gap.score}%. The current study method isn't working — ${
+      label: "Try a Different Strategy",
+      description: `You've put in real effort on "${gap.topic}" (${gap.attempts} attempts, ${gap.score}%). That persistence is valuable — now let's find an approach that clicks better for you. ${
         isVisual
-          ? "try watching a worked-example video instead of re-reading notes"
+          ? "Try watching a worked-example video instead of re-reading notes"
           : isKinesthetic
-          ? "try teaching this concept to someone else or building a physical model"
-          : "try breaking it into 3 smaller sub-topics and mastering each one separately"
+          ? "Try teaching this concept to someone else or building a physical model"
+          : "Try breaking it into 3 smaller sub-topics and mastering each one separately"
       }.`,
-      rationale: `After ${gap.attempts} attempts without improvement, a strategy change is more effective than repeating the same approach.`,
+      rationale: `Multiple attempts show strong effort. Research shows changing strategy is more effective than repeating the same approach — this is a learning insight, not a shortcoming.`,
     });
   } else if (gap.daysSinceLastPractice !== null && gap.daysSinceLastPractice > 7) {
     // Stale knowledge — forgetting curve
