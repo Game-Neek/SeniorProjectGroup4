@@ -24,10 +24,15 @@ interface CalendarEvent {
 }
 
 const TEST_TYPES = ['test', 'exam', 'quiz', 'midterm', 'final'];
+const MICROLEARNING_TYPE = 'microlearning';
 
 const isTestEvent = (eventType: string | null): boolean => {
   if (!eventType) return false;
   return TEST_TYPES.some(type => eventType.toLowerCase().includes(type));
+};
+
+const isMicrolearningEvent = (eventType: string | null): boolean => {
+  return eventType === MICROLEARNING_TYPE;
 };
 
 const getUrgencyInfo = (eventDate: string): { color: string; bgColor: string; label: string; daysLeft: number } => {
@@ -313,7 +318,9 @@ export default function CalendarPage() {
                     <Card 
                       key={event.id} 
                       className={`p-4 border transition-colors ${
-                        isTest && urgency ? urgency.bgColor : 'border-border'
+                        isMicrolearningEvent(event.event_type)
+                          ? 'bg-primary/5 border-primary/20'
+                          : isTest && urgency ? urgency.bgColor : 'border-border'
                       }`}
                     >
                       <div className="flex justify-between items-start">
