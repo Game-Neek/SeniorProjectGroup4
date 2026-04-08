@@ -243,12 +243,13 @@ function GapRow({
   const [open, setOpen] = useState(false);
   const activities = buildRemedialActivities(gap, learningStyles, onNavigateToTopic, onOpenChat);
 
+  // Growth-oriented labels — avoid deficit framing like "Struggling" or "Failing"
   const statusLabel = gap.status === "struggling"
-    ? `Struggling — ${gap.attempts} attempts, ${gap.score}%`
+    ? `Needs a new approach — ${gap.attempts} attempts, ${gap.score}%`
     : gap.status === "untouched"
-    ? "Not started"
+    ? "Ready to start"
     : gap.status === "low"
-    ? `Score: ${gap.score}%${gap.attempts > 0 ? ` (${gap.attempts} attempt${gap.attempts > 1 ? "s" : ""})` : ""}`
+    ? `Building: ${gap.score}%${gap.attempts > 0 ? ` (${gap.attempts} attempt${gap.attempts > 1 ? "s" : ""})` : ""}`
     : `Score: ${gap.score}%${gap.trajectory > 0 ? " ↑" : gap.trajectory < 0 ? " ↓" : ""}`;
 
   return (
