@@ -267,7 +267,7 @@ function GapRow({
         )}
       >
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-3 text-left hover:bg-accent/30 transition-colors rounded-lg">
+          <button className="w-full flex items-center justify-between p-3 text-left hover:bg-accent/30 transition-colors rounded-lg" aria-expanded={open} aria-label={`${gap.topic}, ${statusLabel}. ${activities.length} remedial activities available.`}>
             <div className="flex items-center gap-3 min-w-0">
               {open ? (
                 <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
