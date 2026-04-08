@@ -24,10 +24,15 @@ interface CalendarEvent {
 }
 
 const TEST_TYPES = ['test', 'exam', 'quiz', 'midterm', 'final'];
+const MICROLEARNING_TYPE = 'microlearning';
 
 const isTestEvent = (eventType: string | null): boolean => {
   if (!eventType) return false;
   return TEST_TYPES.some(type => eventType.toLowerCase().includes(type));
+};
+
+const isMicrolearningEvent = (eventType: string | null): boolean => {
+  return eventType === MICROLEARNING_TYPE;
 };
 
 const getUrgencyInfo = (eventDate: string): { color: string; bgColor: string; label: string; daysLeft: number } => {
