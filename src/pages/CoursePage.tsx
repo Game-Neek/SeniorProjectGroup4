@@ -483,6 +483,12 @@ const CoursePage = () => {
         {/* Personalized Practice - only after placement quiz */}
         {hasQuiz && <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />}
 
+        {/* Knowledge Structure & Response State */}
+        <KnowledgeStructureChecklist
+          className={decodedClassName}
+          onNavigateToTopic={handleNavigateToTopic}
+        />
+
         {/* Topic Checklist */}
         <TopicChecklist className={decodedClassName} />
 
