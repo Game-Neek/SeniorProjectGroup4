@@ -81,19 +81,19 @@ export const UpcomingAssignments = () => {
   if (loading) return null;
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)] border-border">
+    <Card className="p-6 shadow-[var(--shadow-medium)] border-border" role="region" aria-label="Upcoming assignments">
       <div className="flex items-center gap-3 mb-5">
         <div className="p-2 rounded-lg bg-primary/10">
-          <ClipboardList className="w-6 h-6 text-primary" />
+          <ClipboardList className="w-6 h-6 text-primary" aria-hidden="true" />
         </div>
         <h3 className="text-xl font-semibold text-foreground">Upcoming Assignments</h3>
       </div>
 
       {/* Urgent Section */}
       {urgentAssignments.length > 0 && (
-        <div className="mb-5">
+        <div className="mb-5" role="alert" aria-label="Urgent assignments due within 48 hours">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
             <span className="text-sm font-semibold text-destructive">Urgent — Due Within 48 Hours</span>
           </div>
           <div className="space-y-2">

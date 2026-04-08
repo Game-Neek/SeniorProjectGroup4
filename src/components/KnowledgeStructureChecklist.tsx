@@ -186,7 +186,7 @@ const TopicNodeCard = ({ node, index, total, onNavigate }: {
           node.state === "mastered" || node.state === "proficient"
             ? "bg-green-500/40"
             : "bg-border"
-        )} />
+        )} aria-hidden="true" />
       )}
 
       <div className={cn(
@@ -198,6 +198,8 @@ const TopicNodeCard = ({ node, index, total, onNavigate }: {
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-3 w-full p-3 text-left"
+          aria-expanded={expanded}
+          aria-label={`${node.topic}: ${config.label}, ${node.masteredCount} of ${node.items.length} objectives mastered, ${node.avgScore}% average score`}
         >
           {/* State icon */}
           <div className={cn(

@@ -61,13 +61,19 @@ const CelebrationOverlay = ({ milestone, onDone }: { milestone: Milestone; onDon
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in"
       onClick={onDone}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Milestone achieved: ${milestone.label}`}
+      onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') onDone(); }}
+      tabIndex={0}
     >
-      <div className="relative flex flex-col items-center gap-3 p-8 rounded-2xl bg-card border border-border shadow-2xl animate-scale-in max-w-sm text-center">
+      <div className="relative flex flex-col items-center gap-3 p-8 rounded-2xl bg-card border border-border shadow-2xl animate-scale-in max-w-sm text-center" aria-live="assertive">
         {/* confetti dots */}
         {Array.from({ length: 12 }).map((_, i) => (
           <span
             key={i}
             className="absolute w-2 h-2 rounded-full opacity-80"
+            aria-hidden="true"
             style={{
               background: ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "#facc15", "#22c55e"][i % 5],
               top: `${10 + Math.random() * 80}%`,
@@ -78,12 +84,12 @@ const CelebrationOverlay = ({ milestone, onDone }: { milestone: Milestone; onDon
           />
         ))}
         <div className="p-4 rounded-full bg-primary/10 animate-[pulse_1s_ease-in-out_2]">
-          <Icon className={cn("w-10 h-10", milestone.color)} />
+          <Icon className={cn("w-10 h-10", milestone.color)} aria-hidden="true" />
         </div>
         <h3 className="text-xl font-bold text-foreground">{milestone.label}</h3>
         <p className="text-sm text-muted-foreground">{milestone.message}</p>
         <Badge className="bg-accent/20 text-accent border-accent/30 text-sm gap-1">
-          <Sparkles className="w-3 h-3" /> +{milestone.xp} XP
+          <Sparkles className="w-3 h-3" aria-hidden="true" /> +{milestone.xp} XP
         </Badge>
       </div>
     </div>

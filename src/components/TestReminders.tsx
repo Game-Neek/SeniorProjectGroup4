@@ -437,8 +437,9 @@ export const TestReminders = () => {
                         size="icon"
                         onClick={() => handleDelete(test.id)}
                         className="text-muted-foreground hover:text-destructive"
+                        aria-label={`Delete test reminder: ${test.title}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>

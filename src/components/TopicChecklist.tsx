@@ -199,10 +199,11 @@ export const TopicChecklist = ({ className }: TopicChecklistProps) => {
         />
       </div>
 
-      <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
+      <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1" role="list" aria-label="Topic checklist items">
         {topics.map((item, i) => (
           <div
             key={item.id}
+            role="listitem"
             className={cn(
               "flex items-center gap-3 p-2.5 rounded-lg transition-colors",
               item.checked ? "bg-green-500/5" : "hover:bg-muted/50"
@@ -213,6 +214,7 @@ export const TopicChecklist = ({ className }: TopicChecklistProps) => {
               onCheckedChange={() => toggleTopic(i)}
               disabled={item.autoCompleted}
               className="flex-shrink-0"
+              aria-label={`${item.topic}${item.checked ? ', completed' : ''}${item.autoCompleted ? ', auto-completed' : ''}`}
             />
             <div className="flex-1 min-w-0">
               <p className={cn(
@@ -225,6 +227,7 @@ export const TopicChecklist = ({ className }: TopicChecklistProps) => {
             <div className="flex items-center gap-2 flex-shrink-0">
               {item.autoCompleted && (
                 <Badge variant="outline" className="text-xs py-0 bg-green-500/10 text-green-600 border-green-500/20">
+                  <span className="sr-only">Automatically completed</span>
                   Auto
                 </Badge>
               )}
@@ -233,7 +236,7 @@ export const TopicChecklist = ({ className }: TopicChecklistProps) => {
                   "text-xs font-medium",
                   item.score >= 70 ? "text-green-600" : item.score >= 40 ? "text-amber-600" : "text-destructive"
                 )}>
-                  {item.score}%
+                  <span className="sr-only">Score: </span>{item.score}%
                 </span>
               )}
             </div>

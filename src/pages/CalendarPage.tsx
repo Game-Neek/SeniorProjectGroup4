@@ -217,8 +217,9 @@ export default function CalendarPage() {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/")}
+              aria-label="Go back to dashboard"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Campus Calendar</h1>
             
@@ -384,29 +385,31 @@ export default function CalendarPage() {
             {selectedDateEvents.length === 0 ? (
               <p className="text-muted-foreground">No events for this date</p>
             ) : (
-              <div className="space-y-4">
+              <ul className="space-y-4" role="list" aria-label={`Events for ${date ? format(date, "MMMM d, yyyy") : "selected date"}`}>
                 {selectedDateEvents.map((event) => {
                   const isTest = isTestEvent(event.event_type);
                   const urgency = isTest ? getUrgencyInfo(event.event_date) : null;
                   
                   return (
+                    <li key={event.id}>
                     <Card 
-                      key={event.id} 
                       className={`p-4 border transition-colors ${
                         isMicrolearningEvent(event.event_type)
                           ? 'bg-primary/5 border-primary/20'
                           : isTest && urgency ? urgency.bgColor : 'border-border'
                       }`}
+                      role="article"
+                      aria-label={`${event.title}${isTest && urgency ? `, ${urgency.label === 'Today!' ? 'due today' : urgency.daysLeft < 0 ? 'past due' : `due in ${urgency.daysLeft} days`}` : ''}`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             {isTest && urgency && urgency.daysLeft >= 0 && urgency.daysLeft <= 2 && (
-                              <AlertTriangle className={`h-4 w-4 ${urgency.color}`} />
+                              <AlertTriangle className={`h-4 w-4 ${urgency.color}`} aria-hidden="true" />
                             )}
                             <h3 className="font-semibold text-foreground">{event.title}</h3>
                             {isTest && urgency && (
-                              <span className={`text-xs font-medium ${urgency.color}`}>
+                              <span className={`text-xs font-medium ${urgency.color}`} aria-label={urgency.label === 'Today!' ? 'Due today' : `${urgency.daysLeft} days left`}>
                                 {urgency.label}
                               </span>
                             )}
@@ -416,7 +419,7 @@ export default function CalendarPage() {
                           )}
                           {event.start_time && event.end_time && (
                             <p className="text-sm text-muted-foreground mt-2">
-                              {event.start_time} - {event.end_time}
+                              <span className="sr-only">Time: </span>{event.start_time} - {event.end_time}
                             </p>
                           )}
                           {event.event_type && (
@@ -431,14 +434,16 @@ export default function CalendarPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteEvent(event.id)}
+                          aria-label={`Delete event: ${event.title}`}
                         >
                           Delete
                         </Button>
                       </div>
                     </Card>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </Card>
         </div>
