@@ -405,6 +405,12 @@ const CoursePage = () => {
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
 
+        {/* Outline Builder — auto-generates chapter breakdowns & topic checklists */}
+        <OutlineBuilder
+          className={decodedClassName}
+          onNavigateToTopic={handleNavigateToTopic}
+        />
+
         {/* Learning Objective Mastery */}
         <KnowledgeMasteryProgress className={decodedClassName} />
 
