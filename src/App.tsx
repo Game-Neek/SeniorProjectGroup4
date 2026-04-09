@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import ReadAloudDemo from "./pages/ReadAloudDemo";
 import CoursePage from "./pages/CoursePage";
 import TransitPage from "./pages/TransitPage";
+import RubricsPage from "./pages/RubricsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/read-aloud" element={<ReadAloudDemo />} />
             <Route path="/course/:className" element={<CoursePage />} />
+            <Route path="/course/:className/rubrics" element={<RubricsPage />} />
             <Route path="/transit" element={<TransitPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

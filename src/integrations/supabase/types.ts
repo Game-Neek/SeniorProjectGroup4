@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_examples: {
+        Row: {
+          annotations: Json
+          created_at: string
+          description: string | null
+          example_content: string
+          id: string
+          learning_objectives: string[] | null
+          quality_level: string
+          rubric_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotations?: Json
+          created_at?: string
+          description?: string | null
+          example_content?: string
+          id?: string
+          learning_objectives?: string[] | null
+          quality_level?: string
+          rubric_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotations?: Json
+          created_at?: string
+          description?: string | null
+          example_content?: string
+          id?: string
+          learning_objectives?: string[] | null
+          quality_level?: string
+          rubric_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_examples_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assessment_metadata: Json | null
@@ -891,6 +941,106 @@ export type Database = {
           weak_areas?: string[]
         }
         Relationships: []
+      }
+      rubric_criteria: {
+        Row: {
+          created_at: string
+          criterion_name: string
+          criterion_order: number
+          description: string | null
+          id: string
+          performance_levels: Json
+          rubric_id: string
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          criterion_name: string
+          criterion_order?: number
+          description?: string | null
+          id?: string
+          performance_levels?: Json
+          rubric_id: string
+          updated_at?: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          criterion_name?: string
+          criterion_order?: number
+          description?: string | null
+          id?: string
+          performance_levels?: Json
+          rubric_id?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_criteria_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubrics: {
+        Row: {
+          assignment_id: string | null
+          bloom_level: string | null
+          class_name: string
+          created_at: string
+          description: string | null
+          id: string
+          learning_objectives: string[] | null
+          source: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          bloom_level?: string | null
+          class_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          learning_objectives?: string[] | null
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          bloom_level?: string | null
+          class_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          learning_objectives?: string[] | null
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubrics_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       study_focus_areas: {
         Row: {
