@@ -405,6 +405,25 @@ const CoursePage = () => {
         {/* Assignment Upload */}
         <AssignmentUpload learningStyles={learningStyles} courseName={decodedClassName} />
 
+        {/* Rubrics & Assignment Examples */}
+        <Card className="p-4 border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Rubrics & Assignment Examples
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                View AI-generated rubrics aligned with learning objectives to understand mastery expectations.
+              </p>
+            </div>
+            <Button onClick={() => navigate(`/course/${encodeURIComponent(decodedClassName)}/rubrics`)} className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              View Rubrics
+            </Button>
+          </div>
+        </Card>
+
         {/* Outline Builder — auto-generates chapter breakdowns & topic checklists */}
         <OutlineBuilder
           className={decodedClassName}
