@@ -1,18 +1,50 @@
 
 
-## Why Upcoming Assignments Isn't Updating
+# Plan: Generate Standalone Supabase + AWS Migration Kit
 
-**Root Cause**: The `UpcomingAssignments` component has a date/time filtering bug. When you create an assignment for today, `parseISO("2026-04-06")` returns **midnight** of today — which is already in the past by the time you view it. This causes `differenceInHours` to return a negative number, so the assignment falls into **neither** the "Urgent" (requires `hoursLeft >= 0`) nor "Coming Up" (requires `hoursLeft > 48`) section. It's fetched from the database but silently dropped from the UI.
+## Summary
+Generate two production-ready files in `/mnt/documents/` that contain everything needed to recreate this project's backend on a standalone Supabase instance and deploy the frontend to AWS.
 
-**Secondary issue**: If the default event type wasn't changed from "other" to "assignment", the query `.eq("event_type", "assignment")` would also filter it out.
+## What will be produced
 
-## Plan
+### File 1: `agentb-migration-guide.md`
+A structured, step-by-step migration guide covering:
 
-### 1. Fix the hours-until-due calculation in `UpcomingAssignments.tsx`
-- Change the urgency calculation to use **days** instead of hours, or treat today's assignments as urgent (0 hours = still due today)
-- Update the urgent filter to include `hoursLeft >= -24` (or use date-level comparison instead of hour-level) so same-day assignments always appear in the urgent section
-- Add a fallback: any assignment with `event_date === today` should show as urgent regardless of hour math
+1. **Prerequisites** — Supabase CLI, AWS CLI, Node.js, domain setup
+2. **Supabase project creation** — new project on supabase.com
+3. **Database setup** — all 37 migration files listed in execution order with full SQL (concatenated from `supabase/migrations/`)
+4. **Storage buckets** — recreate `syllabi` and `assignments` buckets with RLS policies
+5. **Database functions & triggers** — `handle_new_user`, `update_updated_at_column`, `anonymize_old_learning_events`, `backfill_daily_metrics`
+6. **Secrets configuration** — `LOVABLE_API_KEY` replacement strategy (swap to direct OpenAI/Google AI keys), `WMATA_API_KEY`
+7. **Edge functions deployment** — all 13 functions with notes on which use the Lovable AI Gateway (needs URL swap to direct provider endpoints)
+8. **Frontend environment variables** — update `.env` with new Supabase URL and anon key
+9. **AWS deployment** — S3 bucket creation, CloudFront distribution, `npm run build`, sync to S3
+10. **DNS & SSL** — Route 53 or custom domain setup with ACM certificate
+11. **Post-migration checklist** — auth callback URLs, CORS origins, cron jobs (pg_cron for transit-feed)
 
-### 2. No database or backend changes needed
-The data is being stored correctly — this is purely a frontend display bug.
+### File 2: `agentb-full-backend-dump.txt`
+Raw dump of all backend code for copy-paste migration:
+- All 37 SQL migration files (full contents)
+- All 13 edge function `index.ts` files (full contents)
+- `supabase/config.toml`
+- TypeScript types from `src/integrations/supabase/types.ts`
+- `package.json` (for frontend dependency reference)
+
+## Critical migration notes to document
+
+**AI Gateway swap**: 6 edge functions call `https://ai.gateway.lovable.dev/v1/chat/completions` using `LOVABLE_API_KEY`. The guide will map each to the equivalent direct API call (OpenAI or Google) and document the required secret name changes.
+
+**Affected functions**: `agent-b-chat`, `generate-course`, `generate-rubric`, `audit-bias`, `analyze-difficulty`, `predictive-coaching`, `refine-content`
+
+**Auth trigger**: The `handle_new_user` trigger on `auth.users` needs manual creation in the Supabase dashboard since migrations can't attach triggers to `auth` schema.
+
+## Technical approach
+- Read all 37 migration files and 13 edge functions via shell
+- Concatenate into the two output files with proper formatting
+- Write to `/mnt/documents/`
+
+## Output
+Two downloadable files:
+- `/mnt/documents/agentb-migration-guide.md`
+- `/mnt/documents/agentb-full-backend-dump.txt`
 
