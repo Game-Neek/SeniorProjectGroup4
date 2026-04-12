@@ -18,6 +18,11 @@ const categoryIcons: Record<string, string> = {
   general: "🔔",
 };
 
+const sourceTypeIcons: Record<string, string> = {
+  policy_change: "📋",
+  content_change: "📝",
+};
+
 const groupByDate = (notifications: Notification[]) => {
   const groups: Record<string, Notification[]> = {};
   for (const n of notifications) {
@@ -145,7 +150,7 @@ export const NotificationBell = () => {
                         }}
                       >
                         <span className="text-lg mt-0.5">
-                          {categoryIcons[notif.category] || categoryIcons.general}
+                          {(notif.source_type && sourceTypeIcons[notif.source_type]) || categoryIcons[notif.category] || categoryIcons.general}
                         </span>
                         <div className="flex-1 min-w-0">
                           <p
