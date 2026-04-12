@@ -87,8 +87,6 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       if (error) throw error;
 
       // Update the syllabus record with parsed data
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
 
       await supabase
         .from("syllabi")
