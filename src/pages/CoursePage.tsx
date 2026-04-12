@@ -42,6 +42,7 @@ import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
 import { PredictiveCoaching } from "@/components/PredictiveCoaching";
 import { PrerequisiteDiagnostic } from "@/components/PrerequisiteDiagnostic";
 import { OutlineBuilder } from "@/components/OutlineBuilder";
+import { AdaptiveQuiz } from "@/components/AdaptiveQuiz";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +76,7 @@ const CoursePage = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [showMiniQuiz, setShowMiniQuiz] = useState(false);
+  const [showAdaptiveQuiz, setShowAdaptiveQuiz] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
