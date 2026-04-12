@@ -104,6 +104,7 @@ ${instructions}
 
 ${styleHint}
 
+${studentFeedback ? `STUDENT FEEDBACK: A student reported the following issue with this content — prioritize addressing it:\n"${studentFeedback}"\n` : ""}
 RULES:
 - Preserve ALL mathematical notation using LaTeX dollar-sign delimiters (e.g. $f(x) = 3x^2$)
 - Keep markdown formatting (headers, lists, bold)
