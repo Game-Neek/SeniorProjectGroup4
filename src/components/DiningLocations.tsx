@@ -143,16 +143,6 @@ export const DiningLocations = ({ open, onOpenChange }: DiningLocationsProps) =>
                 <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
                   <Clock className="w-3 h-3" /> {loc.hours}
                 </p>
-                {loc.directionsUrl && (
-                  <a
-                    href={loc.directionsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    Get Directions <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
               </div>
             </Card>
           ))}
