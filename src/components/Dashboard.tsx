@@ -14,6 +14,7 @@ import { useStreakTracker } from "@/hooks/useStreakTracker";
 
 import { CourseHub } from "./CourseHub";
 import { TestReminders } from "./TestReminders";
+import { DiningLocations } from "./DiningLocations";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +47,7 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
   const { toast } = useToast();
   const [syllabusRefreshTrigger, setSyllabusRefreshTrigger] = useState(0);
   const [isReadAloudActive, setIsReadAloudActive] = useState(false);
+  const [diningOpen, setDiningOpen] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
 
   const { saveProfile } = useProfile();
@@ -251,9 +253,10 @@ export const Dashboard = ({ learningStyles, onOpenChat, onRetakeQuiz }: Dashboar
             <p className="text-sm text-muted-foreground mb-4">
               Menus, hours, and dining hall locations
             </p>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => setDiningOpen(true)}>
               See Menus
             </Button>
+            <DiningLocations open={diningOpen} onOpenChange={setDiningOpen} />
           </Card>
 
           {/* Safety & Title IX */}
