@@ -17,6 +17,7 @@ import { LessonRenderer } from "@/components/LessonRenderer";
 import { ContentReview } from "@/components/ContentReview";
 import { BiasAudit } from "@/components/BiasAudit";
 import { ContentFeedbackLoop } from "@/components/ContentFeedbackLoop";
+import { AlignmentChecker } from "@/components/AlignmentChecker";
 
 interface CourseChapter {
   id: string;
@@ -623,7 +624,8 @@ function ChapterContent({
       </TabsContent>
 
       {/* SME Review */}
-      <TabsContent value="review" className="mt-0">
+      <TabsContent value="review" className="mt-0 space-y-4">
+        <AlignmentChecker contentId={chapter.id} className={courseName} topic={chapter.topic} />
         <ContentReview
           contentId={chapter.id}
           lessonContent={chapter.lesson_content}

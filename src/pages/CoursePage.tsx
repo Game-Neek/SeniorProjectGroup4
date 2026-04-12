@@ -42,6 +42,7 @@ import { MicrolearningScheduler } from "@/components/MicrolearningScheduler";
 import { PredictiveCoaching } from "@/components/PredictiveCoaching";
 import { PrerequisiteDiagnostic } from "@/components/PrerequisiteDiagnostic";
 import { OutlineBuilder } from "@/components/OutlineBuilder";
+import { AdaptiveQuiz } from "@/components/AdaptiveQuiz";
 import { format, differenceInDays, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +76,7 @@ const CoursePage = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [showMiniQuiz, setShowMiniQuiz] = useState(false);
+  const [showAdaptiveQuiz, setShowAdaptiveQuiz] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
@@ -532,6 +534,24 @@ const CoursePage = () => {
         {/* Personalized Practice - only after placement quiz */}
         {hasQuiz && <PersonalizedPractice className={decodedClassName} learningStyles={learningStyles} />}
 
+        {/* Adaptive Quiz Quick-Launch */}
+        {hasQuiz && (
+          <Card className="p-4 border-border flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Adaptive Quiz</h3>
+                <p className="text-xs text-muted-foreground">Difficulty adjusts to your performance in real-time</p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setShowAdaptiveQuiz(true)} className="gap-1.5">
+              <Zap className="w-3.5 h-3.5" /> Start
+            </Button>
+          </Card>
+        )}
+
         {/* Knowledge Structure & Response State */}
         <KnowledgeStructureChecklist
           className={decodedClassName}
@@ -587,6 +607,13 @@ const CoursePage = () => {
           learningStyles={learningStyles}
         />
       )}
+
+      {/* Adaptive Quiz Modal */}
+      <AdaptiveQuiz
+        isOpen={showAdaptiveQuiz}
+        onClose={() => setShowAdaptiveQuiz(false)}
+        className={decodedClassName}
+      />
 
       {/* Interactive Exercises Modal */}
       {classQuizResult && (
