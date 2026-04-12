@@ -590,6 +590,13 @@ const CoursePage = () => {
         />
       )}
 
+      {/* Adaptive Quiz Modal */}
+      <AdaptiveQuiz
+        isOpen={showAdaptiveQuiz}
+        onClose={() => setShowAdaptiveQuiz(false)}
+        className={decodedClassName}
+      />
+
       {/* Interactive Exercises Modal */}
       {classQuizResult && (
         <InteractiveExercise
