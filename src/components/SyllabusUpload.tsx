@@ -39,6 +39,29 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
 
   const autoParseNewSyllabus = async (courseName: string, filePath: string) => {
     try {
+      // Fetch previous syllabus data for change detection
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: existingSyllabus } = await supabase
+        .from("syllabi")
+        .select("id, course_description, learning_objectives, weekly_schedule, grading_policy, required_materials")
+        .eq("user_id", session.user.id)
+        .eq("class_name", courseName)
+        .order("uploaded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const oldData = existingSyllabus
+        ? {
+            course_description: existingSyllabus.course_description,
+            learning_objectives: existingSyllabus.learning_objectives,
+            weekly_schedule: existingSyllabus.weekly_schedule,
+            grading_policy: existingSyllabus.grading_policy,
+            required_materials: existingSyllabus.required_materials,
+          }
+        : null;
+
       // Download the file to extract text
       const { data: fileData, error: downloadError } = await supabase.storage
         .from("syllabi")
@@ -101,6 +124,26 @@ export const SyllabusUpload = ({ onUploadComplete }: SyllabusUploadProps) => {
       }
       if (topics.length > 0) {
         localStorage.setItem(`chapters-${courseName}`, JSON.stringify(topics));
+      }
+
+      // Detect content changes and send notifications
+      if (oldData) {
+        const newData = {
+          course_description: data.courseDescription,
+          learning_objectives: data.learningObjectives,
+          weekly_schedule: data.weeklySchedule,
+          grading_policy: data.gradingPolicy,
+          required_materials: data.requiredMaterials,
+        };
+        supabase.functions.invoke("detect-content-changes", {
+          body: {
+            oldData,
+            newData,
+            className: courseName,
+            syllabusId: existingSyllabus?.id,
+            userId: session.user.id,
+          },
+        }).catch((err) => console.error("Change detection error:", err));
       }
 
       // Dispatch events for other components
