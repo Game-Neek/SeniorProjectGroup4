@@ -16,6 +16,8 @@ const categoryLabels: Record<string, string> = {
   quiz_results: "Quiz Results",
   study_plan: "Study Plan",
   course_updates: "Course Updates",
+  policy_change: "Policy Changes",
+  content_change: "Content Updates",
   system_alerts: "System",
   general: "General",
 };
@@ -26,8 +28,15 @@ const categoryIcons: Record<string, string> = {
   quiz_results: "✅",
   study_plan: "📚",
   course_updates: "📖",
+  policy_change: "📋",
+  content_change: "📝",
   system_alerts: "⚙️",
   general: "🔔",
+};
+
+const sourceTypeIcons: Record<string, string> = {
+  policy_change: "📋",
+  content_change: "📝",
 };
 
 
@@ -60,7 +69,11 @@ export default function NotificationsPage() {
     );
   }
   if (categoryFilter !== "all") {
-    filtered = filtered.filter((n) => n.category === categoryFilter);
+    if (categoryFilter === "policy_change" || categoryFilter === "content_change") {
+      filtered = filtered.filter((n) => n.source_type === categoryFilter);
+    } else {
+      filtered = filtered.filter((n) => n.category === categoryFilter);
+    }
   }
   if (readFilter === "unread") {
     filtered = filtered.filter((n) => !n.is_read);
@@ -208,7 +221,7 @@ export default function NotificationsPage() {
                       }`}
                     >
                       <span className="text-2xl mt-0.5">
-                        {categoryIcons[notif.category] || categoryIcons.general}
+                        {(notif.source_type && sourceTypeIcons[notif.source_type]) || categoryIcons[notif.category] || categoryIcons.general}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -233,7 +246,9 @@ export default function NotificationsPage() {
                             {formatTime(notif.created_at)}
                           </span>
                           <Badge variant="outline" className="text-[10px] h-5">
-                            {categoryLabels[notif.category] || notif.category}
+                            {notif.source_type && categoryLabels[notif.source_type]
+                              ? categoryLabels[notif.source_type]
+                              : categoryLabels[notif.category] || notif.category}
                           </Badge>
                         </div>
                       </div>

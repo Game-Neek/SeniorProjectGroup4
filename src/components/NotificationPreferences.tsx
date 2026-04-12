@@ -16,7 +16,7 @@ const categories = [
   { key: "exam_reminder", label: "Exam Reminders", icon: "📋", description: "Alerts for upcoming exams and tests" },
   { key: "quiz_results", label: "Quiz Results", icon: "✅", description: "Notifications when quiz results are available" },
   { key: "study_plan", label: "Study Plan Updates", icon: "📚", description: "Changes and suggestions to your study plan" },
-  { key: "course_updates", label: "Course Updates", icon: "📖", description: "New content or changes to your courses" },
+  { key: "course_updates", label: "Course Updates", icon: "📖", description: "New content, policy changes, and schedule updates" },
   { key: "system_alerts", label: "System Alerts", icon: "⚙️", description: "Important system announcements" },
 ];
 

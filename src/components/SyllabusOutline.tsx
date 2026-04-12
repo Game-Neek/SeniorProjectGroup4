@@ -41,6 +41,20 @@ export const SyllabusOutline = ({
   const handleParseSyllabus = async () => {
     setIsParsing(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      // Capture old data for change detection
+      const oldData = parsedAt
+        ? {
+            course_description: courseDescription,
+            learning_objectives: learningObjectives,
+            weekly_schedule: weeklySchedule,
+            grading_policy: gradingPolicy,
+            required_materials: requiredMaterials,
+          }
+        : null;
+
       // Download the syllabus file to get its text content
       const { data: fileData, error: downloadError } = await supabase.storage
         .from("syllabi")
@@ -82,6 +96,26 @@ export const SyllabusOutline = ({
         .eq("id", syllabusId);
 
       if (updateError) throw updateError;
+
+      // Detect content changes and send notifications
+      if (oldData) {
+        const newData = {
+          course_description: data.courseDescription,
+          learning_objectives: data.learningObjectives,
+          weekly_schedule: data.weeklySchedule,
+          grading_policy: data.gradingPolicy,
+          required_materials: data.requiredMaterials,
+        };
+        supabase.functions.invoke("detect-content-changes", {
+          body: {
+            oldData,
+            newData,
+            className,
+            syllabusId,
+            userId: session.user.id,
+          },
+        }).catch((err) => console.error("Change detection error:", err));
+      }
 
       toast({
         title: "Syllabus parsed!",
