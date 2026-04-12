@@ -23,10 +23,11 @@ import {
 import { 
   Upload, FileText, Trash2, Calendar, Loader2, 
   ClipboardList, Target, Sparkles, Brain, BarChart3,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, MessageSquareText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { WritingFeedback } from "@/components/WritingFeedback";
 
 interface Assignment {
   id: string;
@@ -602,6 +603,17 @@ export const AssignmentUpload = ({ learningStyles, courseName, onAssignmentParse
                         Analyze Difficulty
                       </Button>
                     )}
+                    {/* AI Writing Feedback */}
+                    <div className="mt-2">
+                      <WritingFeedback
+                        assignmentId={assignment.id}
+                        assignmentTitle={assignment.assignment_title}
+                        className={assignment.class_name}
+                        parsedContent={undefined}
+                        learningObjectives={assignment.learning_objectives}
+                        assessmentType={assignment.assessment_type}
+                      />
+                    </div>
                   </div>
                   <Button
                     variant="ghost"

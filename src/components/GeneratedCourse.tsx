@@ -16,6 +16,7 @@ import { MathText } from "@/components/MathText";
 import { LessonRenderer } from "@/components/LessonRenderer";
 import { ContentReview } from "@/components/ContentReview";
 import { BiasAudit } from "@/components/BiasAudit";
+import { ContentFeedbackLoop } from "@/components/ContentFeedbackLoop";
 
 interface CourseChapter {
   id: string;
@@ -439,7 +440,10 @@ function ChapterContent({
       {/* Lesson Content — Clean structured rendering */}
       <TabsContent value="lesson" className="mt-0">
         {chapter.lesson_content ? (
-          <LessonRenderer content={chapter.lesson_content} moduleType="lesson" />
+          <>
+            <LessonRenderer content={chapter.lesson_content} moduleType="lesson" />
+            <ContentFeedbackLoop contentId={chapter.id} topic={chapter.topic} className={courseName} />
+          </>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-4">No lesson content available.</p>
         )}

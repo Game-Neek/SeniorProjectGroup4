@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { contentId, lessonContent, quizQuestions, exercises, refinementMode } = await req.json();
+    const { contentId, lessonContent, quizQuestions, exercises, refinementMode, studentFeedback } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -104,6 +104,7 @@ ${instructions}
 
 ${styleHint}
 
+${studentFeedback ? `STUDENT FEEDBACK: A student reported the following issue with this content — prioritize addressing it:\n"${studentFeedback}"\n` : ""}
 RULES:
 - Preserve ALL mathematical notation using LaTeX dollar-sign delimiters (e.g. $f(x) = 3x^2$)
 - Keep markdown formatting (headers, lists, bold)
