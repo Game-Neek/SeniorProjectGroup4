@@ -2,8 +2,45 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = String(import.meta.env.VITE_SUPABASE_URL ?? "")
+  .trim()
+  .replace(/\/+$/, "");
+const SUPABASE_PUBLISHABLE_KEY = String(
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY ?? "",
+).trim();
+
+function projectRefFromSupabaseUrl(url: string): string | null {
+  try {
+    const host = new URL(url).hostname;
+    const sub = host.replace(/\.supabase\.co$/i, "");
+    return sub && sub !== host ? sub : null;
+  } catch {
+    return null;
+  }
+}
+
+function projectRefFromJwt(anonKey: string): string | null {
+  try {
+    const payload = anonKey.split(".")[1];
+    if (!payload) return null;
+    const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as { ref?: string };
+    return json.ref ?? null;
+  } catch {
+    return null;
+  }
+}
+
+if (import.meta.env.DEV && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
+  const urlRef = projectRefFromSupabaseUrl(SUPABASE_URL);
+  const jwtRef = projectRefFromJwt(SUPABASE_PUBLISHABLE_KEY);
+  if (urlRef && jwtRef && urlRef !== jwtRef) {
+    console.error(
+      `[Supabase] URL project (${urlRef}) does not match anon key JWT ref (${jwtRef}). ` +
+        "Copy the anon key from the same project in Dashboard → Settings → API. " +
+        "This mismatch causes \"Invalid API key\" on sign-in.",
+    );
+  }
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

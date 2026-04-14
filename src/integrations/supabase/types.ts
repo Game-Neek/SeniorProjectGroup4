@@ -10,7 +10,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.4"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -52,6 +77,94 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      course_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          start_date: string | null
+          syllabus_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type: string
+          id?: string
+          start_date?: string | null
+          syllabus_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          start_date?: string | null
+          syllabus_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_events_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_textbooks: {
+        Row: {
+          author: string | null
+          created_at: string | null
+          edition: string | null
+          id: string
+          is_required: boolean | null
+          isbn: string | null
+          syllabus_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string | null
+          edition?: string | null
+          id?: string
+          is_required?: boolean | null
+          isbn?: string | null
+          syllabus_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          created_at?: string | null
+          edition?: string | null
+          id?: string
+          is_required?: boolean | null
+          isbn?: string | null
+          syllabus_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_textbooks_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabi"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       learning_resources: {
         Row: {
@@ -127,6 +240,7 @@ export type Database = {
           content: string
           file_name: string | null
           id: string
+          is_archived: boolean
           processed: boolean | null
           title: string
           topics_extracted: Json | null
@@ -138,6 +252,7 @@ export type Database = {
           content: string
           file_name?: string | null
           id?: string
+          is_archived?: boolean
           processed?: boolean | null
           title: string
           topics_extracted?: Json | null
@@ -149,6 +264,7 @@ export type Database = {
           content?: string
           file_name?: string | null
           id?: string
+          is_archived?: boolean
           processed?: boolean | null
           title?: string
           topics_extracted?: Json | null
@@ -161,6 +277,71 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "user_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      syllabus_topics: {
+        Row: {
+          blooms_taxonomy_level: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          learning_objectives: Json | null
+          mastery_percent: number | null
+          module_title: string | null
+          start_date: string | null
+          subtopics: Json | null
+          syllabus_id: string
+          textbook_chapters: Json | null
+          title: string
+          topic_order: number
+          user_id: string
+          week_number: number | null
+        }
+        Insert: {
+          blooms_taxonomy_level?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          learning_objectives?: Json | null
+          mastery_percent?: number | null
+          module_title?: string | null
+          start_date?: string | null
+          subtopics?: Json | null
+          syllabus_id: string
+          textbook_chapters?: Json | null
+          title: string
+          topic_order?: number
+          user_id: string
+          week_number?: number | null
+        }
+        Update: {
+          blooms_taxonomy_level?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          learning_objectives?: Json | null
+          mastery_percent?: number | null
+          module_title?: string | null
+          start_date?: string | null
+          subtopics?: Json | null
+          syllabus_id?: string
+          textbook_chapters?: Json | null
+          title?: string
+          topic_order?: number
+          user_id?: string
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabus_topics_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabi"
             referencedColumns: ["id"]
           },
         ]
@@ -347,6 +528,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
