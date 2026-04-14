@@ -397,6 +397,7 @@ export type Database = {
           author: string | null
           class_name: string
           created_at: string
+          file_path: string | null
           id: string
           isbn: string | null
           requirement_type: string
@@ -408,6 +409,7 @@ export type Database = {
           author?: string | null
           class_name: string
           created_at?: string
+          file_path?: string | null
           id?: string
           isbn?: string | null
           requirement_type?: string
@@ -419,6 +421,7 @@ export type Database = {
           author?: string | null
           class_name?: string
           created_at?: string
+          file_path?: string | null
           id?: string
           isbn?: string | null
           requirement_type?: string
