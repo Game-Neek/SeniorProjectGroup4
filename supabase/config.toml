@@ -1,4 +1,7 @@
-project_id = "hftvdzbgasfegskewxdz"
+project_id = "kzxjiqsnyztixwspsblh"
 
 [functions.agent-b-chat]
+verify_jwt = false
+
+[functions.parse-syllabus]
 verify_jwt = false
