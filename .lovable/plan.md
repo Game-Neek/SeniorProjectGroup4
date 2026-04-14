@@ -1,33 +1,28 @@
 
 
-# Plan: Scrape Howard Dining Hub for Live Dining Information
+## Plan: Add File Upload Option to Course Textbooks
 
-## Summary
-Create an edge function that scrapes `https://howard.mydininghub.com/en/locations` on demand, parses dining location data (name, address, hours, open/closed status, image), and serves it to the frontend. Results are cached for 24 hours to minimize external requests.
+### Overview
+Add a two-mode "Add Textbook" dialog: users can either fill in details manually (current behavior) or upload a textbook file (PDF, DOCX, etc.) that gets stored in a new `textbooks` storage bucket. The uploaded file path is saved alongside the textbook record.
 
-## Implementation
+### Database Changes
 
-### 1. New Edge Function: `dining-scrape`
-- Fetches HTML from `https://howard.mydininghub.com/en/locations`
-- Parses location cards using regex/string parsing
-- Returns JSON array with: name, address, hours, status (OPEN/CLOSED), image URL, directions link
-- **Caches results in-memory for 24 hours** (86400 seconds). Subsequent calls within the same day return the cached response instantly. Cache is keyed by date so it refreshes daily.
+1. **Add `file_path` column** to `course_textbooks` table (nullable text) to store the storage path of uploaded files.
+2. **Create `textbooks` storage bucket** (private) with RLS policies allowing authenticated users to upload/read/delete their own files.
 
-### 2. New Component: `DiningLocations.tsx`
-- Dialog opened from Dashboard's "See Menus" button
-- Displays dining location cards with image, name, address, hours
-- Green/red OPEN/CLOSED badges
-- "Get Directions" link to Google Maps
-- Filter tabs: "All" and "Open Now"
+### UI Changes (CourseTextbooks.tsx)
 
-### 3. Update `Dashboard.tsx`
-- Wire "See Menus" button to open the `DiningLocations` dialog
-- Show count of currently open locations on the card
+1. **Add mode toggle** in the Add dialog — two tabs or segmented control: "Manual" and "Upload File".
+2. **Manual tab** — keeps the current form (title, author, ISBN, type).
+3. **Upload tab** — file input accepting `.pdf`, `.docx`, `.epub`, `.txt` plus a title field (auto-populated from filename) and requirement type selector. Uses the existing `uploadEngine.ts` for validation and upload to the `textbooks` bucket.
+4. **Display file indicator** — textbooks with a `file_path` show a download/view button in the list row.
+5. **Delete cleanup** — when deleting a textbook with a file, also remove the file from storage.
 
-## Files
-- **New**: `supabase/functions/dining-scrape/index.ts`
-- **New**: `src/components/DiningLocations.tsx`
-- **Modified**: `src/components/Dashboard.tsx`
+### Technical Details
 
-## No Database Changes Required
+- Reuse `validateFile` and upload patterns from `uploadEngine.ts`
+- Storage path: `{user_id}/{class_name}/{filename}`
+- File size limit: 20MB
+- The `source` field will be set to `"uploaded"` for file-based entries
+- Signed URL generation for viewing/downloading uploaded files
 
